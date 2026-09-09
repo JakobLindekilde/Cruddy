@@ -1,4 +1,6 @@
-﻿namespace CruddyDemo.Helpers
+﻿using System.Reflection;
+
+namespace CruddyDemo.Helpers
 {
     /// <summary>
     /// This class is intended to provide helper methods for the dynamic type.
@@ -10,12 +12,12 @@
             var list = new List<T>();
             foreach (var dynRow in dynRows)
             {
-                list.Add(MapDynRow<T>(dynRow));
+                list.Add(MapDyn<T>(dynRow));
             }
             return list;
         }
 
-        public static T MapDynRow<T>(dynamic dynRow)
+        public static T MapDyn<T>(dynamic dyn)
         {
             var target = Activator.CreateInstance<T>()!;
             var targetType = typeof(T);
@@ -23,25 +25,8 @@
             var targetProps = targetType.GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance)
                 .Where(p => p.CanWrite);
 
-            // Build a dictionary of source property names -> values. Support IDictionary (ExpandoObject/Dapper) and regular objects.
             var sourceDict = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
-            if (dynRow is IDictionary<string, object> kv)
-            {
-                foreach (var pair in kv)
-                {
-                    sourceDict[pair.Key] = pair.Value;
-                }
-            }
-            else
-            {
-                var sourceObj = (object)dynRow;
-                var sourceType = sourceObj.GetType();
-                var sourceProps = sourceType.GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
-                foreach (var p in sourceProps)
-                {
-                    sourceDict[p.Name] = p.GetValue(sourceObj);
-                }
-            }
+            FillDictPropNames(sourceDict, dyn);
 
             foreach (var prop in targetProps)
             {
@@ -75,6 +60,31 @@
 
             return target;
         }
+
+        /// <summary>
+        /// // Build a dictionary of source property names -> values. Support IDictionary (ExpandoObject/Dapper) and regular objects.
+        /// </summary>
+        public static void FillDictPropNames(Dictionary<string, object?> sourceDict, dynamic dyn)
+        {
+            if (dyn is IDictionary<string, object> kv)
+            {
+                foreach (var pair in kv)
+                {
+                    sourceDict[pair.Key] = pair.Value;
+                }
+            }
+            else
+            {
+                var sourceObj = (object)dyn;
+                var sourceType = sourceObj.GetType();
+                var sourceProps = sourceType.GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+                foreach (var p in sourceProps)
+                {
+                    sourceDict[p.Name] = p.GetValue(sourceObj);
+                }
+            }
+        }
+
 
     }
 }

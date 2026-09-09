@@ -1,4 +1,5 @@
 ﻿@using Microsoft.AspNetCore.Components.QuickGrid
+@using QuickGrid.Toolkit
 @inherits CruddyBase<Models.Customer>
 
 @if (ShowTechInfo.GetValueOrDefault())
@@ -23,15 +24,29 @@ else if (!Rows.Any())
 else
 {
     <div class="grid">
-        <QuickGrid id="MyGrid" Items="@Rows">
-            <PropertyColumn Property="@(p => p.Id)" Sortable="true" />
+        <QuickGrid @ref="_grid" id="MyGrid" Items="@Rows" Class="table table-sm table-index table-striped small table-fit table-thead-sticky mb-0" Theme="twentyAI">
+@*             <PropertyColumn Property="@(p => p.Id)" Sortable="true" />
             <PropertyColumn Property="@(p => p.Name)" Sortable="true" />
             <PropertyColumn Property="@(p => p.Email)" Sortable="true" />
             <PropertyColumn Property="@(p => p.Phone)" Sortable="true" />
+ *@            @QuickGridColumns.Columns(_columnManager)
         </QuickGrid>
     </div>
 }
 
 @code {
+
+    private QuickGrid<Models.Customer>? _grid;
+
+    private ColumnManager<Models.Customer> _columnManager = new();
+
+    protected override void OnInitialized()
+    {
+        //_columnManager.Add(new() { Property = p => p.Id });
+        _columnManager.AddSimple(p => p.Id, fullTitle: "Id");
+        _columnManager.AddSimple(p => p.Name, fullTitle: "Name");
+        //_columnManager.AddSimple(p => p.Email, fullTitle: "Email");
+        _columnManager.AddSimple(p => p.Phone, fullTitle: "Phone");
+    }
 
 }

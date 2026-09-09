@@ -1,5 +1,8 @@
 using Dapper;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.QuickGrid;
+using QuickGrid.Toolkit;
+using QuickGrid.Toolkit.Columns;
 using System.Data.Common;
 
 namespace CruddyDemo.Components
@@ -7,7 +10,7 @@ namespace CruddyDemo.Components
     /// <summary>
     /// Base class for simple CRUD operations in a blazor component.
     /// </summary>
-    public partial class CruddyBase<T> : ComponentBase
+    public partial class CruddyNy<TEntity>
     {
         /// <summary>
         /// Name of database table to 'CRUD'.
@@ -31,8 +34,9 @@ namespace CruddyDemo.Components
         /// <summary>
         /// The maximum number of rows to retrieve from table <seealso cref="TableName"/>.
         /// </summary>
+        /// <remarks>Default is 10000.</remarks>
         [Parameter]
-        public int? Top { get; set; }
+        public int? Top { get; set; } = 10000;
 
         /// <summary>
         /// Whether to retrieve only distinct (=unique) rows.
@@ -73,13 +77,43 @@ namespace CruddyDemo.Components
         /// Whether to show technical information.
         /// </summary>
         [Parameter]
-        public bool? ShowTechInfo { get; set; }
+        public bool? ShowInfoMessage { get; set; }
+
+        protected string InfoMessage { get; set; } = string.Empty;
+
+        protected QuickGrid<TEntity>? MyGrid;
+
+        protected readonly ColumnManager<TEntity> ColumnManager = new();
 
 
         /// <summary>
         /// The rows retrieved from the database table in <seealso cref="TableName"/>.
         /// </summary>
-        protected IQueryable<T>? Rows;
+        protected IQueryable<TEntity>? Rows;
+
+        public bool IsInitialized { get; set; }
+
+        List<string>? Columnslist = null;
+
+        protected virtual bool InTableColumns(string columnName)
+        {
+            if (string.IsNullOrEmpty(TableColumns))
+            {
+                return false;
+            }
+
+            if (TableColumns == "*")
+            {
+                return true;
+            }
+
+            if (Columnslist == null)
+            {
+                Columnslist = TableColumns.Split(',').Select(c => c.Trim().ToLower()).ToList();
+            }
+
+            return Columnslist!.Contains(columnName.ToLower());
+        }
 
         /// <summary>
         /// This method builds the final SQL SELECT statement. It uses parameter 
@@ -117,12 +151,20 @@ namespace CruddyDemo.Components
         }
 
         /// <summary>
-        /// Calls first base.OnInitializedAsync() then FillRowsAsync().
+        /// Calls first base.OnInitializedAsync() then FillRowsAsync() and AddColumnsToGrid() last.
         /// </summary>
         protected override async Task OnInitializedAsync()
         {
+            // TODO: Why is OnInitializedAsync called twice? Should be called only once, but it is called twice. This is a bug in Blazor?
+            // Should we NOT call base.OnInitializedAsync()?
             await base.OnInitializedAsync();
-            await FillRowsAsync();
+
+            if (!IsInitialized)
+            {
+                IsInitialized = true;
+                await FillRowsAsync();
+                AddColumnsToGrid();
+            }
         }
 
         /// <summary>
@@ -132,7 +174,58 @@ namespace CruddyDemo.Components
         protected virtual async Task FillRowsAsync()
         {
             var sql = BuildSql();
-            Rows = await GetTableRowsAsync<T>(DbConnection, sql);
+            Rows = await GetTableRowsAsync<TEntity>(DbConnection, sql);
+        }
+
+        /// <summary>
+        /// Add a simple column, using AddSimple(), for each public readable property on TEntity.
+        /// </summary>
+        protected virtual void AddColumnsToGrid()
+        {
+            var entityType = typeof(TEntity);
+            var props = entityType.GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance)
+                .Where(p => p.CanRead);
+
+            foreach (var prop in props)
+            {
+                var param = System.Linq.Expressions.Expression.Parameter(entityType, "p");
+                var access = System.Linq.Expressions.Expression.PropertyOrField(param, prop.Name);
+
+                System.Linq.Expressions.Expression body = access;
+                // If value type, box to object
+                if (prop.PropertyType.IsValueType)
+                {
+                    body = System.Linq.Expressions.Expression.Convert(access, typeof(object));
+                }
+
+                var lambdaType = typeof(Func<,>).MakeGenericType(entityType, typeof(object));
+                var lambda = System.Linq.Expressions.Expression.Lambda(lambdaType, body, param);
+
+                // ColumnManager has generic AddSimple expecting Expression<Func<TEntity, TValue?>>; use object as TValue
+                var addSimpleMethod = typeof(ColumnManager<TEntity>).GetMethods()
+                    .FirstOrDefault(m => m.Name == "AddSimple" && m.GetParameters().Length >= 1 && m.GetParameters()[0].ParameterType.Name.StartsWith("Expression"));
+
+                if (addSimpleMethod != null)
+                {
+                    var genericMethod = addSimpleMethod.MakeGenericMethod(typeof(object));
+                    try
+                    {
+                        if (InTableColumns(prop.Name))
+                        {
+                            // TODO: Add in the order of the columns in TableColumns, not in the order of the properties in TEntity.
+
+                            // TODO: Set ColumnInfo title, fullName and class
+                            var columnInfo = new ColumnInfo(prop.Name, prop.Name, null);                          
+                            genericMethod.Invoke(ColumnManager, [lambda, columnInfo, null, Align.Left, null, null, true, null]);
+                        }
+                    }
+                    catch
+                    {
+                        // ignore any failures adding a specific column
+                        // TODO: What should we do here? Log the error? Show a message in the UI?
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -142,10 +235,10 @@ namespace CruddyDemo.Components
         /// <param name="DbConnection">A database connection e.g an SqlConnection (for MS SQL Server)/param>
         /// <param name="tableName">The rows retrieved from this database table.</param>
         /// <param name="cols">The columns to retrieve.</param>
-        static public async Task<IQueryable<T1>> GetTableRowsAsync<T1>(DbConnection DbConnection, string sql)
+        static public async Task<IQueryable<T>> GetTableRowsAsync<T>(DbConnection DbConnection, string sql)
         {
             IEnumerable<dynamic> dynRows = await DbConnection.QueryAsync(sql);
-            return Helpers.DynamicHelper.MapDynRows<T1>(dynRows).AsQueryable();
+            return Helpers.DynamicHelper.MapDynRows<T>(dynRows).AsQueryable();
         }
 
     }

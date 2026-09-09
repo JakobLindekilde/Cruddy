@@ -7,7 +7,7 @@ namespace CruddyDemo.Components
     /// <summary>
     /// Base class for simple CRUD operations in a blazor component.
     /// </summary>
-    public partial class CruddyBase<T> : ComponentBase
+    public partial class CruddyBaseNy<T> : ComponentBase
     {
         /// <summary>
         /// Name of database table to 'CRUD'.

@@ -1,10 +1,10 @@
 ﻿@page "/"
 @inject Microsoft.Data.SqlClient.SqlConnection dbConnection
 
-<h3>SomeTable</h3>
+<h3>Tabel Customers</h3>
 
-<Cruddy TableName="Customers" DbConnection="dbConnection" ShowTechInfo="true" />
-
+<CruddyNy TEntity="Models.Customer" TableName="Customers" TableColumns="Id, Name, Email, Phone" DbConnection="dbConnection" />
 
 @code {
+
 }

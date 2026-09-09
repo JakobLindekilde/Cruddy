@@ -1,3 +1,4 @@
 <Solution>
   <Project Path="CruddyDemo/CruddyDemo.csproj" />
+  <Project Path="QuickGrid.Toolkit/QuickGrid.Toolkit.csproj" />
 </Solution>
