@@ -1,0 +1,70 @@
+﻿@using Dapper;
+@using Microsoft.AspNetCore.Components.QuickGrid
+@using Microsoft.Data.SqlClient
+@inject IConfiguration config
+
+<h3>Cruddy table @TableName (@message)</h3>
+<div class="grid">
+    <QuickGrid id="MyGrid" Items="@customers">
+        <PropertyColumn Property="@(p => p.Id)" Sortable="true" />
+        <PropertyColumn Property="@(p => p.Name)" Sortable="true" />
+        <PropertyColumn Property="@(p => p.Email)" Sortable="true" />
+        <PropertyColumn Property="@(p => p.Phone)" Sortable="true" />
+    </QuickGrid>
+</div>
+
+@code {
+    [Parameter]
+    public required string TableName { get; set; }
+    private string message = "Not set";
+
+    // [Parameter]
+    // public required System.Data.Common.DbConnection DbConnection { get; set; }
+
+    protected IQueryable<Models.Customer>? customers;
+
+    // IQueryable<Customer> people = new[]
+    // {
+    //     new Customer(10895, "Jean Martin", "email1", 123),
+    //     new Customer(10944, "António Langa",  "email2", 1234),
+    //     new Customer(11203, "Julie Smith",  "email3", 12345),
+    //     new Customer(11205, "Nur Sari",  "email4", 123456),
+    //     new Customer(11898, "Jose Hernandez",  "email5", 1234567),
+    //     new Customer(12130, "Kenji Sato",  "email6", 12345678),
+    // }.AsQueryable();
+
+    protected IQueryable<T> GetTableRows<T>(string tableName)
+    {
+        var connStr = config.GetConnectionString("VoresDB");
+        using (var conn = new SqlConnection(connStr))
+        {
+            var sql = "SELECT * FROM dbo." + tableName;
+            IEnumerable<dynamic> dynRows = conn.Query(sql);
+
+            return Helpers.DynamicHelper.MapDynRows<T>(dynRows).AsQueryable();
+        }
+    }
+
+    public override async Task SetParametersAsync(ParameterView parameters)
+    {
+        await base.SetParametersAsync(parameters);
+
+        string? tableName = null;
+        if (parameters.TryGetValue<string>(nameof(TableName), out var value))
+        {
+            if (value is null)
+            {
+                message = "The value of 'TableName' is null.";
+            }
+            else
+            {
+                message = $"The value of 'TableName' is {value}.";
+                tableName = value.Trim();
+            }
+        }
+        if (tableName != null)
+        {
+            customers = GetTableRows<Models.Customer>(tableName);
+        }
+    }
+}
