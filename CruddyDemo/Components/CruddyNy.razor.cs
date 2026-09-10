@@ -158,16 +158,15 @@ namespace CruddyDemo.Components
         protected override async Task OnInitializedAsync()
         {
             FillColumnAliasDict();
-            AddColumnsToGrid();
+            AddColumnsToGrid(typeof(TEntity));
             Rows = await GetTableRowsAsync<TEntity>(DbConnection, BuildSql());
         }
 
         /// <summary>
         /// Add a simple column, using AddSimple(), for each public readable property on TEntity.
         /// </summary>
-        protected virtual void AddColumnsToGrid()
+        protected virtual void AddColumnsToGrid(Type entityType)
         {
-            var entityType = typeof(TEntity);
             var props = entityType.GetProperties(BindingFlags.Public | BindingFlags.Instance)
                 .Where(p => p.CanRead);
 
@@ -206,21 +205,21 @@ namespace CruddyDemo.Components
             var lambdaType = typeof(Func<,>).MakeGenericType(entityType, typeof(object));
             var lambda = Expression.Lambda(lambdaType, body, param);
 
-            //if (prop.PropertyType.Name == "Decimal")
-            //{ 
-            //    AddNumberColumn(prop.Name, lambda);
-            //}
-            //else
-            //{ 
-            AddSimpleColumn(colName, lambda);
-            //}
+            if (prop.PropertyType.Name == "Decimal")
+            {
+                AddNumberColumn(entityType, prop.Name);
+            }
+            else
+            {
+                AddSimpleColumn(entityType, colName, lambda);
+            }
         }
 
-        private void AddSimpleColumn(string colName, LambdaExpression lambda)
+        private void AddSimpleColumn(Type entityType, string colName, LambdaExpression lambda)
         {
             // ColumnManager has generic AddSimple expecting Expression<Func<TEntity, TValue?>>; use object as TValue
             var addSimpleMethod = typeof(ColumnManager<TEntity>).GetMethods()
-                .FirstOrDefault(m => m.Name == "AddSimple" && m.GetParameters().Length >= 1 && m.GetParameters()[0].ParameterType.Name.StartsWith("Expression"));
+                .FirstOrDefault(m => m.Name == "AddSimple" && m.GetParameters()[0].ParameterType.Name.StartsWith("Expression"));
 
             if (addSimpleMethod != null)
             {
@@ -231,6 +230,8 @@ namespace CruddyDemo.Components
 
                     // TODO: Set ColumnInfo title, fullName and class
                     var columnInfo = new ColumnInfo(colName, colName, null);
+
+                    //ColumnManager.AddSimple(lambda, columnInfo, null, Align.Left, null, null, true, null);
                     genericMethod.Invoke(ColumnManager, [lambda, columnInfo, null, Align.Left, null, null, true, null]);
                 }
                 catch
@@ -241,22 +242,41 @@ namespace CruddyDemo.Components
             }
         }
 
-
-        //public DynamicColumn<TGridItem> AddSimple<TValue>(Expression<Func<TGridItem, TValue?>> expression, ColumnInfo columnInfo,                          string? format = null,                       Align align = Align.Left, CellStyleMap<TValue>? cellStyle = null, GridSort<TGridItem>? sortBy = null, bool visible = true, string? propertyName = null)
         //public DynamicColumn<TGridItem> AddNumber(Expression<Func<TGridItem, decimal?>>        expression, string? title = null, string? fullTitle = null, string format = "N0", string? @class = null, Align align = Align.Right, bool visible = true, string? propertyName = null, bool? calculateTotal = null)
         //public DynamicColumn<TGridItem> AddNumber(Expression<Func<TGridItem, double?>>         expression, string? title = null, string? fullTitle = null, string format = "N0", string? @class = null, Align align = Align.Right, bool visible = true, string? propertyName = null, bool? calculateTotal = null)
 
-        private void AddNumberColumn(string propName, LambdaExpression lambda)
+        private void AddNumberColumn(Type entityType, string propName)
         {
             var addSimpleMethod = typeof(ColumnManager<TEntity>).GetMethods()
-                .FirstOrDefault(m => m.Name == "AddNumber" && m.GetParameters().Length >= 1 && m.GetParameters()[0].ParameterType.Name.StartsWith("Expression"));
+                .FirstOrDefault(m => m.Name == "AddNumber" && m.GetParameters()[0].ParameterType.Name.StartsWith("Expression"));
 
             if (addSimpleMethod != null)
             {
-                var genericMethod = addSimpleMethod.MakeGenericMethod(typeof(object));
+                //var genericMethod = addSimpleMethod
                 try
                 {
-                    genericMethod.Invoke(ColumnManager, [lambda, propName, propName, "N0", null, Align.Right, true, null, null]);
+                    var param = Expression.Parameter(entityType, "p");
+                    var access = Expression.PropertyOrField(param, propName);
+
+                    // find the method as you already do: addSimpleMethod
+                    var firstParamType = addSimpleMethod.GetParameters()[0].ParameterType; // Expression<TDelegate>
+                    var lambdaType = firstParamType.GetGenericArguments()[0];          // TDelegate (e.g. Func<Customer, Nullable<decimal>>)
+                    var returnType = lambdaType.GetMethod("Invoke").ReturnType;        // Nullable<decimal> (or decimal/other)
+
+                    // convert access to the expected return type if needed
+                    Expression body = access;
+                    if (access.Type != returnType)
+                    {
+                        body = Expression.Convert(access, returnType);
+                    }
+
+                    // create a strongly-typed lambda matching the overload
+                    var lambda = Expression.Lambda(lambdaType, body, param);
+
+                    addSimpleMethod.Invoke(ColumnManager, [lambda, propName, propName, "0.00", null, Align.Left, true, null, null]);
+
+                    //ColumnManager.AddNumber(lambda, propName, propName, "N0", null, Align.Right, true, null, null);
+                    //addSimpleMethod.Invoke(ColumnManager, [            lambda, propName, propName, "N0", null, Align.Right, true, null, null]);
                 }
                 catch
                 {

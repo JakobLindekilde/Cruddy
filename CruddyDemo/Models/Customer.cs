@@ -25,7 +25,5 @@
 
         public Decimal Salary { get; set; }
 
-        public required string Child { get; set; }
-
     }
 }
