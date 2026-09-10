@@ -3,7 +3,8 @@
 
 <h3>Tabel Customers</h3>
 
-<CruddyNy TEntity="Models.Customer" TableName="Customers" TableColumns="Id, Name, Email, Phone" DbConnection="dbConnection" />
+@* <CruddyNy TEntity="Models.Customer" TableName="Customers" TableColumns="Id, Phone, Name AS Navn, Email, Birthdate, Salary" DbConnection="dbConnection" /> *@
+<CruddyNy TEntity="Models.Customer" TableName="Customers" TableColumns="*" DbConnection="dbConnection" />
 
 @code {
 

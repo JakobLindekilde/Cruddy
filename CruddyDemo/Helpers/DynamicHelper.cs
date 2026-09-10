@@ -1,6 +1,4 @@
-﻿using System.Reflection;
-
-namespace CruddyDemo.Helpers
+﻿namespace CruddyDemo.Helpers
 {
     /// <summary>
     /// This class is intended to provide helper methods for the dynamic type.
@@ -66,9 +64,9 @@ namespace CruddyDemo.Helpers
         /// </summary>
         public static void FillDictPropNames(Dictionary<string, object?> sourceDict, dynamic dyn)
         {
-            if (dyn is IDictionary<string, object> kv)
+            if (dyn is IDictionary<string, object> dict)
             {
-                foreach (var pair in kv)
+                foreach (var pair in dict)
                 {
                     sourceDict[pair.Key] = pair.Value;
                 }

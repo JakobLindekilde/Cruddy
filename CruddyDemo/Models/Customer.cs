@@ -12,8 +12,17 @@
         public Customer() { }
 
         public int Id { get; set; }
+        
         public required string Name { get; set; }
+
+        public required string Navn { get; set; }
+
         public required string Email { get; set; }
+        
         public int Phone { get; set; }
+
+        public DateTime Birthdate { get; set; }
+
+        public Decimal Salary { get; set; }
     }
 }

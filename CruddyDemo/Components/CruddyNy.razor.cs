@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Components.QuickGrid;
 using QuickGrid.Toolkit;
 using QuickGrid.Toolkit.Columns;
 using System.Data.Common;
+using System.Linq.Expressions;
+using System.Reflection;
 
 namespace CruddyDemo.Components
 {
@@ -93,26 +95,23 @@ namespace CruddyDemo.Components
 
         public bool IsInitialized { get; set; }
 
-        List<string>? Columnslist = null;
 
-        protected virtual bool InTableColumns(string columnName)
+        readonly Dictionary<string, string> ColumnAliasDict = new(StringComparer.OrdinalIgnoreCase);
+
+        protected void FillColumnAliasDict()
         {
-            if (string.IsNullOrEmpty(TableColumns))
+            var columns = TableColumns.Split(',').Select(c => c.Trim());
+            foreach (var column in columns)
             {
-                return false;
-            }
+                var parts = column.Split([" AS "], StringSplitOptions.RemoveEmptyEntries);
 
-            if (TableColumns == "*")
-            {
-                return true;
-            }
+                if (parts.Length == 2 && parts[1].Contains('['))
+                {
+                    parts[1] = parts[1].Replace("[", "").Replace("]", "");
+                }
 
-            if (Columnslist == null)
-            {
-                Columnslist = TableColumns.Split(',').Select(c => c.Trim().ToLower()).ToList();
+                ColumnAliasDict.Add(parts[0].Trim(), parts.Length == 2 ? parts[1].Trim() : parts[0].Trim());
             }
-
-            return Columnslist!.Contains(columnName.ToLower());
         }
 
         /// <summary>
@@ -162,6 +161,7 @@ namespace CruddyDemo.Components
             if (!IsInitialized)
             {
                 IsInitialized = true;
+                FillColumnAliasDict();
                 await FillRowsAsync();
                 AddColumnsToGrid();
             }
@@ -173,8 +173,7 @@ namespace CruddyDemo.Components
         /// </summary>
         protected virtual async Task FillRowsAsync()
         {
-            var sql = BuildSql();
-            Rows = await GetTableRowsAsync<TEntity>(DbConnection, sql);
+            Rows = await GetTableRowsAsync<TEntity>(DbConnection, BuildSql());
         }
 
         /// <summary>
@@ -183,47 +182,89 @@ namespace CruddyDemo.Components
         protected virtual void AddColumnsToGrid()
         {
             var entityType = typeof(TEntity);
-            var props = entityType.GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance)
+            var props = entityType.GetProperties(BindingFlags.Public | BindingFlags.Instance)
                 .Where(p => p.CanRead);
 
             foreach (var prop in props)
             {
-                var param = System.Linq.Expressions.Expression.Parameter(entityType, "p");
-                var access = System.Linq.Expressions.Expression.PropertyOrField(param, prop.Name);
-
-                System.Linq.Expressions.Expression body = access;
-                // If value type, box to object
-                if (prop.PropertyType.IsValueType)
+                if (TableColumns == "*" || ColumnAliasDict.ContainsValue(prop.Name))
                 {
-                    body = System.Linq.Expressions.Expression.Convert(access, typeof(object));
+                    AddColumn(prop, entityType);
                 }
+            }
+        }
 
-                var lambdaType = typeof(Func<,>).MakeGenericType(entityType, typeof(object));
-                var lambda = System.Linq.Expressions.Expression.Lambda(lambdaType, body, param);
+        protected virtual void AddColumn(PropertyInfo prop, Type entityType)
+        {
+            var param = Expression.Parameter(entityType, "p");
+            var access = Expression.PropertyOrField(param, prop.Name);
 
-                // ColumnManager has generic AddSimple expecting Expression<Func<TEntity, TValue?>>; use object as TValue
-                var addSimpleMethod = typeof(ColumnManager<TEntity>).GetMethods()
-                    .FirstOrDefault(m => m.Name == "AddSimple" && m.GetParameters().Length >= 1 && m.GetParameters()[0].ParameterType.Name.StartsWith("Expression"));
+            Expression body = access;
+            // If value type, box to object
+            if (prop.PropertyType.IsValueType)
+            {
+                body = Expression.Convert(access, typeof(object));
+            }
 
-                if (addSimpleMethod != null)
+            var lambdaType = typeof(Func<,>).MakeGenericType(entityType, typeof(object));
+            var lambda = Expression.Lambda(lambdaType, body, param);
+
+            //if (prop.PropertyType.Name == "Decimal")
+            //{ 
+            //    AddNumberColumn(prop, lambda);
+            //}
+            //else
+            //{ 
+               AddSimpleColumn(prop, lambda);
+            //}
+        }
+
+        private void AddSimpleColumn(PropertyInfo prop, LambdaExpression lambda)
+        {
+            // ColumnManager has generic AddSimple expecting Expression<Func<TEntity, TValue?>>; use object as TValue
+            var addSimpleMethod = typeof(ColumnManager<TEntity>).GetMethods()
+                .FirstOrDefault(m => m.Name == "AddSimple" && m.GetParameters().Length >= 1 && m.GetParameters()[0].ParameterType.Name.StartsWith("Expression"));
+
+            if (addSimpleMethod != null)
+            {
+                var genericMethod = addSimpleMethod.MakeGenericMethod(typeof(object));
+                try
                 {
-                    var genericMethod = addSimpleMethod.MakeGenericMethod(typeof(object));
-                    try
-                    {
-                        if (InTableColumns(prop.Name))
-                        {
-                            // TODO: Add in the order of the columns in TableColumns, not in the order of the properties in TEntity.
+                    // TODO: Add in the order of the columns in TableColumns, not in the order of the properties in TEntity.
 
-                            // TODO: Set ColumnInfo title, fullName and class
-                            var columnInfo = new ColumnInfo(prop.Name, prop.Name, null);                          
-                            genericMethod.Invoke(ColumnManager, [lambda, columnInfo, null, Align.Left, null, null, true, null]);
-                        }
-                    }
-                    catch
-                    {
-                        // ignore any failures adding a specific column
-                        // TODO: What should we do here? Log the error? Show a message in the UI?
-                    }
+                    // TODO: Set ColumnInfo title, fullName and class
+                    var columnInfo = new ColumnInfo(prop.Name, prop.Name, null);
+                    genericMethod.Invoke(ColumnManager, [lambda, columnInfo, null, Align.Left, null, null, true, null]);
+                }
+                catch
+                {
+                    // ignore any failures adding a specific column
+                    // TODO: What should we do here? Log the error? Show a message in the UI?
+                }
+            }
+        }
+
+
+        //public DynamicColumn<TGridItem> AddSimple<TValue>(Expression<Func<TGridItem, TValue?>> expression, ColumnInfo columnInfo,                          string? format = null,                       Align align = Align.Left, CellStyleMap<TValue>? cellStyle = null, GridSort<TGridItem>? sortBy = null, bool visible = true, string? propertyName = null)
+        //public DynamicColumn<TGridItem> AddNumber(Expression<Func<TGridItem, decimal?>>        expression, string? title = null, string? fullTitle = null, string format = "N0", string? @class = null, Align align = Align.Right, bool visible = true, string? propertyName = null, bool? calculateTotal = null)
+        //public DynamicColumn<TGridItem> AddNumber(Expression<Func<TGridItem, double?>>         expression, string? title = null, string? fullTitle = null, string format = "N0", string? @class = null, Align align = Align.Right, bool visible = true, string? propertyName = null, bool? calculateTotal = null)
+
+        private void AddNumberColumn(PropertyInfo prop, LambdaExpression lambda)
+        {
+            var addSimpleMethod = typeof(ColumnManager<TEntity>).GetMethods()
+                .FirstOrDefault(m => m.Name == "AddNumber" && m.GetParameters().Length >= 1 && m.GetParameters()[0].ParameterType.Name.StartsWith("Expression"));
+
+            if (addSimpleMethod != null)
+            {
+                var genericMethod = addSimpleMethod.MakeGenericMethod(typeof(object));
+                try
+                {
+                    genericMethod.Invoke(ColumnManager, [lambda, prop.Name, prop.Name, "N0", null, Align.Right, true, null, null]);
+                }
+                catch
+                {
+                    // ignore any failures adding a specific column
+                    // TODO: What should we do here? Log the error? Show a message in the UI?
                 }
             }
         }
