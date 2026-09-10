@@ -18,7 +18,9 @@
         public required string Navn { get; set; }
 
         public required string Email { get; set; }
-        
+
+        public bool Vip { get; set; }
+
         public int Phone { get; set; }
 
         public DateTime Birthdate { get; set; }

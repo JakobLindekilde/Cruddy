@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.QuickGrid;
 using QuickGrid.Toolkit;
 using QuickGrid.Toolkit.Columns;
+using QuickGrid.Toolkit.Core;
 using System.Data.Common;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -12,7 +13,7 @@ namespace CruddyDemo.Components
     /// <summary>
     /// Base class for simple CRUD operations in a blazor component.
     /// </summary>
-    public partial class CruddyNy<TEntity>
+    public partial class Cruddy<TEntity>   // Tip: public partial class CruddyNy<T> : ComponentBase
     {
         /// <summary>
         /// Name of database table to 'CRUD'.
@@ -158,15 +159,16 @@ namespace CruddyDemo.Components
         protected override async Task OnInitializedAsync()
         {
             FillColumnAliasDict();
-            AddColumnsToGrid(typeof(TEntity));
+            AddColumnsToGrid();
             Rows = await GetTableRowsAsync<TEntity>(DbConnection, BuildSql());
         }
 
         /// <summary>
         /// Add a simple column, using AddSimple(), for each public readable property on TEntity.
         /// </summary>
-        protected virtual void AddColumnsToGrid(Type entityType)
+        protected virtual void AddColumnsToGrid()
         {
+            Type entityType = typeof(TEntity);
             var props = entityType.GetProperties(BindingFlags.Public | BindingFlags.Instance)
                 .Where(p => p.CanRead);
 
@@ -174,7 +176,7 @@ namespace CruddyDemo.Components
             {
                 foreach (var prop in props)
                 {
-                    AddColumn(prop.Name, prop, entityType);
+                    AddColumn(prop.Name, prop);
                 }
             }
             else
@@ -184,84 +186,59 @@ namespace CruddyDemo.Components
                     var prop = props.FirstOrDefault(p => p.Name.Equals(col.Value, StringComparison.OrdinalIgnoreCase));
                     if (prop != null)
                     {
-                        AddColumn(prop.Name, prop, entityType);
+                        AddColumn(prop.Name, prop);
                     }
                 }
             }
         }
 
-        protected virtual void AddColumn(string colName, PropertyInfo prop, Type entityType)
+
+        public static bool IsNumber(string typeName)
         {
-            var param = Expression.Parameter(entityType, "p");
-            var access = Expression.PropertyOrField(param, colName);
+            return typeName == "Decimal" || typeName == "Int32" || typeName == "Double" || typeName == "Single" || typeName == "Int64" || typeName == "UInt32" || typeName == "UInt64";
+        }
 
-            Expression body = access;
-            // If value type, box to object
-            if (prop.PropertyType.IsValueType)
+        protected virtual void AddColumn(string colName, PropertyInfo prop)
+        {
+            if (IsNumber(prop.PropertyType.Name))
             {
-                body = Expression.Convert(access, typeof(object));
+                AddNumberColumn(prop, prop.Name);
             }
-
-            var lambdaType = typeof(Func<,>).MakeGenericType(entityType, typeof(object));
-            var lambda = Expression.Lambda(lambdaType, body, param);
-
-            if (prop.PropertyType.Name == "Decimal")
+            else if (prop.PropertyType.Name == "DateTime")
             {
-                AddNumberColumn(entityType, prop.Name);
+                AddSimpleDateColumn(prop, prop.Name);
             }
             else
             {
-                AddSimpleColumn(entityType, colName, lambda);
-            }
-        }
-
-        private void AddSimpleColumn(Type entityType, string colName, LambdaExpression lambda)
-        {
-            // ColumnManager has generic AddSimple expecting Expression<Func<TEntity, TValue?>>; use object as TValue
-            var addSimpleMethod = typeof(ColumnManager<TEntity>).GetMethods()
-                .FirstOrDefault(m => m.Name == "AddSimple" && m.GetParameters()[0].ParameterType.Name.StartsWith("Expression"));
-
-            if (addSimpleMethod != null)
-            {
-                var genericMethod = addSimpleMethod.MakeGenericMethod(typeof(object));
-                try
-                {
-                    // TODO: Add in the order of the columns in TableColumns, not in the order of the properties in TEntity.
-
-                    // TODO: Set ColumnInfo title, fullName and class
-                    var columnInfo = new ColumnInfo(colName, colName, null);
-
-                    //ColumnManager.AddSimple(lambda, columnInfo, null, Align.Left, null, null, true, null);
-                    genericMethod.Invoke(ColumnManager, [lambda, columnInfo, null, Align.Left, null, null, true, null]);
-                }
-                catch
-                {
-                    // ignore any failures adding a specific column
-                    // TODO: What should we do here? Log the error? Show a message in the UI?
-                }
+                AddSimpleColumn(prop, colName);
             }
         }
 
         //public DynamicColumn<TGridItem> AddNumber(Expression<Func<TGridItem, decimal?>>        expression, string? title = null, string? fullTitle = null, string format = "N0", string? @class = null, Align align = Align.Right, bool visible = true, string? propertyName = null, bool? calculateTotal = null)
         //public DynamicColumn<TGridItem> AddNumber(Expression<Func<TGridItem, double?>>         expression, string? title = null, string? fullTitle = null, string format = "N0", string? @class = null, Align align = Align.Right, bool visible = true, string? propertyName = null, bool? calculateTotal = null)
+        //public DynamicColumn<TGridItem> AddSimpleDate<TValue>(Expression<Func<TGridItem, TValue?>> expression, string? title = null, string? fullTitle = null, string? format = "dd/MM/yyyy", string? @class = null, Align align = Align.Center, CellStyleMap<TValue>? cellStyle = null, bool visible = true)
+        //public DynamicColumn<TGridItem> AddSimple    <TValue>(Expression<Func<TGridItem, TValue?>> expression, ColumnInfo columnInfo, string? format = null, Align align = Align.Left, CellStyleMap<TValue>? cellStyle = null, GridSort<TGridItem>? sortBy = null,  bool visible = true, string? propertyName = null)
 
-        private void AddNumberColumn(Type entityType, string propName)
+        private void AddSimpleColumn(PropertyInfo prop, string title)
         {
-            var addSimpleMethod = typeof(ColumnManager<TEntity>).GetMethods()
-                .FirstOrDefault(m => m.Name == "AddNumber" && m.GetParameters()[0].ParameterType.Name.StartsWith("Expression"));
+            // TODO: Make sure to get the correct overload of AddSimple(). Count the parameters!
+            var method = typeof(ColumnManager<TEntity>).GetMethods()
+                .FirstOrDefault(m => m.Name == "AddSimple" && m.GetParameters()[0].ParameterType.Name.StartsWith("Expression"));
 
-            if (addSimpleMethod != null)
+            if (method != null)
             {
-                //var genericMethod = addSimpleMethod
+                // AddSimple is a generic method, so we need to make it generic with the correct type argument. In this case,
+                // we can use object as the type argument, since we don't know the actual type of the property at compile time.
+                var genericMethod = method.MakeGenericMethod(typeof(object));
+
                 try
                 {
+                    Type entityType = typeof(TEntity);
                     var param = Expression.Parameter(entityType, "p");
-                    var access = Expression.PropertyOrField(param, propName);
+                    var access = Expression.PropertyOrField(param, title);
 
-                    // find the method as you already do: addSimpleMethod
-                    var firstParamType = addSimpleMethod.GetParameters()[0].ParameterType; // Expression<TDelegate>
-                    var lambdaType = firstParamType.GetGenericArguments()[0];          // TDelegate (e.g. Func<Customer, Nullable<decimal>>)
-                    var returnType = lambdaType.GetMethod("Invoke").ReturnType;        // Nullable<decimal> (or decimal/other)
+                    var delegateType = typeof(Func<,>).MakeGenericType(entityType, typeof(object));
+                    var returnType = delegateType.GetMethod("Invoke").ReturnType;   // Nullable<decimal> (or decimal/other)
 
                     // convert access to the expected return type if needed
                     Expression body = access;
@@ -271,12 +248,93 @@ namespace CruddyDemo.Components
                     }
 
                     // create a strongly-typed lambda matching the overload
-                    var lambda = Expression.Lambda(lambdaType, body, param);
+                    var lambda = Expression.Lambda(delegateType, body, param);
 
-                    addSimpleMethod.Invoke(ColumnManager, [lambda, propName, propName, "0.00", null, Align.Left, true, null, null]);
+                    var columnInfo = new ColumnInfo(title, title, null);
+                    genericMethod.Invoke(ColumnManager, [lambda, columnInfo, null, Align.Left, null, null, true, null]);
+                    //ColumnManager.AddSimple(           lambda, columnInfo, null, Align.Left, null, null, true, null);
+                }
+                catch
+                {
+                    // ignore any failures adding a specific column
+                    // TODO: What should we do here? Log the error? Show a message in the UI?
+                }
+            }
+        }
 
-                    //ColumnManager.AddNumber(lambda, propName, propName, "N0", null, Align.Right, true, null, null);
-                    //addSimpleMethod.Invoke(ColumnManager, [            lambda, propName, propName, "N0", null, Align.Right, true, null, null]);
+        private void AddNumberColumn(PropertyInfo prop, string title)
+        {
+            var method = typeof(ColumnManager<TEntity>).GetMethods()
+                .FirstOrDefault(m => m.Name == "AddNumber" && m.GetParameters()[0].ParameterType.Name.StartsWith("Expression"));
+
+            if (method != null)
+            {
+                try
+                {
+                    Type entityType = typeof(TEntity);
+                    var param = Expression.Parameter(entityType, "p");
+                    var access = Expression.PropertyOrField(param, title);
+
+                    var firstParamType = method.GetParameters()[0].ParameterType; // Expression<TDelegate>
+                    var delegateType = firstParamType.GetGenericArguments()[0];          // TDelegate (e.g. Func<Customer, Nullable<decimal>>)
+                    var returnType = delegateType.GetMethod("Invoke").ReturnType;        // Nullable<decimal> (or decimal/other)
+
+                    // convert access to the expected return type if needed
+                    Expression body = access;
+                    if (access.Type != returnType)
+                    {
+                        body = Expression.Convert(access, returnType);
+                    }
+
+                    // create a strongly-typed lambda matching the overload
+                    var lambda = Expression.Lambda(delegateType, body, param);
+
+                    var format = prop.PropertyType.Name == "Decimal" ? "0.00" : "0";
+                    method.Invoke(ColumnManager, [lambda, title, title, format, null, Align.Left, true, null, null]);
+                    //ColumnManager.AddNumber(    lambda, title, title, format, null, Align.Left, true, null, null);
+                }
+                catch
+                {
+                    // ignore any failures adding a specific column
+                    // TODO: What should we do here? Log the error? Show a message in the UI?
+                }
+            }
+        }
+
+        private void AddSimpleDateColumn(PropertyInfo prop, string title)
+        {
+            var method = typeof(ColumnManager<TEntity>).GetMethods()
+                .FirstOrDefault(m => m.Name == "AddSimpleDate" && m.GetParameters()[0].ParameterType.Name.StartsWith("Expression"));
+
+            if (method != null)
+            {
+                // AddSimpleDate is a generic method, so we need to make it generic with the correct type argument. In this case,
+                // we can use object as the type argument, since we don't know the actual type of the property at compile time.
+                var genericMethod = method.MakeGenericMethod(typeof(object));
+
+                try
+                {
+                    Type entityType = typeof(TEntity);
+                    var param = Expression.Parameter(entityType, "p");
+                    var access = Expression.PropertyOrField(param, title);
+
+                    // find the method as you already do: addSimpleMethod
+                    var delegateType = typeof(Func<,>).MakeGenericType(entityType, typeof(object));
+                    var returnType = delegateType.GetMethod("Invoke").ReturnType;   // Nullable<decimal> (or decimal/other)
+
+                    // convert access to the expected return type if needed
+                    Expression body = access;
+                    if (access.Type != returnType)
+                    {
+                        body = Expression.Convert(access, returnType);
+                    }
+
+                    // create a strongly-typed lambda matching the overload
+                    var lambda = Expression.Lambda(delegateType, body, param);
+
+                    var format = "dd/MM/yyyy";
+                    genericMethod.Invoke(ColumnManager, [lambda, title, title, format, null, Align.Left, null, true]);
+                    //ColumnManager.AddSimpleDate(       lambda, title, title, format, null, Align.Left, null, true);
                 }
                 catch
                 {
