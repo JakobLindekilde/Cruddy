@@ -93,8 +93,6 @@ namespace CruddyDemo.Components
         /// </summary>
         protected IQueryable<TEntity>? Rows;
 
-        public bool IsInitialized { get; set; }
-
 
         readonly Dictionary<string, string> ColumnAliasDict = new(StringComparer.OrdinalIgnoreCase);
 
@@ -107,10 +105,14 @@ namespace CruddyDemo.Components
 
                 if (parts.Length == 2 && parts[1].Contains('['))
                 {
-                    parts[1] = parts[1].Replace("[", "").Replace("]", "");
+                    parts[1] = parts[1].Replace("[", "").Replace("]", "").Trim();
                 }
 
-                ColumnAliasDict.Add(parts[0].Trim(), parts.Length == 2 ? parts[1].Trim() : parts[0].Trim());
+                var key = parts[0].Trim();
+                if (!ColumnAliasDict.ContainsKey(key))
+                {
+                    ColumnAliasDict.Add(key, parts.Length == 2 ? parts[1] : key);
+                }
             }
         }
 
@@ -150,29 +152,13 @@ namespace CruddyDemo.Components
         }
 
         /// <summary>
-        /// Calls first base.OnInitializedAsync() then FillRowsAsync() and AddColumnsToGrid() last.
+        /// During component initialization, this method fills <see cref="ColumnAliasDict"/>, 
+        /// adds columns to the grid and retrieves the rows from the database.
         /// </summary>
         protected override async Task OnInitializedAsync()
         {
-            // TODO: Why is OnInitializedAsync called twice? Should be called only once, but it is called twice. This is a bug in Blazor?
-            // Should we NOT call base.OnInitializedAsync()?
-            await base.OnInitializedAsync();
-
-            if (!IsInitialized)
-            {
-                IsInitialized = true;
-                FillColumnAliasDict();
-                await FillRowsAsync();
-                AddColumnsToGrid();
-            }
-        }
-
-        /// <summary>
-        /// This method uses <seealso cref="GetTableRowsAsync{T1}"/> to retrieve the rows 
-        /// from the database and maps them to a list of <typeparamref name="T"/>.
-        /// </summary>
-        protected virtual async Task FillRowsAsync()
-        {
+            FillColumnAliasDict();
+            AddColumnsToGrid();
             Rows = await GetTableRowsAsync<TEntity>(DbConnection, BuildSql());
         }
 
@@ -185,19 +171,30 @@ namespace CruddyDemo.Components
             var props = entityType.GetProperties(BindingFlags.Public | BindingFlags.Instance)
                 .Where(p => p.CanRead);
 
-            foreach (var prop in props)
+            if (TableColumns == "*")
             {
-                if (TableColumns == "*" || ColumnAliasDict.ContainsValue(prop.Name))
+                foreach (var prop in props)
                 {
-                    AddColumn(prop, entityType);
+                    AddColumn(prop.Name, prop, entityType);
+                }
+            }
+            else
+            {
+                foreach (var col in ColumnAliasDict)
+                {
+                    var prop = props.FirstOrDefault(p => p.Name.Equals(col.Value, StringComparison.OrdinalIgnoreCase));
+                    if (prop != null)
+                    {
+                        AddColumn(prop.Name, prop, entityType);
+                    }
                 }
             }
         }
 
-        protected virtual void AddColumn(PropertyInfo prop, Type entityType)
+        protected virtual void AddColumn(string colName, PropertyInfo prop, Type entityType)
         {
             var param = Expression.Parameter(entityType, "p");
-            var access = Expression.PropertyOrField(param, prop.Name);
+            var access = Expression.PropertyOrField(param, colName);
 
             Expression body = access;
             // If value type, box to object
@@ -211,15 +208,15 @@ namespace CruddyDemo.Components
 
             //if (prop.PropertyType.Name == "Decimal")
             //{ 
-            //    AddNumberColumn(prop, lambda);
+            //    AddNumberColumn(prop.Name, lambda);
             //}
             //else
             //{ 
-               AddSimpleColumn(prop, lambda);
+            AddSimpleColumn(colName, lambda);
             //}
         }
 
-        private void AddSimpleColumn(PropertyInfo prop, LambdaExpression lambda)
+        private void AddSimpleColumn(string colName, LambdaExpression lambda)
         {
             // ColumnManager has generic AddSimple expecting Expression<Func<TEntity, TValue?>>; use object as TValue
             var addSimpleMethod = typeof(ColumnManager<TEntity>).GetMethods()
@@ -233,7 +230,7 @@ namespace CruddyDemo.Components
                     // TODO: Add in the order of the columns in TableColumns, not in the order of the properties in TEntity.
 
                     // TODO: Set ColumnInfo title, fullName and class
-                    var columnInfo = new ColumnInfo(prop.Name, prop.Name, null);
+                    var columnInfo = new ColumnInfo(colName, colName, null);
                     genericMethod.Invoke(ColumnManager, [lambda, columnInfo, null, Align.Left, null, null, true, null]);
                 }
                 catch
@@ -249,7 +246,7 @@ namespace CruddyDemo.Components
         //public DynamicColumn<TGridItem> AddNumber(Expression<Func<TGridItem, decimal?>>        expression, string? title = null, string? fullTitle = null, string format = "N0", string? @class = null, Align align = Align.Right, bool visible = true, string? propertyName = null, bool? calculateTotal = null)
         //public DynamicColumn<TGridItem> AddNumber(Expression<Func<TGridItem, double?>>         expression, string? title = null, string? fullTitle = null, string format = "N0", string? @class = null, Align align = Align.Right, bool visible = true, string? propertyName = null, bool? calculateTotal = null)
 
-        private void AddNumberColumn(PropertyInfo prop, LambdaExpression lambda)
+        private void AddNumberColumn(string propName, LambdaExpression lambda)
         {
             var addSimpleMethod = typeof(ColumnManager<TEntity>).GetMethods()
                 .FirstOrDefault(m => m.Name == "AddNumber" && m.GetParameters().Length >= 1 && m.GetParameters()[0].ParameterType.Name.StartsWith("Expression"));
@@ -259,7 +256,7 @@ namespace CruddyDemo.Components
                 var genericMethod = addSimpleMethod.MakeGenericMethod(typeof(object));
                 try
                 {
-                    genericMethod.Invoke(ColumnManager, [lambda, prop.Name, prop.Name, "N0", null, Align.Right, true, null, null]);
+                    genericMethod.Invoke(ColumnManager, [lambda, propName, propName, "N0", null, Align.Right, true, null, null]);
                 }
                 catch
                 {
