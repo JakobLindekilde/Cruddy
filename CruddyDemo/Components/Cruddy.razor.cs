@@ -100,7 +100,7 @@ namespace CruddyDemo.Components
         /// <summary>
         /// The rows retrieved from the database table in <seealso cref="TableName"/>.
         /// </summary>
-        protected IQueryable<TEntity>? Rows;
+        protected List<TEntity>? Rows;
 
 
         readonly Dictionary<string, string> ColumnAliasDict = new(StringComparer.OrdinalIgnoreCase);
@@ -182,7 +182,7 @@ namespace CruddyDemo.Components
         {
             FillColumnAliasDict();
             AddColumnsToGrid();
-            Rows = await GetTableRowsAsync<TEntity>(DbConnection, BuildSql());
+            Rows = GetTableRows<TEntity>(DbConnection, BuildSql());
         }
 
         /// <summary>
@@ -369,16 +369,17 @@ namespace CruddyDemo.Components
         }
 
         /// <summary>
-        /// Gets rows from the database table in <seealso cref="TableName"/> and maps them to a list of <typeparamref name="T1"/>.
+        /// Gets rows from the database table in <seealso cref="TableName"/> or <seealso cref="Select"/>
+        /// and maps them to a list of <typeparamref name="T1"/>.
         /// </summary>
         /// <typeparam name="T1"></typeparam>
         /// <param name="DbConnection">A database connection e.g an SqlConnection (for MS SQL Server)/param>
         /// <param name="tableName">The rows retrieved from this database table.</param>
         /// <param name="cols">The columns to retrieve.</param>
-        static public async Task<IQueryable<T>> GetTableRowsAsync<T>(DbConnection DbConnection, string sql)
+        static public List<T> GetTableRows<T>(DbConnection DbConnection, string sql)
         {
-            IEnumerable<dynamic> dynRows = await DbConnection.QueryAsync(sql);
-            return Helpers.DynamicMapper.MapCollection<T>(dynRows).AsQueryable();
+            IEnumerable<dynamic> dynRows = DbConnection.Query(sql);
+            return Helpers.DynamicMapper.MapCollection<T>(dynRows).ToList();
         }
 
     }

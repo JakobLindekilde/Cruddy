@@ -17,7 +17,7 @@ else if (!Rows.Any())
 }
 else
 {
-    <QuickGrid @ref="MyGrid" id="@this.GetHashCode()" Items="@Rows" Class="table table-sm table-index table-striped small table-fit table-thead-sticky mb-0" Theme="twentyAI">
+    <QuickGrid @ref="MyGrid" id="@this.GetHashCode()" Items="@Rows.AsQueryable()" Class="table table-sm table-index table-striped small table-fit table-thead-sticky mb-0" Theme="twentyAI">
         @QuickGridColumns.Columns(ColumnManager)
     </QuickGrid>
 }
