@@ -1,0 +1,10 @@
+﻿@page "/Products"
+@inject Microsoft.Data.SqlClient.SqlConnection dbConnection
+
+<h3>Tabel Products - Distinct</h3>
+
+<Cruddy TEntity="Models.Product" TableName="Products" TableColumns="Name" OrderBy="Name" Distinct="true" DbConnection="dbConnection" />
+
+@code {
+
+}

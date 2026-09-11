@@ -1,0 +1,10 @@
+﻿@page "/Customers"
+@inject Microsoft.Data.SqlClient.SqlConnection dbConnection
+
+<h3>Tabel Customers - Kolonne orden</h3>
+
+<Cruddy TEntity="Models.Customer" TableName="Customers" TableColumns="Id, Vip, Name, Email, Birthdate, Email, Phone" DbConnection="dbConnection" />
+
+@code {
+
+}

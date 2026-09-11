@@ -160,7 +160,9 @@ namespace CruddyDemo.Components
             {
                 sql += $" ORDER BY {OrderBy}";
 
-                if (SortOrder != SortOrder.None)
+
+                if (!sql.EndsWith(" ASC", StringComparison.InvariantCultureIgnoreCase) && 
+                    !sql.EndsWith(" DESC", StringComparison.InvariantCultureIgnoreCase) && SortOrder != SortOrder.None)
                 {
                     sql += $" {(SortOrder == SortOrder.Ascending ? "ASC" : "DESC")}";
                 }

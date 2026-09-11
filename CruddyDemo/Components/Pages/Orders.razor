@@ -1,0 +1,14 @@
+﻿@page "/Orders"
+@inject Microsoft.Data.SqlClient.SqlConnection dbConnection
+
+<h3>Tabel Orders - håndlavet SQL</h3>
+
+<Cruddy TEntity="Models.OrderExt" TableName="Orders" TableColumns="Id, CustomerName, ProductName, Qty, Paid, OrderDate" Select=@sql DbConnection="dbConnection" />
+
+@code {
+    string sql = @"
+        SELECT o.Id, c.Name AS CustomerName, p.Name AS ProductName, Pid, o.Qty, o.Paid, o.OrderDate FROM Orders o
+        INNER JOIN Customers c ON c.Id = o.Cid
+        INNER JOIN Products p ON p.Id = o.PId
+";
+}

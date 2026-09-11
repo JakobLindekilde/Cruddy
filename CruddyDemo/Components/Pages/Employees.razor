@@ -1,0 +1,10 @@
+﻿@page "/Employees"
+@inject Microsoft.Data.SqlClient.SqlConnection dbConnection
+
+<h3>Tabel Employee - Salary > 45000</h3>
+
+<Cruddy TEntity="Models.Employee" TableName="Employees" TableColumns="Id, Name, Salary" Where="Salary > 45000" OrderBy="Salary DESC" DbConnection="dbConnection" />
+
+@code {
+
+}

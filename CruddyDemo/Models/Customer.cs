@@ -1,29 +1,29 @@
-﻿namespace CruddyDemo.Models
+﻿using System.ComponentModel;
+
+namespace CruddyDemo.Models;
+
+//public record Customer(int Id, string Name, string Email, int Phone)
+//{
+//    // TODO: Does Dapper always require a parameterless constructor? (I think so, but it need to be verified.)
+//    // Parameterless constructor initializing default values
+//    public Customer() : this(0, string.Empty, string.Empty, 0) { }
+//};
+
+public class Customer
 {
-    //public record Customer(int Id, string Name, string Email, int Phone)
-    //{
-    //    // TODO: Does Dapper always require a parameterless constructor? (I think so, but it need to be verified.)
-    //    // Parameterless constructor initializing default values
-    //    public Customer() : this(0, string.Empty, string.Empty, 0) { }
-    //};
+    public Customer() { }
 
-    public class Customer
-    {
-        public Customer() { }
+    public int Id { get; set; }
 
-        public int Id { get; set; }
-        
-        public required string Name { get; set; }
+    [DisplayName("Kunde")]
+    public required string Name { get; set; }
 
-        public required string Email { get; set; }
+    public required string Email { get; set; }
 
-        public bool Vip { get; set; }
+    public bool Vip { get; set; }
 
-        public int Phone { get; set; }
+    public int Phone { get; set; }
 
-        public DateTime Birthdate { get; set; }
+    public DateTime Birthdate { get; set; }
 
-        public Decimal Salary { get; set; }
-
-    }
 }
