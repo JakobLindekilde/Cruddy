@@ -113,7 +113,7 @@ namespace CruddyDemo.Components
         /// <summary>
         /// The ColumnManager that manages the columns of the QuickGrid component.
         /// </summary>
-        protected readonly ColumnManager<TEntity> ColumnManager = new();
+        protected readonly ColumnManager<TEntity> MyColumnManager = new();
 
         /// <summary>
         /// The rows retrieved from the database.
@@ -310,7 +310,7 @@ namespace CruddyDemo.Components
                     var displayName = PropertyHelper.GetDisplayName(prop);
                     var format = GetDisplayFormat(prop);
                     var columnInfo = new ColumnInfo(displayName, displayName, null);
-                    genericMethod.Invoke(ColumnManager, [lambda, columnInfo, format, Align.Left, null, null, true, null]);
+                    genericMethod.Invoke(MyColumnManager, [lambda, columnInfo, format, Align.Left, null, null, true, null]);
                     // Would be nice if the code below worked, but it doesn't because of the generic type parameter. So we have to use reflection to invoke the method.
                     //ColumnManager.AddSimple(           lambda, columnInfo, format, Align.Left, null, null, true, null);
                 }
@@ -355,7 +355,7 @@ namespace CruddyDemo.Components
 
                     var displayName = PropertyHelper.GetDisplayName(prop);
                     var format = GetDisplayFormat(prop);
-                    method.Invoke(ColumnManager, [lambda, displayName, displayName, format, null, Align.Left, true, null, null]);
+                    method.Invoke(MyColumnManager, [lambda, displayName, displayName, format, null, Align.Left, true, null, null]);
                     // Would be nice if the code below worked, but it doesn't because of the generic type parameter. So we have to use reflection to invoke the method.
                     //ColumnManager.AddNumber(    lambda, displayName, displayName, format, null, Align.Left, true, null, null);
                 }
@@ -403,7 +403,7 @@ namespace CruddyDemo.Components
 
                     var displayName = PropertyHelper.GetDisplayName(prop);
                     var format = GetDisplayFormat(prop);
-                    genericMethod.Invoke(ColumnManager, [lambda, displayName, displayName, format, null, Align.Left, null, true]);
+                    genericMethod.Invoke(MyColumnManager, [lambda, displayName, displayName, format, null, Align.Left, null, true]);
                     // Would be nice if the code below worked, but it doesn't because of the generic type parameter. So we have to use reflection to invoke the method.
                     //ColumnManager.AddSimpleDate(       lambda, displayName, displayName, format, null, Align.Left, null, true); 
                 }

@@ -12,11 +12,28 @@ else if (!Rows.Any())
 }
 else
 {
+    @if (ShowColumnSelector)
+    {
+        <div>
+            <ColumnSelector ColumnManager="MyColumnManager" SelectionChanged="SelectionChangedAsync" />
+        </div>
+    }
     <QuickGrid @ref="MyGrid" id="CruddyGrid" Items="@Rows.AsQueryable()" Class="table table-sm table-index table-striped small table-fit table-thead-sticky mb-0" Theme="twentyAI">
-        @QuickGridColumns.Columns(ColumnManager)
+        @QuickGridColumns.Columns(MyColumnManager)
     </QuickGrid>
 }
 
 @code {
 
+    /// <summary>
+    /// Whether to show the column selector above the grid. Defaults to false.
+    /// </summary>
+    [Parameter]
+    public bool ShowColumnSelector { get; set; } = false;
+    
+    private async Task SelectionChangedAsync()
+    {
+        if (MyGrid is null) return;
+        await MyGrid.RefreshDataAsync();
+    }
 }
