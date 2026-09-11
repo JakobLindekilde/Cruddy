@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 
 namespace CruddyDemo.Models;
 
@@ -15,7 +16,7 @@ public class Customer
 
     public int Id { get; set; }
 
-    [DisplayName("Kunde")]
+    [DisplayName("Customer Name")]
     public required string Name { get; set; }
 
     public required string Email { get; set; }
@@ -24,6 +25,8 @@ public class Customer
 
     public int Phone { get; set; }
 
+    [DisplayName("Birth Date")]
+    [DisplayFormat(DataFormatString = "dd-MM-yyyy", ApplyFormatInEditMode = true)]
     public DateTime Birthdate { get; set; }
 
 }

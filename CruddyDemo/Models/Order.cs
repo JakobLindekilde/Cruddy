@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 
 namespace CruddyDemo.Models;
 
@@ -12,6 +13,7 @@ public partial class Order
 
     public int? Eid { get; set; }
 
+    [DisplayName("Employee")]
     public int? Qty { get; set; }
 
     public int? Paid { get; set; }
@@ -28,6 +30,9 @@ public partial class Order
 
 public partial class OrderExt : Order
 {
+    [DisplayName("Customer")]
     public string? CustomerName { get; set; }
+    
+    [DisplayName("Product")]
     public string? ProductName { get; set; }
 }

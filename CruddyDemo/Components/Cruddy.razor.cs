@@ -3,10 +3,10 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.QuickGrid;
 using QuickGrid.Toolkit;
 using QuickGrid.Toolkit.Columns;
-using QuickGrid.Toolkit.Core;
 using System.Data.Common;
 using System.Linq.Expressions;
 using System.Reflection;
+using CruddyDemo.Helpers;
 
 namespace CruddyDemo.Components
 {
@@ -83,6 +83,16 @@ namespace CruddyDemo.Components
         /// </summary>
         [Parameter]
         public required DbConnection DbConnection { get; set; }
+
+        [Parameter]
+        public string? DefaultDateFormat { get; set; } = "dd-MM-yyyy";
+
+        [Parameter]
+        public string? DefaultDecimalFormat { get; set; } = "0.00";
+
+        [Parameter]
+        public string? DefaultNumberFormat { get; set; } = "0";
+
 
         /// <summary>
         /// Whether to show technical information.
@@ -272,10 +282,12 @@ namespace CruddyDemo.Components
                     // create a strongly-typed lambda matching the overload
                     var lambda = Expression.Lambda(delegateType, body, param);
 
-                    var columnInfo = new ColumnInfo(title, title, null);
-                    genericMethod.Invoke(ColumnManager, [lambda, columnInfo, null, Align.Left, null, null, true, null]);
+                    var displayName = PropertyHelper.GetDisplayName(prop);
+                    var format = GetDisplayFormat(prop);
+                    var columnInfo = new ColumnInfo(displayName, displayName, null);
+                    genericMethod.Invoke(ColumnManager, [lambda, columnInfo, format, Align.Left, null, null, true, null]);
                     // Would be nice if the code below worked, but it doesn't because of the generic type parameter. So we have to use reflection to invoke the method.
-                    //ColumnManager.AddSimple(           lambda, columnInfo, null, Align.Left, null, null, true, null);
+                    //ColumnManager.AddSimple(           lambda, columnInfo, format, Align.Left, null, null, true, null);
                 }
                 catch
                 {
@@ -312,10 +324,11 @@ namespace CruddyDemo.Components
                     // create a strongly-typed lambda matching the overload
                     var lambda = Expression.Lambda(delegateType, body, param);
 
-                    var format = prop.PropertyType.Name == "Decimal" ? "0.00" : "0";
-                    method.Invoke(ColumnManager, [lambda, title, title, format, null, Align.Left, true, null, null]);
+                    var displayName = PropertyHelper.GetDisplayName(prop);
+                    var format = GetDisplayFormat(prop);
+                    method.Invoke(ColumnManager, [lambda, displayName, displayName, format, null, Align.Left, true, null, null]);
                     // Would be nice if the code below worked, but it doesn't because of the generic type parameter. So we have to use reflection to invoke the method.
-                    //ColumnManager.AddNumber(    lambda, title, title, format, null, Align.Left, true, null, null);
+                    //ColumnManager.AddNumber(    lambda, displayName, displayName, format, null, Align.Left, true, null, null);
                 }
                 catch
                 {
@@ -355,10 +368,11 @@ namespace CruddyDemo.Components
                     // create a strongly-typed lambda matching the overload
                     var lambda = Expression.Lambda(delegateType, body, param);
 
-                    var format = "dd/MM/yyyy";
-                    genericMethod.Invoke(ColumnManager, [lambda, title, title, format, null, Align.Left, null, true]);
+                    var displayName = PropertyHelper.GetDisplayName(prop);
+                    var format = GetDisplayFormat(prop);
+                    genericMethod.Invoke(ColumnManager, [lambda, displayName, displayName, format, null, Align.Left, null, true]);
                     // Would be nice if the code below worked, but it doesn't because of the generic type parameter. So we have to use reflection to invoke the method.
-                    //ColumnManager.AddSimpleDate(       lambda, title, title, format, null, Align.Left, null, true); 
+                    //ColumnManager.AddSimpleDate(       lambda, displayName, displayName, format, null, Align.Left, null, true); 
                 }
                 catch
                 {
@@ -366,6 +380,41 @@ namespace CruddyDemo.Components
                     // TODO: What should we do here? Log the error? Show a message in the UI?
                 }
             }
+        }
+        protected string? GetDisplayFormat(PropertyInfo prop)
+        {
+            var displayFormat = PropertyHelper.GetDisplayFormat(prop);
+            if (!string.IsNullOrEmpty(displayFormat))
+            {
+                return displayFormat;
+            }
+
+            var propertyType = Nullable.GetUnderlyingType(prop.PropertyType) ?? prop.PropertyType;
+
+            if (propertyType == typeof(decimal) || propertyType == typeof(double) || propertyType == typeof(float))
+            {
+                return string.IsNullOrEmpty(DefaultDecimalFormat) ? null : DefaultDecimalFormat;
+            }
+
+            if (propertyType == typeof(int) ||
+                propertyType == typeof(long) ||
+                propertyType == typeof(short) ||
+                propertyType == typeof(byte) ||
+                propertyType == typeof(uint) ||
+                propertyType == typeof(ulong) ||
+                propertyType == typeof(ushort) ||
+                propertyType == typeof(sbyte))
+            {
+                return string.IsNullOrEmpty(DefaultNumberFormat) ? null : DefaultNumberFormat;
+            }
+
+            // TODO: Should we handle DateTimeOffset like DateTime?
+            if (propertyType == typeof(DateTime))
+            {
+                return string.IsNullOrEmpty(DefaultDateFormat) ? null : DefaultDateFormat;
+            }
+
+            return null;
         }
 
         /// <summary>

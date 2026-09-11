@@ -1,4 +1,6 @@
-﻿namespace CruddyDemo.Models;
+﻿using System.ComponentModel;
+
+namespace CruddyDemo.Models;
 
 public partial class Address
 {
