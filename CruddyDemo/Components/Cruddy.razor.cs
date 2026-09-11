@@ -84,37 +84,53 @@ namespace CruddyDemo.Components
         [Parameter]
         public required DbConnection DbConnection { get; set; }
 
+        /// <summary>
+        /// The default date format to use when displaying date values 
+        /// when not using <seealso cref="DisplayFormatAttribute"/>.
+        /// </summary>
         [Parameter]
         public string? DefaultDateFormat { get; set; } = "dd-MM-yyyy";
 
+        /// <summary>
+        /// The default decimal, double and float format to use when displaying decimal values 
+        /// when not using <seealso cref="DisplayFormatAttribute"/>.
+        /// </summary>
         [Parameter]
         public string? DefaultDecimalFormat { get; set; } = "0.00";
 
+        /// <summary>
+        /// The default format to use when displaying numbers 
+        /// when not using <seealso cref="DisplayFormatAttribute"/>.
+        /// </summary>
         [Parameter]
         public string? DefaultNumberFormat { get; set; } = "0";
 
-
         /// <summary>
-        /// Whether to show technical information.
+        /// The QuickGrid component that displays the rows retrieved from the database.
         /// </summary>
-        [Parameter]
-        public bool? ShowInfoMessage { get; set; }
-
-        protected string InfoMessage { get; set; } = string.Empty;
-
         protected QuickGrid<TEntity>? MyGrid;
 
+        /// <summary>
+        /// The ColumnManager that manages the columns of the QuickGrid component.
+        /// </summary>
         protected readonly ColumnManager<TEntity> ColumnManager = new();
 
-
         /// <summary>
-        /// The rows retrieved from the database table in <seealso cref="TableName"/>.
+        /// The rows retrieved from the database.
         /// </summary>
         protected List<TEntity>? Rows;
 
 
+        /// <summary>
+        /// A dictionary that maps the column names specified in <seealso cref="TableColumns"/> 
+        /// to their corresponding property names in <typeparamref name="TEntity"/>.
+        /// </summary>
         readonly Dictionary<string, string> ColumnAliasDict = new(StringComparer.OrdinalIgnoreCase);
 
+        /// <summary>
+        /// Fills the <seealso cref="ColumnAliasDict"/> dictionary with the column names and their 
+        /// corresponding property names. Use 'AS' to specify a property in the <typeparamref name="TEntity"/>. 
+        /// </summary>
         protected void FillColumnAliasDict()
         {
             var columns = TableColumns.Split(',').Select(c => c.Trim());
@@ -208,7 +224,7 @@ namespace CruddyDemo.Components
             {
                 foreach (var prop in props)
                 {
-                    AddColumn(prop.Name, prop);
+                    AddColumn(prop);
                 }
             }
             else
@@ -218,31 +234,36 @@ namespace CruddyDemo.Components
                     var prop = props.FirstOrDefault(p => p.Name.Equals(col.Value, StringComparison.OrdinalIgnoreCase));
                     if (prop != null)
                     {
-                        AddColumn(prop.Name, prop);
+                        AddColumn(prop);
                     }
                 }
             }
         }
 
-
+        /// <summary>
+        /// Returns true if the type name is a number type (Decimal, Int32, Double, Single, Int64, UInt32, UInt64).
+        /// </summary>
         public static bool IsNumber(string typeName)
         {
             return typeName == "Decimal" || typeName == "Int32" || typeName == "Double" || typeName == "Single" || typeName == "Int64" || typeName == "UInt32" || typeName == "UInt64";
         }
 
-        protected virtual void AddColumn(string colName, PropertyInfo prop)
+        /// <summary>
+        /// Adds a column to the QuicGrid for the specified property
+        /// </summary>
+        protected virtual void AddColumn(PropertyInfo prop)
         {
             if (IsNumber(prop.PropertyType.Name))
             {
-                AddNumberColumn(prop, prop.Name);
+                AddNumberColumn(prop);
             }
             else if (prop.PropertyType.Name == "DateTime")
             {
-                AddSimpleDateColumn(prop, prop.Name);
+                AddSimpleDateColumn(prop);
             }
             else
             {
-                AddSimpleColumn(prop, colName);
+                AddSimpleColumn(prop);
             }
         }
 
@@ -251,7 +272,11 @@ namespace CruddyDemo.Components
         //public DynamicColumn<TGridItem> AddSimpleDate<TValue>(Expression<Func<TGridItem, TValue?>> expression, string? title = null, string? fullTitle = null, string? format = "dd/MM/yyyy", string? @class = null, Align align = Align.Center, CellStyleMap<TValue>? cellStyle = null, bool visible = true)
         //public DynamicColumn<TGridItem> AddSimple    <TValue>(Expression<Func<TGridItem, TValue?>> expression, ColumnInfo columnInfo, string? format = null, Align align = Align.Left, CellStyleMap<TValue>? cellStyle = null, GridSort<TGridItem>? sortBy = null,  bool visible = true, string? propertyName = null)
 
-        private void AddSimpleColumn(PropertyInfo prop, string title)
+        /// <summary>
+        /// Adds a Toolkit.AddSimple column to the QuickGrid for the specified property.
+        /// </summary>
+        /// <param name="prop">The property to add a column for.</param>
+        private void AddSimpleColumn(PropertyInfo prop)
         {
             // TODO: Make sure to get the correct overload of AddSimple(). Count the parameters!
             var method = typeof(ColumnManager<TEntity>).GetMethods()
@@ -267,7 +292,7 @@ namespace CruddyDemo.Components
                 {
                     Type entityType = typeof(TEntity);
                     var param = Expression.Parameter(entityType, "p");
-                    var access = Expression.PropertyOrField(param, title);
+                    var access = Expression.PropertyOrField(param, prop.Name);
 
                     var delegateType = typeof(Func<,>).MakeGenericType(entityType, typeof(object));
                     var returnType = delegateType.GetMethod("Invoke").ReturnType;
@@ -297,7 +322,11 @@ namespace CruddyDemo.Components
             }
         }
 
-        private void AddNumberColumn(PropertyInfo prop, string title)
+        /// <summary>
+        /// Adds a Toolkit.AddNumber column to the QuickGrid for the specified property.
+        /// </summary>
+        /// <param name="prop">The property to add a column for.</param>
+        private void AddNumberColumn(PropertyInfo prop)
         {
             var method = typeof(ColumnManager<TEntity>).GetMethods()
                 .FirstOrDefault(m => m.Name == "AddNumber" && m.GetParameters()[0].ParameterType.Name.StartsWith("Expression"));
@@ -308,7 +337,7 @@ namespace CruddyDemo.Components
                 {
                     Type entityType = typeof(TEntity);
                     var param = Expression.Parameter(entityType, "p");
-                    var access = Expression.PropertyOrField(param, title);
+                    var access = Expression.PropertyOrField(param, prop.Name);
 
                     var firstParamType = method.GetParameters()[0].ParameterType; // Expression<TDelegate>
                     var delegateType = firstParamType.GetGenericArguments()[0];          // TDelegate (e.g. Func<Customer, Nullable<decimal>>)
@@ -338,7 +367,11 @@ namespace CruddyDemo.Components
             }
         }
 
-        private void AddSimpleDateColumn(PropertyInfo prop, string title)
+        /// <summary>
+        /// Adds a Toolkit.AddSimpleDate column to the QuickGrid for the specified property.
+        /// </summary>
+        /// <param name="prop">The property to add a column for.</param>
+        private void AddSimpleDateColumn(PropertyInfo prop)
         {
             var method = typeof(ColumnManager<TEntity>).GetMethods()
                 .FirstOrDefault(m => m.Name == "AddSimpleDate" && m.GetParameters()[0].ParameterType.Name.StartsWith("Expression"));
@@ -353,7 +386,7 @@ namespace CruddyDemo.Components
                 {
                     Type entityType = typeof(TEntity);
                     var param = Expression.Parameter(entityType, "p");
-                    var access = Expression.PropertyOrField(param, title);
+                    var access = Expression.PropertyOrField(param, prop.Name);
 
                     var delegateType = typeof(Func<,>).MakeGenericType(entityType, typeof(object));
                     var returnType = delegateType.GetMethod("Invoke").ReturnType;
@@ -381,6 +414,13 @@ namespace CruddyDemo.Components
                 }
             }
         }
+
+        /// <summary>
+        /// Gets the display format for the specified property either 
+        /// from the DisplayFormatAttribute, or from the default formats.
+        /// </summary>
+        /// <param name="prop">The property to get the display format for.</param>
+        /// <returns>The display format string, or null if none is specified.</returns>
         protected string? GetDisplayFormat(PropertyInfo prop)
         {
             var displayFormat = PropertyHelper.GetDisplayFormat(prop);

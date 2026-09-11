@@ -2,11 +2,6 @@
 @using QuickGrid.Toolkit
 @typeparam TEntity
 
-@if (ShowInfoMessage.GetValueOrDefault())
-{
-    <pre>InfoMessage : @InfoMessage</pre>
-}
-
 @if (Rows is null)
 {
     <p>Loading data...</p>
@@ -17,7 +12,7 @@ else if (!Rows.Any())
 }
 else
 {
-    <QuickGrid @ref="MyGrid" id="@this.GetHashCode()" Items="@Rows.AsQueryable()" Class="table table-sm table-index table-striped small table-fit table-thead-sticky mb-0" Theme="twentyAI">
+    <QuickGrid @ref="MyGrid" id="CruddyGrid" Items="@Rows.AsQueryable()" Class="table table-sm table-index table-striped small table-fit table-thead-sticky mb-0" Theme="twentyAI">
         @QuickGridColumns.Columns(ColumnManager)
     </QuickGrid>
 }
