@@ -1,21 +1,40 @@
 ﻿namespace CruddyDemo.Helpers
 {
+    // TODO: Consider findig a NuGet package that can handle the mapping. 
+    
+    // TODO: From CoPilot: Consider using System.Text.Json for mapping dynamic objects to strongly typed objects,
+    // as it can be more efficient and flexible. However, the current implementation is straightforward and works well for most scenarios.
+
     /// <summary>
-    /// This class is intended to provide helper methods for the dynamic type.
+    /// This class is intended to provide helper methods for mapping dynamic types 
+    /// into strongly typed objects. It is particularly useful when working with data 
+    /// retrieved from sources like Dapper, which often returns dynamic objects.
     /// </summary>
-    static public class DynamicHelper
+    static public class DynamicMapper
     {
-        public static List<T> MapDynRows<T>(IEnumerable<dynamic> dynRows)
+        /// <summary>
+        /// Maps a collection of dynamics to a list of strongly typed objects of type T.
+        /// </summary>
+        /// <typeparam name="T">The type to map the dynamic items to.</typeparam>
+        /// <param name="dynItems">The collection of dynamics.</param>
+        /// <returns>A list of strongly typed objects of type T.</returns>
+        public static List<T> MapCollection<T>(IEnumerable<dynamic> dynItems)
         {
             var list = new List<T>();
-            foreach (var dynRow in dynRows)
+            foreach (var dynItem in dynItems)
             {
-                list.Add(MapDyn<T>(dynRow));
+                list.Add(Map<T>(dynItem));
             }
             return list;
         }
 
-        public static T MapDyn<T>(dynamic dyn)
+        /// <summary>
+        /// Maps a dynamic object to a strongly typed object of type T. 
+        /// </summary>
+        /// <typeparam name="T">The type to map the dynamic object to.</typeparam>
+        /// <param name="dynItem">The dynamic object to map.</param>
+        /// <returns>A strongly typed object of type T.</returns>
+        public static T Map<T>(dynamic dynItem)
         {
             var target = Activator.CreateInstance<T>()!;
             var targetType = typeof(T);
@@ -24,7 +43,7 @@
                 .Where(p => p.CanWrite);
 
             var sourceDict = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
-            FillDictPropNames(sourceDict, dyn);
+            FillDictPropNames(sourceDict, dynItem);
 
             foreach (var prop in targetProps)
             {
@@ -60,7 +79,8 @@
         }
 
         /// <summary>
-        /// // Build a dictionary of source property names -> values. Support IDictionary (ExpandoObject/Dapper) and regular objects.
+        /// Build a dictionary of source property names -> values. 
+        /// Support IDictionary (ExpandoObject/Dapper) and regular objects.
         /// </summary>
         public static void FillDictPropNames(Dictionary<string, object?> sourceDict, dynamic dyn)
         {

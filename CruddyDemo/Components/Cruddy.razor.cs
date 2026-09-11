@@ -44,8 +44,9 @@ namespace CruddyDemo.Components
         /// <summary>
         /// Whether to retrieve only distinct (=unique) rows.
         /// </summary>
+        /// <remarks>Default is false.</remarks>
         [Parameter]
-        public bool? Distinct { get; set; }
+        public bool? Distinct { get; set; } = false;
 
         /// <summary>
         /// The column(s) to order the results by, separated by commas. 
@@ -54,6 +55,13 @@ namespace CruddyDemo.Components
         /// </summary>
         [Parameter]
         public string? OrderBy { get; set; }
+
+        /// <summary>
+        /// The WHERE clause to filter the results by. Must be a valid 
+        /// SQL WHERE clause (without the "WHERE" keyword).
+        /// </summary>
+        [Parameter]
+        public string? Where { get; set; }
 
         /// <summary>
         /// Sorting order for the rows when using <seealso cref="OrderBy"/>. Default is <seealso cref="SortOrder.Ascending"/>.
@@ -127,6 +135,9 @@ namespace CruddyDemo.Components
         /// <returns>The final SQL SELECT statement.</returns>  
         protected virtual string BuildSql()
         {
+            // TODO: Handle '[' and ']' in column names (e.g. [Customer Name] AS CustomerName). I'm not sure if it works
+            // with Dapper or the code in BuildSql()
+
             string sql;
 
             if (!string.IsNullOrEmpty(Select))
@@ -136,7 +147,13 @@ namespace CruddyDemo.Components
             else
             {
                 sql = $"SELECT {(Distinct.GetValueOrDefault() ? "DISTINCT " : "")}{(Top.HasValue ? $"TOP {Top.Value} " : "")}" +
-                    $" {TableColumns} FROM dbo.{TableName}";
+                    $" {TableColumns} FROM {TableName}";
+
+            }
+
+            if (!sql.Contains(" WHERE ", StringComparison.InvariantCultureIgnoreCase) && !string.IsNullOrEmpty(Where))
+            {
+                sql += $" WHERE {Where}";
             }
 
             if (!sql.Contains("ORDER BY", StringComparison.InvariantCultureIgnoreCase) && !string.IsNullOrEmpty(OrderBy))
@@ -148,6 +165,9 @@ namespace CruddyDemo.Components
                     sql += $" {(SortOrder == SortOrder.Ascending ? "ASC" : "DESC")}";
                 }
             }
+
+            // TODO: Should we check if the SQL statement is valid? Maybe there is a NuGet package that can do this?
+            // Or we can just try to execute the SQL statement and catch any exception.
 
             return sql;
         }
@@ -238,7 +258,7 @@ namespace CruddyDemo.Components
                     var access = Expression.PropertyOrField(param, title);
 
                     var delegateType = typeof(Func<,>).MakeGenericType(entityType, typeof(object));
-                    var returnType = delegateType.GetMethod("Invoke").ReturnType;   // Nullable<decimal> (or decimal/other)
+                    var returnType = delegateType.GetMethod("Invoke").ReturnType;
 
                     // convert access to the expected return type if needed
                     Expression body = access;
@@ -252,6 +272,7 @@ namespace CruddyDemo.Components
 
                     var columnInfo = new ColumnInfo(title, title, null);
                     genericMethod.Invoke(ColumnManager, [lambda, columnInfo, null, Align.Left, null, null, true, null]);
+                    // Would be nice if the code below worked, but it doesn't because of the generic type parameter. So we have to use reflection to invoke the method.
                     //ColumnManager.AddSimple(           lambda, columnInfo, null, Align.Left, null, null, true, null);
                 }
                 catch
@@ -291,6 +312,7 @@ namespace CruddyDemo.Components
 
                     var format = prop.PropertyType.Name == "Decimal" ? "0.00" : "0";
                     method.Invoke(ColumnManager, [lambda, title, title, format, null, Align.Left, true, null, null]);
+                    // Would be nice if the code below worked, but it doesn't because of the generic type parameter. So we have to use reflection to invoke the method.
                     //ColumnManager.AddNumber(    lambda, title, title, format, null, Align.Left, true, null, null);
                 }
                 catch
@@ -318,9 +340,8 @@ namespace CruddyDemo.Components
                     var param = Expression.Parameter(entityType, "p");
                     var access = Expression.PropertyOrField(param, title);
 
-                    // find the method as you already do: addSimpleMethod
                     var delegateType = typeof(Func<,>).MakeGenericType(entityType, typeof(object));
-                    var returnType = delegateType.GetMethod("Invoke").ReturnType;   // Nullable<decimal> (or decimal/other)
+                    var returnType = delegateType.GetMethod("Invoke").ReturnType;
 
                     // convert access to the expected return type if needed
                     Expression body = access;
@@ -334,7 +355,8 @@ namespace CruddyDemo.Components
 
                     var format = "dd/MM/yyyy";
                     genericMethod.Invoke(ColumnManager, [lambda, title, title, format, null, Align.Left, null, true]);
-                    //ColumnManager.AddSimpleDate(       lambda, title, title, format, null, Align.Left, null, true);
+                    // Would be nice if the code below worked, but it doesn't because of the generic type parameter. So we have to use reflection to invoke the method.
+                    //ColumnManager.AddSimpleDate(       lambda, title, title, format, null, Align.Left, null, true); 
                 }
                 catch
                 {
@@ -354,7 +376,7 @@ namespace CruddyDemo.Components
         static public async Task<IQueryable<T>> GetTableRowsAsync<T>(DbConnection DbConnection, string sql)
         {
             IEnumerable<dynamic> dynRows = await DbConnection.QueryAsync(sql);
-            return Helpers.DynamicHelper.MapDynRows<T>(dynRows).AsQueryable();
+            return Helpers.DynamicMapper.MapCollection<T>(dynRows).AsQueryable();
         }
 
     }
