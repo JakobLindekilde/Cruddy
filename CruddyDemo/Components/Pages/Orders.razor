@@ -1,9 +1,9 @@
 ﻿@page "/Orders"
 @inject Microsoft.Data.SqlClient.SqlConnection dbConnection
 
-<h3>Tabel Orders - håndlavet SQL</h3>
+<h3>Table Orders - handcrafted SQL</h3>
 
-<Cruddy TEntity="Models.OrderExt" TableName="Orders" TableColumns="Id, CustomerName, ProductName, Qty, Paid, OrderDate" Select=@sql DbConnection="dbConnection" />
+<Cruddy TEntity="Models.OrderCruddy" TableName="Orders" TableColumns="Id, CustomerName, ProductName, Qty, Paid, OrderDate" Select=@sql DbConnection="dbConnection" />
 
 @code {
     string sql = @"

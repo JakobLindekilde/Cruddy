@@ -1,7 +1,7 @@
 ﻿@page "/Addresses"
 @inject Microsoft.Data.SqlClient.SqlConnection dbConnection
 
-<h3>Tabel Addresses</h3>
+<h3>Table Addresses</h3>
 
 <Cruddy TEntity="Models.Address" TableName="Addresses" TableColumns="Id, CustomerId, Town, Street, StreetNo, ZipCode, AddressType" DbConnection="dbConnection" ShowColumnSelector="true"/>
 

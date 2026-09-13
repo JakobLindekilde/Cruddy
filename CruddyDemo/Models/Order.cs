@@ -28,7 +28,7 @@ public partial class Order
     public virtual Product? PidNavigation { get; set; }
 }
 
-public partial class OrderExt : Order
+public partial class OrderCruddy : Order
 {
     [DisplayName("Customer")]
     public string? CustomerName { get; set; }

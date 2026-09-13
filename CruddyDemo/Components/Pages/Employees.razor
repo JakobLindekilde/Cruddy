@@ -1,7 +1,7 @@
 ﻿@page "/Employees"
 @inject Microsoft.Data.SqlClient.SqlConnection dbConnection
 
-<h3>Tabel Employees</h3>
+<h3>Table Employees</h3>
 
 <h4>Employees with salary > 45000</h4>
 <Cruddy TEntity="Models.Employee" TableName="Employees" TableColumns="Id, Name, Salary" Where="Salary > 45000" OrderBy="Salary DESC" DbConnection="dbConnection" />

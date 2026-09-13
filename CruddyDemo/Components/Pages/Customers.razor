@@ -1,9 +1,9 @@
 ﻿@page "/Customers"
 @inject Microsoft.Data.SqlClient.SqlConnection dbConnection
 
-<h3>Tabel Customers</h3>
+<h3>Table Customers</h3>
 
-<h4>Kolonner angivet i TableColumns</h4>
+<h4>Columns specified in parameter TableColumns</h4>
 <Cruddy TEntity="Models.Customer" TableName="Customers" TableColumns="Id, Vip, Name, Email, Email, Phone" DbConnection="dbConnection" />
 
 <br />
