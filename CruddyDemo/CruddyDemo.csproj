@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="VoresDB testdatabase.sql" />
+    <Content Include="CruddyDB test database.sql" />
   </ItemGroup>
 
   <ItemGroup>

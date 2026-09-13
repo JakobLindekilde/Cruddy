@@ -3,8 +3,8 @@
 
 <h3>Select into any POCO class</h3>
 
-<h4>SELECT Id, Name, Price AS Info FROM Products</h4>
-<Cruddy TEntity="Models.AnyPoco" Select="SELECT Id, Name, Price AS Info FROM Products" DbConnection="dbConnection" />
+<h4>SELECT Id, Name, LTRIM(STR(Price)) AS Info FROM Products</h4>
+<Cruddy TEntity="Models.AnyPoco" Select="SELECT Id, Name, LTRIM(STR(Price)) AS Info FROM Products" DbConnection="dbConnection" />
 
 <br />
 <h4>SELECT Id, Name, Email AS Info FROM Customers</h4>

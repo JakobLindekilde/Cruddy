@@ -156,7 +156,7 @@ namespace CruddyDemo.Components
                     var columnInfo = new ColumnInfo(displayName, displayName, null);
                     genericMethod.Invoke(MyColumnManager, [lambda, columnInfo, format, Align.Left, null, null, true, null]);
                     // Would be nice if the code below worked, but it doesn't because of the generic type parameter. So we have to use reflection to invoke the method.
-                    //ColumnManager.AddSimple(           lambda, columnInfo, format, Align.Left, null, null, true, null);
+                    //MyColumnManager.AddSimple(           lambda, columnInfo, format, Align.Left, null, null, true, null);
                 }
                 catch
                 {
@@ -201,7 +201,7 @@ namespace CruddyDemo.Components
                     var format = GetDisplayFormat(prop);
                     method.Invoke(MyColumnManager, [lambda, displayName, displayName, format, null, Align.Left, true, null, null]);
                     // Would be nice if the code below worked, but it doesn't because of the generic type parameter. So we have to use reflection to invoke the method.
-                    //ColumnManager.AddNumber(    lambda, displayName, displayName, format, null, Align.Left, true, null, null);
+                    //MyColumnManager.AddNumber(    lambda, displayName, displayName, format, null, Align.Left, true, null, null);
                 }
                 catch
                 {
@@ -249,7 +249,7 @@ namespace CruddyDemo.Components
                     var format = GetDisplayFormat(prop);
                     genericMethod.Invoke(MyColumnManager, [lambda, displayName, displayName, format, null, Align.Left, null, true]);
                     // Would be nice if the code below worked, but it doesn't because of the generic type parameter. So we have to use reflection to invoke the method.
-                    //ColumnManager.AddSimpleDate(       lambda, displayName, displayName, format, null, Align.Left, null, true); 
+                    //MyColumnManager.AddSimpleDate(       lambda, displayName, displayName, format, null, Align.Left, null, true); 
                 }
                 catch
                 {

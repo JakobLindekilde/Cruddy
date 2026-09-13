@@ -1,6 +1,8 @@
 using Dapper;
 using Microsoft.AspNetCore.Components;
 using System.Data.Common;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace CruddyDemo.Components
 {
@@ -183,7 +185,31 @@ namespace CruddyDemo.Components
         static public List<T> GetTableRows<T>(DbConnection DbConnection, string sql)
         {
             IEnumerable<dynamic> dynRows = DbConnection.Query(sql);
-            return Helpers.DynamicMapper.MapCollection<T>(dynRows).ToList();
+            return Map<T>(dynRows).ToList();
+        }
+
+        /// <summary>
+        /// Maps a collection of dynamics to a list of strongly typed objects of type T.
+        /// </summary>
+        /// <typeparam name="T">The type to map the dynamic items to.</typeparam>
+        /// <param name="dynItems">The collection of dynamics.</param>
+        /// <returns>A list of strongly typed objects of type T.</returns>
+        public static List<T> Map<T>(IEnumerable<dynamic> dynItems)
+        {
+            if (dynItems == null) return new List<T>();
+
+            // Use System.Text.Json to map dynamic objects to strongly-typed objects.
+            // Serialize the dynamic collection and deserialize to List<T> with case-insensitive property matching.
+            var options = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true,
+                // Preserve numbers and handle common enum/string conversions
+                Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase, allowIntegerValues: true) }
+            };
+
+            var json = JsonSerializer.Serialize(dynItems, options);
+            var deserialized = JsonSerializer.Deserialize<List<T>>(json, options);
+            return deserialized ?? new List<T>();
         }
 
     }

@@ -11,7 +11,7 @@ namespace CruddyDemo
 
             builder.Services.AddScoped(serviceProvider =>
             {
-                return new SqlConnection(builder.Configuration.GetConnectionString("VoresDB"));
+                return new SqlConnection(builder.Configuration.GetConnectionString("CruddyDB"));
             });
 
             // Add services to the container.
