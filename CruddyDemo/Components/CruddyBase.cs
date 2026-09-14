@@ -11,6 +11,9 @@ namespace CruddyDemo.Components
     /// </summary>
     public partial class CruddyBase<TEntity> : ComponentBase 
     {
+        // TODO: Check if TableName, KeyColumn and columns in TableColumns are reserved keyword in SQL.
+        // If it is, we should wrap it in square brackets [].
+
         /// <summary>
         /// Name of database table to 'CRUD'.
         /// </summary>
@@ -172,6 +175,24 @@ namespace CruddyDemo.Components
             // Or we can just try to execute the SQL statement and catch any exception.
 
             return sql;
+        }
+
+        public object? Delete(DbConnection DbConnection, object keyValue)
+        {
+            // TODO: Pluarlize table name if it is not specified? Yes for now
+            // Consider using a library like Humanizer or Pluralize.NET to pluralize the table name.
+            // For example, if the table name is "Person", it should be pluralized to "People" (NO NO!).
+            // If the table name is "Category", it should be pluralized to "Categories".
+            // If the table name is "Child", it should be pluralized to "Children".
+
+            // TODO: Check if the table name is a reserved keyword in SQL Server. If it is, we should wrap it in square brackets [].
+            var tableName = string.IsNullOrEmpty(TableName) ? typeof(TEntity).Name + 's' : TableName;
+
+            // TODO: Find Key property in TEntity and use it as KeyColumn if KeyColumn is not specified.
+            // Use reflection to find the property with [Key] attribute or the property named "Id" or "{ClassName}Id".
+            var keyColumn = string.IsNullOrEmpty(KeyColumn) ? "Id" : KeyColumn;
+
+            return DbConnection.ExecuteScalar($"DELETE FROM {tableName} WHERE {keyColumn} = @keyValue", param: new { keyValue });
         }
 
         /// <summary>

@@ -36,6 +36,19 @@ namespace CruddyDemo.Components
         public string? DefaultNumberFormat { get; set; } = "0";
 
         /// <summary>
+        /// Whether to enable the delete functionality for each row.
+        /// </summary>
+        [Parameter]
+        public bool EnableDelete { get; set; } = false;
+
+        /// <summary>
+        /// The primary name of the column/field, used for display purposes in the UI. 
+        /// Used in messages like "Are you sure you want to delete this {PrimaryName}?".
+        /// </summary>
+        [Parameter]
+        public string? PrimaryName { get; set; }
+
+        /// <summary>
         /// The QuickGrid component that displays the rows retrieved from the database.
         /// </summary>
         protected QuickGrid<TEntity>? MyGrid;
@@ -82,6 +95,7 @@ namespace CruddyDemo.Components
                     }
                 }
             }
+
         }
 
         /// <summary>
