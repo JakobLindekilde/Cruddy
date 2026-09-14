@@ -63,6 +63,11 @@ namespace CruddyDemo.Components
         [Inject] protected IJSRuntime JS { get; set; } = default!;
 
         /// <summary>
+        /// Holds a user visible error message when e.g. delete fails.
+        /// </summary>
+        protected string? ErrorMessage { get; set; }
+
+        /// <summary>
         /// During component initialization, this method fills <see cref="ColumnAliasDict"/>, 
         /// adds columns to the grid and retrieves the rows from the database.
         /// </summary>
@@ -109,10 +114,25 @@ namespace CruddyDemo.Components
                 Rows?.Remove(item);
                 await InvokeAsync(StateHasChanged);
             }
-            catch
+            catch (Exception ex)
             {
-                // TODO: Handle delete errors, e.g., show a message to the user
+                // Show an error message to the user and refresh the UI
+                ErrorMessage = $"Delete failed: {ex.Message}";
+                await ShowErrorMessage();
             }
+        }
+
+        private async Task ShowErrorMessage(int showDuration = 8000)
+        {
+            await InvokeAsync(StateHasChanged);
+
+            // Clear the message after a short delay
+            _ = Task.Run(async () =>
+            {
+                await Task.Delay(showDuration);
+                ErrorMessage = null;
+                await InvokeAsync(StateHasChanged);
+            });
         }
 
         /// <summary>

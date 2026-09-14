@@ -19,6 +19,10 @@ else
             <ColumnSelector ColumnManager="MyColumnManager" SelectionChanged="SelectionChangedAsync" />
         </div>
     }
+@if (!string.IsNullOrEmpty(ErrorMessage))
+{
+    <div class="alert alert-danger" role="alert">@ErrorMessage</div>
+}
     <QuickGrid @ref="MyGrid" id="CruddyGrid" Items="@Rows.AsQueryable()" Class="table table-sm table-index table-striped small table-fit table-thead-sticky mb-0" Theme="twentyAI">
         @QuickGridColumns.Columns(MyColumnManager)
     </QuickGrid>
