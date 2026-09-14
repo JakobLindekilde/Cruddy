@@ -4,6 +4,8 @@ using QuickGrid.Toolkit;
 using QuickGrid.Toolkit.Columns;
 using System.Linq.Expressions;
 using System.Reflection;
+using Microsoft.JSInterop;
+using Microsoft.AspNetCore.Components.Web;
 using CruddyDemo.Helpers;
 
 namespace CruddyDemo.Components
@@ -58,6 +60,8 @@ namespace CruddyDemo.Components
         /// </summary>
         protected readonly ColumnManager<TEntity> MyColumnManager = new();
 
+        [Inject] protected IJSRuntime JS { get; set; } = default!;
+
         /// <summary>
         /// During component initialization, this method fills <see cref="ColumnAliasDict"/>, 
         /// adds columns to the grid and retrieves the rows from the database.
@@ -66,6 +70,49 @@ namespace CruddyDemo.Components
         {
             await base.OnInitializedAsync();
             AddColumnsToGrid();
+        }
+
+        private async Task ConfirmAndDeleteAsync(TEntity item)
+        {
+            if (item == null) return;
+
+            string displayValue = PropertyHelper.GetValue(item, PrimaryName);
+            var label = !string.IsNullOrEmpty(PrimaryName) ? PrimaryName : typeof(TEntity).Name;
+            var message = string.IsNullOrEmpty(displayValue)
+                ? $"Sure you want to delete {label}?"
+                : $"Sure you want to delete {label} '{displayValue}'?";
+
+            bool ok = false;
+            try
+            {
+                ok = await JS.InvokeAsync<bool>("confirm", message);
+            }
+            catch
+            {
+                // If JS interop fails, do not proceed
+                return;
+            }
+
+            if (!ok) return;
+
+            var keyName = string.IsNullOrEmpty(KeyColumn) ? "Id" : KeyColumn;
+            var keyProp = typeof(TEntity).GetProperty(keyName, BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
+            if (keyProp == null) return;
+
+            var keyValue = keyProp.GetValue(item);
+
+            try
+            {
+                Delete(DbConnection, keyValue!);
+
+                // Remove the item from the in-memory rows and refresh UI
+                Rows?.Remove(item);
+                await InvokeAsync(StateHasChanged);
+            }
+            catch
+            {
+                // TODO: Handle delete errors, e.g., show a message to the user
+            }
         }
 
         /// <summary>
@@ -96,6 +143,31 @@ namespace CruddyDemo.Components
                 }
             }
 
+            if (EnableDelete)
+            {
+                AddDeleteColumn();
+            }
+        }
+
+        /// <summary>
+        /// Adds a delete column to the QuickGrid, with a button for each row 
+        /// that prompts the user for confirmation and deletes the row if confirmed.
+        /// </summary>
+        private void AddDeleteColumn()
+        {
+            RenderFragment<TEntity> deleteTemplate = (item) => (builder) =>
+            {
+                if (item == null) return;
+
+                var seq = 0;
+                builder.OpenElement(seq++, "button");
+                builder.AddAttribute(seq++, "class", "btn btn-sm btn-danger");
+                builder.AddAttribute(seq++, "onclick", EventCallback.Factory.Create<MouseEventArgs>(this, async () => await ConfirmAndDeleteAsync(item)));
+                builder.AddContent(seq++, "Delete");
+                builder.CloseElement();
+            };
+
+            MyColumnManager.AddTemplateColumn(deleteTemplate, title: "Delete", cssClass: "text-center");
         }
 
         /// <summary>

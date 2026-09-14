@@ -1,9 +1,31 @@
 ﻿using System.Reflection;
 
+
 namespace CruddyDemo.Helpers
 {
     static public class PropertyHelper
     {
+        /// <summary>
+        /// Gets the value of a property from an object using reflection.   
+        /// </summary>
+        /// <param name="item">The object from which to get the property value.</param>
+        /// <param name="propName">The name of the property.</param>
+        /// <returns>The value of the property as a string.</returns>
+        public static string GetValue(object item, string propName)
+        {
+            string value = string.Empty;
+            if (!string.IsNullOrEmpty(propName))
+            {
+                var prop = item.GetType().GetProperty(propName, BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
+                if (prop != null)
+                {
+                    var val = prop.GetValue(item);
+                    value = val?.ToString() ?? string.Empty;
+                }
+            }
+            return value;
+        }
+
         /// <summary>
         /// Gets the display name for a property, using the DisplayNameAttribute or 
         /// DisplayAttribute if present, otherwise returns the property name.
