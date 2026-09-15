@@ -23,6 +23,49 @@ else
 {
     <div class="alert alert-danger" role="alert">@ErrorMessage</div>
 }
+@if (ShowDetailsModal && DetailsItem != null)
+{
+    <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Details - @typeof(TEntity).Name</h5>
+                    <button type="button" class="btn-close" aria-label="Close" @onclick="CloseDetails"></button>
+                </div>
+                <div class="modal-body">
+                    <table class="table table-sm table-striped">
+                        <tbody>
+                            @foreach (var prop in typeof(TEntity).GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance))
+                            {
+                                var displayName = CruddyDemo.Helpers.PropertyHelper.GetDisplayName(prop);
+                                var format = CruddyDemo.Helpers.PropertyHelper.GetDisplayFormat(prop);
+                                var val = prop.GetValue(DetailsItem);
+                                string display;
+                                if (val == null) display = string.Empty;
+                                else if (!string.IsNullOrEmpty(format) && val is System.IFormattable f)
+                                {
+                                    display = f.ToString(format, System.Globalization.CultureInfo.CurrentCulture);
+                                }
+                                else
+                                {
+                                    display = val?.ToString() ?? string.Empty;
+                                }
+
+                                <tr>
+                                    <th>@displayName</th>
+                                    <td>@display</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" @onclick="CloseDetails">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
     <QuickGrid @ref="MyGrid" id="CruddyGrid" Items="@Rows.AsQueryable()" Class="table table-sm table-index table-striped small table-fit table-thead-sticky mb-0" Theme="twentyAI">
         @QuickGridColumns.Columns(MyColumnManager)
     </QuickGrid>

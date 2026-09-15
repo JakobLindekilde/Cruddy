@@ -41,7 +41,13 @@ namespace CruddyDemo.Components
         /// Whether to enable the delete functionality for each row.
         /// </summary>
         [Parameter]
-        public bool EnableDelete { get; set; } = false;
+        public bool AllowDelete { get; set; } = false;
+
+        /// <summary>
+        /// Whether to enable the details functionality for each row.
+        /// </summary>
+        [Parameter]
+        public bool AllowDetails { get; set; } = false;
 
         /// <summary>
         /// The primary name of the column/field, used for display purposes in the UI. 
@@ -75,6 +81,33 @@ namespace CruddyDemo.Components
         {
             await base.OnInitializedAsync();
             AddColumnsToGrid();
+        }
+
+        /// <summary>
+        /// The currently selected item shown in the details modal.
+        /// </summary>
+        protected TEntity? DetailsItem { get; set; }
+
+        /// <summary>
+        /// Whether the details modal is visible.
+        /// </summary>
+        protected bool ShowDetailsModal { get; set; }
+
+        private void ShowDetails(TEntity item)
+        {
+            // TODO: Get the the item from the database. For now, we just use the item as is.
+
+            // TODO: Consider making this modal a separate component, so that it can be reused and customized.
+            // For example, we could have a CruddyDetails<TEntity> component that takes a TEntity parameter and displays
+            // its properties in a table or form. Then we could use that component here instead of the inline modal.
+            DetailsItem = item;
+            ShowDetailsModal = true;
+        }
+
+        private void CloseDetails()
+        {
+            ShowDetailsModal = false;
+            DetailsItem = default;
         }
 
         private async Task ConfirmAndDeleteAsync(TEntity item)
@@ -163,31 +196,46 @@ namespace CruddyDemo.Components
                 }
             }
 
-            if (EnableDelete)
+            if (AllowDelete || AllowDetails)
             {
-                AddDeleteColumn();
+                AddActionColumn();
             }
+
         }
 
         /// <summary>
-        /// Adds a delete column to the QuickGrid, with a button for each row 
-        /// that prompts the user for confirmation and deletes the row if confirmed.
+        /// Adds an action column to the QuickGrid, with buttons for each row 
+        /// that prompts the user for confirmation and performs the actions if confirmed.
         /// </summary>
-        private void AddDeleteColumn()
+        private void AddActionColumn()
         {
             RenderFragment<TEntity> deleteTemplate = (item) => (builder) =>
             {
                 if (item == null) return;
 
-                var seq = 0;
-                builder.OpenElement(seq++, "button");
-                builder.AddAttribute(seq++, "class", "btn btn-sm btn-danger");
-                builder.AddAttribute(seq++, "onclick", EventCallback.Factory.Create<MouseEventArgs>(this, async () => await ConfirmAndDeleteAsync(item)));
-                builder.AddContent(seq++, "Delete");
-                builder.CloseElement();
+                if (AllowDelete)
+                {
+                    var seq = 0;
+                    builder.OpenElement(seq++, "button");
+                    builder.AddAttribute(seq++, "class", "btn btn-sm btn-danger me-1");
+                    builder.AddAttribute(seq++, "onclick", EventCallback.Factory.Create<MouseEventArgs>(this, async () => await ConfirmAndDeleteAsync(item)));
+                    builder.AddContent(seq++, "Delete");
+                    builder.CloseElement();
+                }
+
+                if (AllowDetails)
+                {
+                    var seq = 0;
+                    builder.OpenElement(seq++, "button");
+                    builder.AddAttribute(seq++, "class", "btn btn-sm btn-primary");
+                    builder.AddAttribute(seq++, "onclick", EventCallback.Factory.Create<MouseEventArgs>(this, () => ShowDetails(item)));
+                    builder.AddContent(seq++, "Details");
+                    builder.CloseElement();
+                }
             };
 
-            MyColumnManager.AddTemplateColumn(deleteTemplate, title: "Delete", cssClass: "text-center");
+            // TODO: Consider making the title of the action column configurable
+            MyColumnManager.AddTemplateColumn(deleteTemplate, title: "Actions", cssClass: "text-center");
         }
 
         /// <summary>

@@ -3,7 +3,7 @@
 
 <h3>Table Orders - handcrafted SQL</h3>
 
-<Cruddy TEntity="Models.OrderCruddy" TableName="Orders" TableColumns="Id, CustomerName, ProductName, Qty, Paid, OrderDate" Select=@sql DbConnection="dbConnection" />
+<Cruddy TEntity="Models.OrderCruddy" TableName="Orders" TableColumns="Id, CustomerName, ProductName, Qty, Paid, OrderDate" Select=@sql AllowDetails="true" DbConnection="dbConnection" />
 
 @code {
     string sql = @"

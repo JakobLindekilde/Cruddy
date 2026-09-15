@@ -195,14 +195,14 @@ namespace CruddyDemo.Components
             return DbConnection.ExecuteScalar($"DELETE FROM {tableName} WHERE {keyColumn} = @keyValue", param: new { keyValue });
         }
 
+
         /// <summary>
         /// Gets rows from the database table in <seealso cref="TableName"/> or <seealso cref="Select"/>
         /// and maps them to a list of <typeparamref name="T1"/>.
         /// </summary>
         /// <typeparam name="T1"></typeparam>
         /// <param name="DbConnection">A database connection e.g an SqlConnection (for MS SQL Server)/param>
-        /// <param name="tableName">The rows retrieved from this database table.</param>
-        /// <param name="cols">The columns to retrieve.</param>
+        /// <param name="sql">The SQL query to execute.</param>
         static public List<T> GetTableRows<T>(DbConnection DbConnection, string sql)
         {
             IEnumerable<dynamic> dynRows = DbConnection.Query(sql);

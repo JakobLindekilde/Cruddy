@@ -4,11 +4,11 @@
 <h3>Table Employees</h3>
 
 <h4>Employees with salary > 45000</h4>
-<Cruddy TEntity="Models.Employee" TableName="Employees" TableColumns="Id, Name, Salary" Where="Salary > 45000" OrderBy="Salary DESC" DbConnection="dbConnection" />
+<Cruddy TEntity="Models.Employee" TableName="Employees" TableColumns="Id, Name, Salary" Where="Salary > 45000" OrderBy="Salary DESC" AllowDetails="true" DbConnection="dbConnection" />
 
 <br />
 <h4>All employees</h4>
-<Cruddy TEntity="Models.Employee" TableName="Employees" TableColumns="Id, Name, Salary" DbConnection="dbConnection" />
+<Cruddy TEntity="Models.Employee" TableName="Employees" TableColumns="Id, Name, Salary" AllowDetails="true" DbConnection="dbConnection" />
 
 @code {
 
