@@ -8,6 +8,13 @@ using Microsoft.JSInterop;
 using Microsoft.AspNetCore.Components.Web;
 using CruddyDemo.Helpers;
 
+// Sidste ting før kontakt med mr Toolkit
+// TODO: Details: Hent alt data
+// TODO: Vis kolonne header med fed
+// TODO: Ved details vis ikke lister som "TODO"
+// TODO: Lav kode der finder de rigtige generics (med unittest)
+// TODO: Eksemple med record
+
 namespace CruddyDemo.Components
 {
     /// <summary>
@@ -118,12 +125,10 @@ namespace CruddyDemo.Components
 
         private async Task ConfirmAndDeleteAsync(TEntity item)
         {
-            if (item == null) return;
-
             bool ok = false;
             try
             {
-                var message = GetDeleteMessage(item);
+                var message = DeleteMessage(item);
                 ok = await JS.InvokeAsync<bool>("confirm", message);
             }
             catch
@@ -136,7 +141,7 @@ namespace CruddyDemo.Components
 
             try
             {
-                var keyValue = PropertyHelper.GetValue(item, KeyColumn!);
+                var keyValue = PropertyHelper.GetValue(item!, KeyColumn!);
                 Delete(DbConnection, keyValue);
 
                 // Remove the item from the in-memory rows and refresh UI
@@ -151,15 +156,15 @@ namespace CruddyDemo.Components
             }
         }
 
-        private string GetDeleteMessage(TEntity item)
+        private string DeleteMessage(TEntity item)
         {
-            var entity = typeof(TEntity).Name.ToLower();
+            var sureToDelete = "Sure you want to delete " + typeof(TEntity).Name.ToLower();
             var keyInfo = $"({KeyColumn}={PropertyHelper.GetValue(item!, KeyColumn!)})";
-            string displayValue = PropertyHelper.GetValue(item!, NameUx!);
+            string nameUxValue = PropertyHelper.GetValue(item!, NameUx!);
             
-            var message = string.IsNullOrEmpty(displayValue)
-                ? $"Sure you want to delete {entity} {keyInfo}?"
-                : $"Sure you want to delete {entity} '{displayValue}' {keyInfo}?";
+            var message = string.IsNullOrEmpty(nameUxValue)
+                ? $"{sureToDelete} {keyInfo}?"
+                : $"{sureToDelete} {nameUxValue} {keyInfo}?";
             
             return message;
         }
@@ -216,10 +221,8 @@ namespace CruddyDemo.Components
         /// </summary>
         private void AddActionColumn()
         {
-            RenderFragment<TEntity> deleteTemplate = (item) => (builder) =>
+            RenderFragment deleteTemplate(TEntity item) => (builder) =>
             {
-                if (item == null) return;
-
                 if (AllowDelete)
                 {
                     builder.OpenElement(0, "button");

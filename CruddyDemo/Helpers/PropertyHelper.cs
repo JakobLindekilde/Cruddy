@@ -45,7 +45,7 @@ namespace CruddyDemo.Helpers
         /// <returns>An array of PropertyInfo objects representing the readable properties.</returns>
         public static PropertyInfo[] GetReadProperties(Type type)
         {
-            return type.GetProperties(BindingFlags.Public | BindingFlags.Instance) .Where(p => p.CanRead).ToArray();
+            return [.. type.GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(p => p.CanRead)];
         }                   
 
         /// <summary>

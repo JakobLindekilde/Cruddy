@@ -197,7 +197,9 @@ namespace CruddyDemo.Components
         public object? Delete(DbConnection DbConnection, object keyValue)
         {
             var sql = $"DELETE FROM {DefaultSchema}.{TableName} WHERE {KeyColumn} = @keyValue";
+#pragma warning disable S2077   // SonarQube rule S2077: "SQL queries should not be vulnerable to injection attacks".
             return DbConnection.ExecuteScalar(sql, param: new { keyValue });
+#pragma warning restore S2077
         }
 
 
@@ -211,7 +213,7 @@ namespace CruddyDemo.Components
         static public List<T> GetTableRows<T>(DbConnection DbConnection, string sql)
         {
             IEnumerable<dynamic> dynRows = DbConnection.Query(sql);
-            return Map<T>(dynRows).ToList();
+            return [.. Map<T>(dynRows)];
         }
 
         /// <summary>
@@ -247,9 +249,9 @@ namespace CruddyDemo.Components
         /// <returns>The pluralized form of the name.</returns>
         static public string Pluralize(string name)
         {
-            if (name.EndsWith("y", StringComparison.OrdinalIgnoreCase) && !IsVowel(name[name.Length - 2]))
+            if (name.EndsWith("y", StringComparison.OrdinalIgnoreCase) && !IsVowel(name[^2]))
             {
-                return name.Substring(0, name.Length - 1) + "ies";
+                return name[..^1] + "ies";
             }
             else if (name.EndsWith("s", StringComparison.OrdinalIgnoreCase) ||
                      name.EndsWith("x", StringComparison.OrdinalIgnoreCase) ||
@@ -272,7 +274,7 @@ namespace CruddyDemo.Components
         /// <returns>True if the character is a vowel; otherwise, false.</returns>
         public static bool IsVowel(char c)
         {
-            return "aeiouAEIOU".IndexOf(c) >= 0;
+            return "aeiouAEIOU".Contains(c);
         }
 
     }
