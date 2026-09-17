@@ -3,11 +3,11 @@ using System.ComponentModel.DataAnnotations;
 
 namespace CruddyDemo.Models;
 
-//public record Customer(int Id, string Name, string Email, int Phone)
+//public record CustomerRec(int Id, string Name, string Email, int Phone)
 //{
 //    // TODO: Does Dapper always require a parameterless constructor? (I think so, but it need to be verified.)
 //    // Parameterless constructor initializing default values
-//    public Customer() : this(0, string.Empty, string.Empty, 0) { }
+//    public CustomerRec() : this(0, string.Empty, string.Empty, 0) { }
 //};
 
 public class Customer
