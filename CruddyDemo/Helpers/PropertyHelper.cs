@@ -1,7 +1,11 @@
 ﻿using System.Reflection;
+using static Dapper.SqlMapper;
 
 namespace CruddyDemo.Helpers
 {
+    /// <summary>
+    /// Provides helper methods for Property operations.
+    /// </summary>
     static public class PropertyHelper
     {
 
@@ -20,6 +24,42 @@ namespace CruddyDemo.Helpers
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// Calculates the key property name for the given type. It first checks for a property marked with the KeyAttribute. 
+        /// If none is found, it looks for common key property names like "Id", "ID", "{TypeName}Id", or "{TypeName}ID". 
+        /// If none of these are found, it defaults to "Id".
+        /// </summary>
+        /// <param name="type">The type for which to calculate the key property name.</param>
+        /// <returns>The name of the key property.</returns>
+        public static string CalcKey(Type type)
+        {
+            var key = GetKey(type);
+
+            if (string.IsNullOrEmpty(key) && PropertyHelper.PropExists(type, "Id"))
+            {
+                key = "Id";
+            }
+            else if (string.IsNullOrEmpty(key) && PropertyHelper.PropExists(type, "ID"))
+            {
+                key = "ID";
+            }
+            else if (string.IsNullOrEmpty(key) && PropertyHelper.PropExists(type, $"{type.Name}Id"))
+            {
+                key = $"{type.Name}Id";
+            }
+            else if (string.IsNullOrEmpty(key) && PropertyHelper.PropExists(type, $"{type.Name}ID"))
+            {
+                key = $"{type.Name}ID";
+            }
+
+            if (string.IsNullOrEmpty(key))
+            {
+                key = "Id";
+            }
+
+            return key;
         }
 
         /// <summary>

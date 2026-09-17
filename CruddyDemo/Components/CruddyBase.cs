@@ -19,53 +19,15 @@ namespace CruddyDemo.Components
                 TableName = typeof(TEntity).Name;
                 if (PluralizeTableName)
                 {
-                    if (TableName.EndsWith("y", StringComparison.OrdinalIgnoreCase) && !IsVowel(TableName[TableName.Length - 2]))
-                    {
-                        TableName = TableName.Substring(0, TableName.Length - 1) + "ies";
-                    }
-                    else if (TableName.EndsWith("s", StringComparison.OrdinalIgnoreCase) || 
-                             TableName.EndsWith("x", StringComparison.OrdinalIgnoreCase) || 
-                             TableName.EndsWith("z", StringComparison.OrdinalIgnoreCase) || 
-                             TableName.EndsWith("ch", StringComparison.OrdinalIgnoreCase) || 
-                             TableName.EndsWith("sh", StringComparison.OrdinalIgnoreCase))
-                    {
-                        TableName += "es";
-                    }
-                    else
-                    {
-                        TableName += "s";
-                    }
+                    TableName = CruddyHelper.Pluralize(TableName);
                 }
             }
 
             if (string.IsNullOrEmpty(KeyColumn))
             {
-                KeyColumn = PropertyHelper.GetKey(typeof(TEntity));
-                if (string.IsNullOrEmpty(KeyColumn) && PropertyHelper.PropExists(typeof(TEntity), "Id"))
-                {
-                    KeyColumn = "Id";
-                } else if (string.IsNullOrEmpty(KeyColumn) && PropertyHelper.PropExists(typeof(TEntity), "ID"))
-                {
-                    KeyColumn = "ID";
-                } else if (string.IsNullOrEmpty(KeyColumn) && PropertyHelper.PropExists(typeof(TEntity), $"{typeof(TEntity).Name}Id"))
-                {
-                    KeyColumn = $"{typeof(TEntity).Name}Id";
-                } else if (string.IsNullOrEmpty(KeyColumn) && PropertyHelper.PropExists(typeof(TEntity), $"{typeof(TEntity).Name}ID"))
-                {
-                    KeyColumn = $"{typeof(TEntity).Name}ID";
-                }
-
-                if (string.IsNullOrEmpty(KeyColumn))
-                {
-                    KeyColumn = "Id";
-                }
+                KeyColumn = PropertyHelper.CalcKey(typeof(TEntity));
             }
         }
-
-        private static bool IsVowel(char c)
-        {
-            return "aeiouAEIOU".IndexOf(c) >= 0;
-        }   
 
         /// <summary>
         /// The default schema for the database table. Default is "dbo".
@@ -94,6 +56,9 @@ namespace CruddyDemo.Components
 
         /// <summary>
         /// The column that is the primary key of table <seealso cref="TableName"/>.
+        /// If not specified, the first property of <typeparamref name="TEntity"/> marked with 
+        /// the KeyAttribute will be used. If no property is marked with KeyAttribute, it will 
+        /// look for a property named "Id" or "{ClassName}Id".
         /// </summary>
         [Parameter]
         public string? KeyColumn { get; set; }
@@ -115,28 +80,26 @@ namespace CruddyDemo.Components
         /// <summary>
         /// The column(s) to order the results by, separated by commas. 
         /// Must be a valid column name in table <seealso cref="TableName"/>.
-        /// NOTE: If you use ASC/DESC in this parameter, then set <seealso cref="SortOrder"/> to <seealso cref="SortOrder.None"/>.
         /// </summary>
         [Parameter]
         public string? OrderBy { get; set; }
 
         /// <summary>
-        /// The WHERE clause to filter the results by. Must be a valid 
-        /// SQL WHERE clause (without the "WHERE" keyword).
+        /// The WHERE clause to filter the results by (without the "WHERE" keyword).
         /// </summary>
         [Parameter]
         public string? Where { get; set; }
 
         /// <summary>
-        /// Sorting order for the rows when using <seealso cref="OrderBy"/>. Default is <seealso cref="SortOrder.Ascending"/>.
-        /// NOTE: If you use ASC/DESC in <seealso cref="OrderBy"/> parameter, then set this to <seealso cref="SortOrder.None"/>.
+        /// Sorting order for the rows when using <seealso cref="OrderBy"/>. 
         /// </summary>
+        /// <remarks>Default is <seealso cref="SortOrder.Ascending".</remarks>
         [Parameter]
         public SortOrder SortOrder { get; set; } = SortOrder.Ascending;
 
         /// <summary>
         /// Here the complete SQL SELECT statement, including joints, can be specified.
-        /// If specified, parameters like <seealso cref="TableName"/> and <seealso cref="TableColumns"/> are ignored.
+        /// If specified, parameters like <seealso cref="Top"/> and <seealso cref="OrderBy"/> are ignored.
         /// </summary>
         [Parameter]
         public string? Select { get; set; }
