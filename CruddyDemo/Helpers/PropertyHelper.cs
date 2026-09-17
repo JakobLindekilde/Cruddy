@@ -1,5 +1,4 @@
 ﻿using System.Reflection;
-using static Dapper.SqlMapper;
 
 namespace CruddyDemo.Helpers
 {
@@ -8,6 +7,46 @@ namespace CruddyDemo.Helpers
     /// </summary>
     static public class PropertyHelper
     {
+        /// <summary>
+        /// Returns true if the type is a decimal type (decimal, double, or float).
+        /// </summary>
+        /// <param name="typeName">The name of the type to check.</param>
+        /// <returns>True if the type is a decimal type; otherwise, false.</returns>
+        public static bool IsDecimal(string typeName)
+        {
+            return
+                typeName == "Decimal" ||
+                typeName == "Double" ||
+                typeName == "Single";
+        }
+
+        /// <summary>
+        /// Returns true if the type name is a number type.
+        /// </summary>
+        /// <param name="typeName">The name of the type to check.</param>
+        /// <returns>True if the type name is a number type; otherwise, false.</returns>
+        public static bool IsNumber(string typeName)
+        {
+            return
+                typeName == "Int32" ||
+                typeName == "Int64" ||
+                typeName == "Int16" ||
+                typeName == "UInt32" ||
+                typeName == "UInt64" ||
+                typeName == "UInt16" ||
+                typeName == "Byte" ||
+                typeName == "SByte";
+        }
+
+        /// <summary>
+        /// Gets all public instance properties of the specified type that can be read (i.e., have a getter).
+        /// </summary>
+        /// <param name="type">The type for which to get the readable properties.</param>
+        /// <returns>An array of PropertyInfo objects representing the readable properties.</returns>
+        public static PropertyInfo[] GetReadProperties(Type type)
+        {
+            return type.GetProperties(BindingFlags.Public | BindingFlags.Instance) .Where(p => p.CanRead).ToArray();
+        }                   
 
         /// <summary>
         /// Gets the name of the first property marked with the KeyAttribute in the given object type.

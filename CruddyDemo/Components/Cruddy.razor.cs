@@ -120,15 +120,10 @@ namespace CruddyDemo.Components
         {
             if (item == null) return;
 
-            string displayValue = PropertyHelper.GetValue(item, NameUx);
-            var label = !string.IsNullOrEmpty(NameUx) ? NameUx : typeof(TEntity).Name;
-            var message = string.IsNullOrEmpty(displayValue)
-                ? $"Sure you want to delete {label}?"
-                : $"Sure you want to delete {label} '{displayValue}'?";
-
             bool ok = false;
             try
             {
+                var message = GetDeleteMessage(item);
                 ok = await JS.InvokeAsync<bool>("confirm", message);
             }
             catch
@@ -139,15 +134,10 @@ namespace CruddyDemo.Components
 
             if (!ok) return;
 
-            var keyName = string.IsNullOrEmpty(KeyColumn) ? "Id" : KeyColumn;
-            var keyProp = typeof(TEntity).GetProperty(keyName, BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
-            if (keyProp == null) return;
-
-            var keyValue = keyProp.GetValue(item);
-
             try
             {
-                Delete(DbConnection, keyValue!);
+                var keyValue = PropertyHelper.GetValue(item, KeyColumn!);
+                Delete(DbConnection, keyValue);
 
                 // Remove the item from the in-memory rows and refresh UI
                 Rows?.Remove(item);
@@ -159,6 +149,19 @@ namespace CruddyDemo.Components
                 ErrorMessage = $"Delete failed: {ex.Message}";
                 await ShowErrorMessage();
             }
+        }
+
+        private string GetDeleteMessage(TEntity item)
+        {
+            var entity = typeof(TEntity).Name.ToLower();
+            var keyInfo = $"({KeyColumn}={PropertyHelper.GetValue(item!, KeyColumn!)})";
+            string displayValue = PropertyHelper.GetValue(item!, NameUx!);
+            
+            var message = string.IsNullOrEmpty(displayValue)
+                ? $"Sure you want to delete {entity} {keyInfo}?"
+                : $"Sure you want to delete {entity} '{displayValue}' {keyInfo}?";
+            
+            return message;
         }
 
         private async Task ShowErrorMessage(int showDuration = 8000)
@@ -179,9 +182,7 @@ namespace CruddyDemo.Components
         /// </summary>
         protected virtual void AddColumnsToGrid()
         {
-            Type entityType = typeof(TEntity);
-            var props = entityType.GetProperties(BindingFlags.Public | BindingFlags.Instance)
-                .Where(p => p.CanRead);
+            var props = PropertyHelper.GetReadProperties(typeof(TEntity));
 
             if (TableColumns == "*")
             {
@@ -221,21 +222,19 @@ namespace CruddyDemo.Components
 
                 if (AllowDelete)
                 {
-                    var seq = 0;
-                    builder.OpenElement(seq++, "button");
-                    builder.AddAttribute(seq++, "class", "btn btn-sm btn-danger me-1");
-                    builder.AddAttribute(seq++, "onclick", EventCallback.Factory.Create<MouseEventArgs>(this, async () => await ConfirmAndDeleteAsync(item)));
-                    builder.AddContent(seq, "Delete");
+                    builder.OpenElement(0, "button");
+                    builder.AddAttribute(1, "class", "btn btn-sm btn-danger me-1");
+                    builder.AddAttribute(2, "onclick", EventCallback.Factory.Create<MouseEventArgs>(this, async () => await ConfirmAndDeleteAsync(item)));
+                    builder.AddContent(3, "Delete");
                     builder.CloseElement();
                 }
 
                 if (AllowDetails)
                 {
-                    var seq = 0;
-                    builder.OpenElement(seq++, "button");
-                    builder.AddAttribute(seq++, "class", "btn btn-sm btn-primary");
-                    builder.AddAttribute(seq++, "onclick", EventCallback.Factory.Create<MouseEventArgs>(this, () => ShowDetails(item)));
-                    builder.AddContent(seq, "Details");
+                    builder.OpenElement(0, "button");
+                    builder.AddAttribute(1, "class", "btn btn-sm btn-primary");
+                    builder.AddAttribute(2, "onclick", EventCallback.Factory.Create<MouseEventArgs>(this, () => ShowDetails(item)));
+                    builder.AddContent(3, "Details");
                     builder.CloseElement();
                 }
             };
@@ -244,19 +243,11 @@ namespace CruddyDemo.Components
         }
 
         /// <summary>
-        /// Returns true if the type name is a number type (Decimal, Int32, Double, Single, Int64, UInt32, UInt64).
-        /// </summary>
-        public static bool IsNumber(string typeName)
-        {
-            return typeName == "Decimal" || typeName == "Int32" || typeName == "Double" || typeName == "Single" || typeName == "Int64" || typeName == "UInt32" || typeName == "UInt64";
-        }
-
-        /// <summary>
         /// Adds a column to the QuicGrid for the specified property
         /// </summary>
         protected virtual void AddColumn(PropertyInfo prop)
         {
-            if (IsNumber(prop.PropertyType.Name))
+            if (PropertyHelper.IsNumber(prop.PropertyType.Name))
             {
                 AddNumberColumn(prop);
             }
@@ -298,7 +289,7 @@ namespace CruddyDemo.Components
                     var access = Expression.PropertyOrField(param, prop.Name);
 
                     var delegateType = typeof(Func<,>).MakeGenericType(entityType, typeof(object));
-                    var returnType = delegateType.GetMethod("Invoke").ReturnType;
+                    var returnType = delegateType.GetMethod("Invoke")!.ReturnType;
 
                     // convert access to the expected return type if needed
                     Expression body = access;
@@ -344,7 +335,7 @@ namespace CruddyDemo.Components
 
                     var firstParamType = method.GetParameters()[0].ParameterType; // Expression<TDelegate>
                     var delegateType = firstParamType.GetGenericArguments()[0];          // TDelegate (e.g. Func<Customer, Nullable<decimal>>)
-                    var returnType = delegateType.GetMethod("Invoke").ReturnType;        // Nullable<decimal> (or decimal/other)
+                    var returnType = delegateType.GetMethod("Invoke")!.ReturnType;        // Nullable<decimal> (or decimal/other)
 
                     // convert access to the expected return type if needed
                     Expression body = access;
@@ -392,7 +383,7 @@ namespace CruddyDemo.Components
                     var access = Expression.PropertyOrField(param, prop.Name);
 
                     var delegateType = typeof(Func<,>).MakeGenericType(entityType, typeof(object));
-                    var returnType = delegateType.GetMethod("Invoke").ReturnType;
+                    var returnType = delegateType.GetMethod("Invoke")!.ReturnType;
 
                     // convert access to the expected return type if needed
                     Expression body = access;
@@ -434,20 +425,13 @@ namespace CruddyDemo.Components
 
             var propertyType = Nullable.GetUnderlyingType(prop.PropertyType) ?? prop.PropertyType;
 
-            if (propertyType == typeof(decimal) || propertyType == typeof(double) || propertyType == typeof(float))
+            if (PropertyHelper.IsDecimal(propertyType.Name))
             {
                 return string.IsNullOrEmpty(DefaultDecimalFormat) ? null : DefaultDecimalFormat;
             }
 
-            if (propertyType == typeof(int) ||
-                propertyType == typeof(long) ||
-                propertyType == typeof(short) ||
-                propertyType == typeof(byte) ||
-                propertyType == typeof(uint) ||
-                propertyType == typeof(ulong) ||
-                propertyType == typeof(ushort) ||
-                propertyType == typeof(sbyte))
-            {
+            if (PropertyHelper.IsNumber(propertyType.Name))
+            { 
                 return string.IsNullOrEmpty(DefaultNumberFormat) ? null : DefaultNumberFormat;
             }
 
