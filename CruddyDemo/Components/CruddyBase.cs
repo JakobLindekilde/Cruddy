@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Components;
 using System.Data.Common;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using CruddyDemo.Helpers;
 
 namespace CruddyDemo.Components
 {
@@ -11,14 +12,78 @@ namespace CruddyDemo.Components
     /// </summary>
     public partial class CruddyBase<TEntity> : ComponentBase 
     {
-        // TODO: Check if TableName, KeyColumn and columns in TableColumns are reserved keyword in SQL.
-        // If it is, we should wrap it in square brackets [].
+        public CruddyBase()
+        {
+            if (string.IsNullOrEmpty(TableName))
+            {
+                TableName = typeof(TEntity).Name;
+                if (PluralizeTableName)
+                {
+                    if (TableName.EndsWith("y", StringComparison.OrdinalIgnoreCase) && !IsVowel(TableName[TableName.Length - 2]))
+                    {
+                        TableName = TableName.Substring(0, TableName.Length - 1) + "ies";
+                    }
+                    else if (TableName.EndsWith("s", StringComparison.OrdinalIgnoreCase) || 
+                             TableName.EndsWith("x", StringComparison.OrdinalIgnoreCase) || 
+                             TableName.EndsWith("z", StringComparison.OrdinalIgnoreCase) || 
+                             TableName.EndsWith("ch", StringComparison.OrdinalIgnoreCase) || 
+                             TableName.EndsWith("sh", StringComparison.OrdinalIgnoreCase))
+                    {
+                        TableName += "es";
+                    }
+                    else
+                    {
+                        TableName += "s";
+                    }
+                }
+            }
+
+            if (string.IsNullOrEmpty(KeyColumn))
+            {
+                KeyColumn = PropertyHelper.GetKey(typeof(TEntity));
+                if (string.IsNullOrEmpty(KeyColumn) && PropertyHelper.PropExists(typeof(TEntity), "Id"))
+                {
+                    KeyColumn = "Id";
+                } else if (string.IsNullOrEmpty(KeyColumn) && PropertyHelper.PropExists(typeof(TEntity), "ID"))
+                {
+                    KeyColumn = "ID";
+                } else if (string.IsNullOrEmpty(KeyColumn) && PropertyHelper.PropExists(typeof(TEntity), $"{typeof(TEntity).Name}Id"))
+                {
+                    KeyColumn = $"{typeof(TEntity).Name}Id";
+                } else if (string.IsNullOrEmpty(KeyColumn) && PropertyHelper.PropExists(typeof(TEntity), $"{typeof(TEntity).Name}ID"))
+                {
+                    KeyColumn = $"{typeof(TEntity).Name}ID";
+                }
+
+                if (string.IsNullOrEmpty(KeyColumn))
+                {
+                    KeyColumn = "Id";
+                }
+            }
+        }
+
+        private static bool IsVowel(char c)
+        {
+            return "aeiouAEIOU".IndexOf(c) >= 0;
+        }   
 
         /// <summary>
-        /// Name of database table to 'CRUD'.
+        /// The default schema for the database table. Default is "dbo".
         /// </summary>
         [Parameter]
-        public string? TableName { get; set; }
+        public string DefaultSchema { get; set; } = "dbo";
+
+        /// <summary>
+        /// Name of database table to 'CRUD'. If not specified, the name of the class <typeparamref name="TEntity"/> will be used.
+        /// </summary>
+        [Parameter]
+        public string TableName { get; set; }
+
+        /// <summary>
+        /// Whether to pluralize <seealso cref="TableName"/> (add 's') when doing SQL SELECT. Default is true.
+        /// </summary>
+        [Parameter]
+        public bool PluralizeTableName { get; set; } = true;
 
         /// <summary>
         /// The columns to retrieve from table <seealso cref="TableName"/>, separated by commas.
@@ -38,14 +103,14 @@ namespace CruddyDemo.Components
         /// </summary>
         /// <remarks>Default is 10000.</remarks>
         [Parameter]
-        public int? Top { get; set; } = 10000;
+        public int Top { get; set; } = 10000;
 
         /// <summary>
         /// Whether to retrieve only distinct (=unique) rows.
         /// </summary>
         /// <remarks>Default is false.</remarks>
         [Parameter]
-        public bool? Distinct { get; set; } = false;
+        public bool Distinct { get; set; } = false;
 
         /// <summary>
         /// The column(s) to order the results by, separated by commas. 
@@ -70,9 +135,8 @@ namespace CruddyDemo.Components
         public SortOrder SortOrder { get; set; } = SortOrder.Ascending;
 
         /// <summary>
-        /// Here the complete SQL SELECT statement, including joints etc., can be specified.
-        /// Use this when not using the other parameters <seealso cref="TableName"/>, <seealso cref="TableColumns"/> and <seealso cref="Top"/>, <seealso cref="Distinct"/>.
-        /// If <seealso cref="OrderBy"/> is specified, it will be appended to the SQL statement (including <seealso cref="SortOrder"/>).
+        /// Here the complete SQL SELECT statement, including joints, can be specified.
+        /// If specified, parameters like <seealso cref="TableName"/> and <seealso cref="TableColumns"/> are ignored.
         /// </summary>
         [Parameter]
         public string? Select { get; set; }
@@ -138,28 +202,21 @@ namespace CruddyDemo.Components
         /// <returns>The final SQL SELECT statement.</returns>  
         protected virtual string BuildSql()
         {
-            // TODO: Handle '[' and ']' in column names (e.g. [Customer Name] AS CustomerName). I'm not sure if it works
-            // with Dapper or the code in BuildSql()
-
-            string sql;
-
             if (!string.IsNullOrEmpty(Select))
             {
-                sql = Select;
-            }
-            else
-            {
-                sql = $"SELECT {(Distinct.GetValueOrDefault() ? "DISTINCT " : "")}{(Top.HasValue ? $"TOP {Top.Value} " : "")}" +
-                    $" {TableColumns} FROM {TableName}";
-
+                return Select;
             }
 
-            if (!sql.Contains(" WHERE ", StringComparison.InvariantCultureIgnoreCase) && !string.IsNullOrEmpty(Where))
+            string sql = 
+                $"SELECT {(Distinct ? "DISTINCT " : "")}{(Top > 0 ? $"TOP {Top} " : "")}" +
+                $" {TableColumns} FROM {DefaultSchema}.{TableName}";
+
+            if (!string.IsNullOrEmpty(Where))
             {
                 sql += $" WHERE {Where}";
             }
 
-            if (!sql.Contains("ORDER BY", StringComparison.InvariantCultureIgnoreCase) && !string.IsNullOrEmpty(OrderBy))
+            if (!string.IsNullOrEmpty(OrderBy))
             {
                 sql += $" ORDER BY {OrderBy}";
 
@@ -171,28 +228,13 @@ namespace CruddyDemo.Components
                 }
             }
 
-            // TODO: Should we check if the SQL statement is valid? Maybe there is a NuGet package that can do this?
-            // Or we can just try to execute the SQL statement and catch any exception.
-
             return sql;
         }
 
         public object? Delete(DbConnection DbConnection, object keyValue)
         {
-            // TODO: Pluarlize table name if it is not specified? Yes for now
-            // Consider using a library like Humanizer or Pluralize.NET to pluralize the table name.
-            // For example, if the table name is "Person", it should be pluralized to "People" (NO NO!).
-            // If the table name is "Category", it should be pluralized to "Categories".
-            // If the table name is "Child", it should be pluralized to "Children".
-
-            // TODO: Check if the table name is a reserved keyword in SQL Server. If it is, we should wrap it in square brackets [].
-            var tableName = string.IsNullOrEmpty(TableName) ? typeof(TEntity).Name + 's' : TableName;
-
-            // TODO: Find Key property in TEntity and use it as KeyColumn if KeyColumn is not specified.
-            // Use reflection to find the property with [Key] attribute or the property named "Id" or "{ClassName}Id".
-            var keyColumn = string.IsNullOrEmpty(KeyColumn) ? "Id" : KeyColumn;
-
-            return DbConnection.ExecuteScalar($"DELETE FROM {tableName} WHERE {keyColumn} = @keyValue", param: new { keyValue });
+            var sql = $"DELETE FROM {DefaultSchema}.{TableName} WHERE {KeyColumn} = @keyValue";
+            return DbConnection.ExecuteScalar(sql, param: new { keyValue });
         }
 
 

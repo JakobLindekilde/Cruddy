@@ -14,6 +14,7 @@ public class Customer
 {
     public Customer() { }
 
+    [Key]
     public int Id { get; set; }
 
     [DisplayName("Customer Name")]

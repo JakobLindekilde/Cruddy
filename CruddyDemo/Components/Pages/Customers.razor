@@ -4,8 +4,8 @@
 <h3>Table Customers</h3>
 
 <h4>Columns specified in parameter TableColumns</h4>
-@*<Cruddy TEntity="Models.Customer" TableName="Customers" TableColumns="Id, Vip, Name, Email, Email, Phone" DbConnection="dbConnection" />*@
-<Cruddy TEntity="Models.Customer" TableName="Customers" TableColumns="Id, Vip, Name, Email, Email, Phone" KeyColumn="Id" PrimaryName="Name" AllowDelete="true" AllowDetails="true" DbConnection="dbConnection" />
+
+<Cruddy TEntity="Models.Customer" TableName="Customers" TableColumns="Id, Vip, Name, Email, Email, Phone" NameUx="Name" AllowDelete="true" AllowDetails="true" DbConnection="dbConnection" />
 
 <br />
 <h4>TableColumns="*"</h4>

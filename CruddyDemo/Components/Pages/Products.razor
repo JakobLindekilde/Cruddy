@@ -3,6 +3,10 @@
 
 <h3>Table Products</h3>
 
+<h4>Simple as possible</h4>
+<Cruddy TEntity="Models.Product" DbConnection="dbConnection" />
+
+<br />
 <h4>Distinct="true"</h4>
 <Cruddy TEntity="Models.Product" TableName="Products" TableColumns="Name" OrderBy="Name" Distinct="true" DbConnection="dbConnection" />
 

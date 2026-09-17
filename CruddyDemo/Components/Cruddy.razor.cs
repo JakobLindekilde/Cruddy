@@ -38,6 +38,12 @@ namespace CruddyDemo.Components
         public string? DefaultNumberFormat { get; set; } = "0";
 
         /// <summary>
+        /// The title to use for the actions column.
+        /// </summary>
+        [Parameter]
+        public string? ActionsTitle { get; set; } = "Actions";
+
+        /// <summary>
         /// Whether to enable the delete functionality for each row.
         /// </summary>
         [Parameter]
@@ -50,11 +56,11 @@ namespace CruddyDemo.Components
         public bool AllowDetails { get; set; } = false;
 
         /// <summary>
-        /// The primary name of the column/field, used for display purposes in the UI. 
-        /// Used in messages like "Are you sure you want to delete this {PrimaryName}?".
+        /// The name of the column/field, used for display purposes in the UX. 
+        /// Used in messages like "Are you sure you want to delete this {NameUx}?".
         /// </summary>
         [Parameter]
-        public string? PrimaryName { get; set; }
+        public string? NameUx { get; set; }
 
         /// <summary>
         /// The QuickGrid component that displays the rows retrieved from the database.
@@ -114,8 +120,8 @@ namespace CruddyDemo.Components
         {
             if (item == null) return;
 
-            string displayValue = PropertyHelper.GetValue(item, PrimaryName);
-            var label = !string.IsNullOrEmpty(PrimaryName) ? PrimaryName : typeof(TEntity).Name;
+            string displayValue = PropertyHelper.GetValue(item, NameUx);
+            var label = !string.IsNullOrEmpty(NameUx) ? NameUx : typeof(TEntity).Name;
             var message = string.IsNullOrEmpty(displayValue)
                 ? $"Sure you want to delete {label}?"
                 : $"Sure you want to delete {label} '{displayValue}'?";
@@ -219,7 +225,7 @@ namespace CruddyDemo.Components
                     builder.OpenElement(seq++, "button");
                     builder.AddAttribute(seq++, "class", "btn btn-sm btn-danger me-1");
                     builder.AddAttribute(seq++, "onclick", EventCallback.Factory.Create<MouseEventArgs>(this, async () => await ConfirmAndDeleteAsync(item)));
-                    builder.AddContent(seq++, "Delete");
+                    builder.AddContent(seq, "Delete");
                     builder.CloseElement();
                 }
 
@@ -229,13 +235,12 @@ namespace CruddyDemo.Components
                     builder.OpenElement(seq++, "button");
                     builder.AddAttribute(seq++, "class", "btn btn-sm btn-primary");
                     builder.AddAttribute(seq++, "onclick", EventCallback.Factory.Create<MouseEventArgs>(this, () => ShowDetails(item)));
-                    builder.AddContent(seq++, "Details");
+                    builder.AddContent(seq, "Details");
                     builder.CloseElement();
                 }
             };
 
-            // TODO: Consider making the title of the action column configurable
-            MyColumnManager.AddTemplateColumn(deleteTemplate, title: "Actions", cssClass: "text-center");
+            MyColumnManager.AddTemplateColumn(deleteTemplate, title: ActionsTitle, cssClass: "text-center");
         }
 
         /// <summary>
