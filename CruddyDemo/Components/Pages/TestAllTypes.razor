@@ -1,0 +1,10 @@
+﻿@page "/TestAllTypes"
+@inject Microsoft.Data.SqlClient.SqlConnection dbConnection
+
+<h3>Table TestAllTypes - The most used datatypes</h3>
+
+<Cruddy TEntity="Models.TestAllType" AllowDetails="true" DbConnection="dbConnection" ShowColumnSelector="true" />
+
+@code {
+
+}
