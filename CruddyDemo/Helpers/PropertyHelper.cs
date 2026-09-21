@@ -8,7 +8,7 @@ namespace CruddyDemo.Helpers
     static public class PropertyHelper
     {
         /// <summary>
-        /// Returns true if the type is a decimal type (decimal, double, or float).
+        /// Returns true if the type is a decimal type (Decimal, Double, or Single).
         /// </summary>
         /// <param name="typeName">The name of the type to check.</param>
         /// <returns>True if the type is a decimal type; otherwise, false.</returns>
@@ -21,7 +21,8 @@ namespace CruddyDemo.Helpers
         }
 
         /// <summary>
-        /// Returns true if the type name is a number type.
+        /// Returns true if the type name is a number type like 
+        /// Int32, Int64, Int16, UInt32, UInt64, UInt16, Byte, or SByte.
         /// </summary>
         /// <param name="typeName">The name of the type to check.</param>
         /// <returns>True if the type name is a number type; otherwise, false.</returns>
