@@ -4,7 +4,6 @@ using QuickGrid.Toolkit;
 using QuickGrid.Toolkit.Columns;
 using System.Linq.Expressions;
 using System.Reflection;
-using Microsoft.JSInterop;
 using Microsoft.AspNetCore.Components.Web;
 using CruddyDemo.Helpers;
 
@@ -83,8 +82,6 @@ namespace CruddyDemo.Components
         /// </summary>
         protected readonly ColumnManager<TEntity> MyColumnManager = new();
 
-        [Inject] protected IJSRuntime JS { get; set; } = default!;
-
         /// <summary>
         /// Holds a user visible error message when e.g. delete fails.
         /// </summary>
@@ -110,6 +107,16 @@ namespace CruddyDemo.Components
         /// </summary>
         protected bool ShowDetailsModal { get; set; }
 
+        /// <summary>
+        /// The currently selected item pending delete confirmation.
+        /// </summary>
+        protected TEntity? DeletePendingItem { get; set; }
+
+        /// <summary>
+        /// Whether the delete confirmation modal is visible.
+        /// </summary>
+        protected bool ShowDeleteModal { get; set; }
+
         private void ShowDetails(TEntity item)
         {
             // TODO: Get the the item from the database. For now, we just use the item as is.
@@ -127,21 +134,25 @@ namespace CruddyDemo.Components
             DetailsItem = default;
         }
 
-        private async Task ConfirmAndDeleteAsync(TEntity item)
+        private Task ConfirmAndDeleteAsync(TEntity item)
         {
-            bool ok = false;
-            try
-            {
-                var message = DeleteMessage(item);
-                ok = await JS.InvokeAsync<bool>("confirm", message);
-            }
-            catch
-            {
-                // If JS interop fails, do not proceed
-                return;
-            }
+            DeletePendingItem = item;
+            ShowDeleteModal = true;
+            return Task.CompletedTask;
+        }
 
-            if (!ok) return;
+        private void CancelDelete()
+        {
+            ShowDeleteModal = false;
+            DeletePendingItem = default;
+        }
+
+        private async Task ConfirmDeleteAsync()
+        {
+            var item = DeletePendingItem;
+            ShowDeleteModal = false;
+            DeletePendingItem = default;
+            if (item == null) return;
 
             try
             {

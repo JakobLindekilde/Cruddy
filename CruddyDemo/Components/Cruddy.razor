@@ -13,64 +13,89 @@ else if (!Rows.Any())
 }
 else
 {
+    @if (!string.IsNullOrEmpty(ErrorMessage))
+    {
+        <div class="alert alert-danger" role="alert">@ErrorMessage</div>
+    }
+
     @if (ShowColumnSelector)
     {
         <div>
             <ColumnSelector ColumnManager="MyColumnManager" SelectionChanged="SelectionChangedAsync" />
         </div>
     }
-@if (!string.IsNullOrEmpty(ErrorMessage))
-{
-    <div class="alert alert-danger" role="alert">@ErrorMessage</div>
-}
-@if (ShowDetailsModal && DetailsItem != null)
-{
-    <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Details - @typeof(TEntity).Name</h5>
-                    <button type="button" class="btn-close" aria-label="Close" @onclick="CloseDetails"></button>
-                </div>
-                <div class="modal-body">
-                    <table class="table table-sm table-striped">
-                        <tbody>
-                            @foreach (var prop in typeof(TEntity).GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance))
-                            {
-                                if (!CruddyDemo.Helpers.PropertyHelper.Supported(prop.PropertyType)) continue;
 
-                                var displayName = CruddyDemo.Helpers.PropertyHelper.GetDisplayName(prop);
-                                var format = CruddyDemo.Helpers.PropertyHelper.GetDisplayFormat(prop);
-                                var val = prop.GetValue(DetailsItem);
-                                string display;
-                                if (val == null) display = string.Empty;
-                                else if (!string.IsNullOrEmpty(format) && val is System.IFormattable f)
-                                {
-                                    display = f.ToString(format, System.Globalization.CultureInfo.CurrentCulture);
-                                }
-                                else
-                                {
-                                    display = val?.ToString() ?? string.Empty;
-                                }
-
-                                <tr>
-                                    <th>@displayName</th>
-                                    <td>@display</td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
-                <div class="modal-footer">
-                    <button class="btn btn-secondary" @onclick="CloseDetails">Close</button>
-                </div>
-            </div>
-        </div>
-    </div>
-}
     <QuickGrid @ref="MyGrid" id="CruddyGrid" Items="@Rows.AsQueryable()" Class="table table-sm table-index table-striped small table-fit table-thead-sticky mb-0" Theme="twentyAI">
         @QuickGridColumns.Columns(MyColumnManager)
     </QuickGrid>
+
+    @if (ShowDeleteModal && DeletePendingItem != null)
+    {
+        <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Confirm delete</h5>
+                        <button type="button" class="btn-close" aria-label="Close" @onclick="CancelDelete"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>@DeleteMessage(DeletePendingItem)</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" @onclick="CancelDelete">Cancel</button>
+                        <button class="btn btn-danger" @onclick="ConfirmDeleteAsync">Delete</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    @if (ShowDetailsModal && DetailsItem != null)
+    {
+        <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Details - @typeof(TEntity).Name</h5>
+                        <button type="button" class="btn-close" aria-label="Close" @onclick="CloseDetails"></button>
+                    </div>
+                    <div class="modal-body">
+                        <table class="table table-sm table-striped">
+                            <tbody>
+                                @foreach (var prop in typeof(TEntity).GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance))
+                                {
+                                    if (!CruddyDemo.Helpers.PropertyHelper.Supported(prop.PropertyType)) continue;
+
+                                    var displayName = CruddyDemo.Helpers.PropertyHelper.GetDisplayName(prop);
+                                    var format = CruddyDemo.Helpers.PropertyHelper.GetDisplayFormat(prop);
+                                    var val = prop.GetValue(DetailsItem);
+                                    string display;
+                                    if (val == null) display = string.Empty;
+                                    else if (!string.IsNullOrEmpty(format) && val is System.IFormattable f)
+                                    {
+                                        display = f.ToString(format, System.Globalization.CultureInfo.CurrentCulture);
+                                    }
+                                    else
+                                    {
+                                        display = val?.ToString() ?? string.Empty;
+                                    }
+
+                                    <tr>
+                                        <th>@displayName</th>
+                                        <td>@display</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" @onclick="CloseDetails">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
 }
 
 @code {
@@ -80,7 +105,7 @@ else
     /// </summary>
     [Parameter]
     public bool ShowColumnSelector { get; set; } = false;
-    
+
     private async Task SelectionChangedAsync()
     {
         if (MyGrid is null) return;
