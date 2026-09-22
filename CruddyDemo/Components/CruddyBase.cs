@@ -129,13 +129,16 @@ namespace CruddyDemo.Components
         /// A dictionary that maps the column names specified in <seealso cref="TableColumns"/> 
         /// to their corresponding property names in <typeparamref name="TEntity"/>.
         /// </summary>
-        protected readonly Dictionary<string, string> ColumnAliasDict = new(StringComparer.OrdinalIgnoreCase);
+        // TODO: Fix the SonarQube warning S3887: 
+#pragma warning disable S3887   // SonarQube rule S3887: "Immutable fields should not be mutable". Use an immutable collection or reduce the accessibility of the non-private readonly field 'ColumnAliasDict'.
+        public readonly Dictionary<string, string> ColumnAliasDict = new(StringComparer.OrdinalIgnoreCase);
+#pragma warning restore S3887
 
         /// <summary>
         /// Fills the <seealso cref="ColumnAliasDict"/> dictionary with the column names and their 
         /// corresponding property names. Use 'AS' to specify a property in the <typeparamref name="TEntity"/>. 
         /// </summary>
-        protected void FillColumnAliasDict()
+        public void FillColumnAliasDict()
         {
             var columns = TableColumns.Split(',').Select(c => c.Trim());
             foreach (var column in columns)
@@ -269,7 +272,7 @@ namespace CruddyDemo.Components
                 pluralized = name + "s";
             }
 
-            if (char.IsUpper(name[name.Length-1]))
+            if (char.IsUpper(name[^1]))
             {
                 pluralized = pluralized.ToUpper();
             }

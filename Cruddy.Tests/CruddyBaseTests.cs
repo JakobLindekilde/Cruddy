@@ -1,4 +1,5 @@
 ﻿using CruddyDemo.Components;
+using CruddyDemo.Helpers;
 
 namespace Cruddy.Tests
 {
@@ -77,14 +78,14 @@ namespace Cruddy.Tests
             string tableName,
             string expected)
         {
-            var tut = new CruddyBase<Person>
+            var dut = new CruddyBase<Person>
             {
                 Select = select,
                 TableColumns = tableColumns,
                 TableName = tableName,
                 DbConnection = null
             };
-            var sql = tut.BuildSql();
+            var sql = dut.BuildSql();
             Assert.Equal(expected, sql);
         }
 
@@ -106,7 +107,7 @@ namespace Cruddy.Tests
             string where,
             string expected)
         {
-            var tut = new CruddyBase<Person> {
+            var dut = new CruddyBase<Person> {
                 Distinct = distinct,
                 Top = top,
                 TableColumns = tableColumns,
@@ -114,7 +115,7 @@ namespace Cruddy.Tests
                 TableName = tableName,
                 Where = where,  
                 DbConnection = null };
-            Assert.Equal(expected, tut.BuildSql());
+            Assert.Equal(expected, dut.BuildSql());
         }
 
         [Theory]
@@ -138,7 +139,7 @@ namespace Cruddy.Tests
             SortOrder sortOrder,
             string expected)
         {
-            var tut = new CruddyBase<Person>
+            var dut = new CruddyBase<Person>
             {
                 TableColumns = tableColumns,
                 TableName = tableName,
@@ -147,10 +148,107 @@ namespace Cruddy.Tests
                 SortOrder = sortOrder,
                 DbConnection = null
             };
-            var sql = tut.BuildSql();
+            var sql = dut.BuildSql();
             Assert.Equal(expected, sql);
         }
 
+
+        [Fact]
+        public void FillColumnAliasDict_FillsDictionaryCorrectlyNoAS()
+        {
+            var dut = new CruddyBase<Person>
+            {
+                TableColumns = "Id, Name, Email",
+                DbConnection = null
+            };
+
+            dut.FillColumnAliasDict();
+
+            var expectedDict = new Dictionary<string, string>
+            {
+                { "Id", "Id" },
+                { "Name", "Name" },
+                { "Email", "Email" }
+            };
+            Assert.Equal(expectedDict, dut.ColumnAliasDict);
+        }
+
+        [Fact]
+        public void FillColumnAliasDict_FillsDictionaryCorrectlyWithAS()
+        {
+            var dut = new CruddyBase<Person>
+            {
+                TableColumns = "Id AS PersonId, Name AS PersonName, Email",
+                DbConnection = null
+            };
+
+            dut.FillColumnAliasDict();
+
+            var expectedDict = new Dictionary<string, string>
+            {
+                { "Id", "PersonId" },
+                { "Name", "PersonName" },
+                { "Email", "Email" }
+            };
+            Assert.Equal(expectedDict, dut.ColumnAliasDict);
+        }
+
+        [Fact]
+        public void FillColumnAliasDict_FillsDictionaryCorrectlyIgnoringDuplicates1()
+        {
+            var dut = new CruddyBase<Person>
+            {
+                TableColumns = "Id, Name, Name AS Name2",
+                DbConnection = null
+            };
+
+            dut.FillColumnAliasDict();
+
+            var expectedDict = new Dictionary<string, string>
+            {
+                { "Id", "Id" },
+                { "Name", "Name" }
+            };
+            Assert.Equal(expectedDict, dut.ColumnAliasDict);
+        }
+
+        [Fact]
+        public void FillColumnAliasDict_FillsDictionaryCorrectlyIgnoringDuplicates2()
+        {
+            var dut = new CruddyBase<Person>
+            {
+                TableColumns = "Id, Name AS Name1, Name",
+                DbConnection = null
+            };
+
+            dut.FillColumnAliasDict();
+
+            var expectedDict = new Dictionary<string, string>
+            {
+                { "Id", "Id" },
+                { "Name", "Name1" }
+            };
+            Assert.Equal(expectedDict, dut.ColumnAliasDict);
+        }
+
+        [Fact]
+        public void FillColumnAliasDict_FillsDictionaryCorrectlyRemovingBrackets()
+        {
+            var dut = new CruddyBase<Person>
+            {
+                TableColumns = "Id, Name AS [PersonName]",
+                DbConnection = null
+            };
+
+            dut.FillColumnAliasDict();
+
+            var expectedDict = new Dictionary<string, string>
+            {
+                { "Id", "Id" },
+                { "Name", "PersonName" }
+            };
+            Assert.Equal(expectedDict, dut.ColumnAliasDict);
+        }
 
     }
 }
