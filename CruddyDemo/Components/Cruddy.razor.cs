@@ -24,8 +24,10 @@ namespace CruddyDemo.Components
     /// Lists the rows of a database table in a QuickGrid component, 
     /// with columns automatically generated from the public properties of TEntity.
     /// </summary>
-    public partial class Cruddy<TEntity> : CruddyBase<TEntity> //where TEntity : class, new()
+    public partial class Cruddy<TEntity> : CruddyBase<TEntity> //where TEntity : class, record, new()
     {
+        #region Parameters
+
         /// <summary>
         /// The default date format to use when displaying date values 
         /// when not using <seealso cref="DisplayFormatAttribute"/>.
@@ -72,6 +74,10 @@ namespace CruddyDemo.Components
         [Parameter]
         public string? NameUx { get; set; }
 
+        #endregion
+
+        #region Properties
+
         /// <summary>
         /// The QuickGrid component that displays the rows retrieved from the database.
         /// </summary>
@@ -87,6 +93,10 @@ namespace CruddyDemo.Components
         /// </summary>
         protected string? ErrorMessage { get; set; }
 
+        #endregion
+
+        #region Lifecycle methods
+
         /// <summary>
         /// During component initialization, this method fills <see cref="ColumnAliasDict"/>, 
         /// adds columns to the grid and retrieves the rows from the database.
@@ -97,6 +107,10 @@ namespace CruddyDemo.Components
             AddColumnsToGrid();
         }
 
+        #endregion
+
+        #region Details
+
         /// <summary>
         /// The currently selected item shown in the details modal.
         /// </summary>
@@ -106,16 +120,6 @@ namespace CruddyDemo.Components
         /// Whether the details modal is visible.
         /// </summary>
         protected bool ShowDetailsModal { get; set; }
-
-        /// <summary>
-        /// The currently selected item pending delete confirmation.
-        /// </summary>
-        protected TEntity? DeletePendingItem { get; set; }
-
-        /// <summary>
-        /// Whether the delete confirmation modal is visible.
-        /// </summary>
-        protected bool ShowDeleteModal { get; set; }
 
         private void ShowDetails(TEntity item)
         {
@@ -133,6 +137,20 @@ namespace CruddyDemo.Components
             ShowDetailsModal = false;
             DetailsItem = default;
         }
+
+        #endregion
+
+        #region Delete
+
+        /// <summary>
+        /// The currently selected item pending delete confirmation.
+        /// </summary>
+        protected TEntity? DeletePendingItem { get; set; }
+
+        /// <summary>
+        /// Whether the delete confirmation modal is visible.
+        /// </summary>
+        protected bool ShowDeleteModal { get; set; }
 
         private Task ConfirmAndDeleteAsync(TEntity item)
         {
@@ -152,11 +170,14 @@ namespace CruddyDemo.Components
             var item = DeletePendingItem;
             ShowDeleteModal = false;
             DeletePendingItem = default;
+            //TODO: Can we just delete line "if (item == null) return;"?
+#pragma warning disable S2955   // SonarQube: "null" should not be passed as an argument to a non-nullable parameter
             if (item == null) return;
+#pragma warning restore S2955
 
             try
             {
-                var keyValue = PropertyHelper.GetValue(item!, KeyColumn!);
+                var keyValue = PropertyHelper.GetValue(item, KeyColumn!);
                 Delete(DbConnection, keyValue);
 
                 // Remove the item from the in-memory rows and refresh UI
@@ -176,26 +197,17 @@ namespace CruddyDemo.Components
             var sureToDelete = "Sure you want to delete " + typeof(TEntity).Name.ToLower();
             var keyInfo = $"({KeyColumn}={PropertyHelper.GetValue(item!, KeyColumn!)})";
             string nameUxValue = PropertyHelper.GetValue(item!, NameUx!);
-            
+
             var message = string.IsNullOrEmpty(nameUxValue)
                 ? $"{sureToDelete} {keyInfo}?"
                 : $"{sureToDelete} {nameUxValue} {keyInfo}?";
-            
+
             return message;
         }
 
-        private async Task ShowErrorMessage(int showDuration = 8000)
-        {
-            await InvokeAsync(StateHasChanged);
+        #endregion
 
-            // Clear the message after a short delay
-            _ = Task.Run(async () =>
-            {
-                await Task.Delay(showDuration);
-                ErrorMessage = null;
-                await InvokeAsync(StateHasChanged);
-            });
-        }
+        #region AddColumns 
 
         /// <summary>
         /// Add a simple column, using AddSimple(), for each public readable property on TEntity.
@@ -429,6 +441,23 @@ namespace CruddyDemo.Components
             }
         }
 
+        #endregion
+
+        #region Misc methods
+
+        private async Task ShowErrorMessage(int showDuration = 8000)
+        {
+            await InvokeAsync(StateHasChanged);
+
+            // Clear the message after a short delay
+            _ = Task.Run(async () =>
+            {
+                await Task.Delay(showDuration);
+                ErrorMessage = null;
+                await InvokeAsync(StateHasChanged);
+            });
+        }
+
         /// <summary>
         /// Gets the display format for the specified property either 
         /// from the DisplayFormatAttribute, or from the default formats.
@@ -451,7 +480,7 @@ namespace CruddyDemo.Components
             }
 
             if (PropertyHelper.IsNumber(propertyType.Name))
-            { 
+            {
                 return string.IsNullOrEmpty(DefaultNumberFormat) ? null : DefaultNumberFormat;
             }
 
@@ -463,5 +492,8 @@ namespace CruddyDemo.Components
 
             return null;
         }
+
+        #endregion
+
     }
 }
