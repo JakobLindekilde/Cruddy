@@ -254,6 +254,8 @@ namespace CruddyDemo.Components
         /// </summary>
         protected virtual void AddColumn(PropertyInfo prop)
         {
+            if (!PropertyHelper.Supported(prop.PropertyType)) return;
+
             if (PropertyHelper.IsNumber(prop.PropertyType.Name))
             {
                 AddNumberColumn(prop);

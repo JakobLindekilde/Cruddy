@@ -37,6 +37,8 @@ else
                         <tbody>
                             @foreach (var prop in typeof(TEntity).GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance))
                             {
+                                if (!CruddyDemo.Helpers.PropertyHelper.Supported(prop.PropertyType)) continue;
+
                                 var displayName = CruddyDemo.Helpers.PropertyHelper.GetDisplayName(prop);
                                 var format = CruddyDemo.Helpers.PropertyHelper.GetDisplayFormat(prop);
                                 var val = prop.GetValue(DetailsItem);
