@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using static Dapper.SqlMapper;
 
 namespace CruddyDemo.Helpers
 {
@@ -7,19 +8,6 @@ namespace CruddyDemo.Helpers
     /// </summary>
     static public class PropertyHelper
     {
-        /// <summary>
-        /// Returns true if the type is a decimal type (Decimal, Double, or Single).
-        /// </summary>
-        /// <param name="typeName">The name of the type to check.</param>
-        /// <returns>True if the type is a decimal type; otherwise, false.</returns>
-        public static bool IsDecimal(string typeName)
-        {
-            return
-                typeName == "Decimal" ||
-                typeName == "Double" ||
-                typeName == "Single";
-        }
-
         /// <summary>
         /// Returns true if the type name is a number type like 
         /// Int32, Int64, Int16, UInt32, UInt64, UInt16, Byte, or SByte.
@@ -40,6 +28,19 @@ namespace CruddyDemo.Helpers
         }
 
         /// <summary>
+        /// Returns true if the type is a decimal type (Decimal, Double, or Single).
+        /// </summary>
+        /// <param name="typeName">The name of the type to check.</param>
+        /// <returns>True if the type is a decimal type; otherwise, false.</returns>
+        public static bool IsDecimal(string typeName)
+        {
+            return
+                typeName == "Decimal" ||
+                typeName == "Double" ||
+                typeName == "Single";
+        }
+
+        /// <summary>
         /// Returns true if the specified type is supported by Cruddy, which includes string, 
         /// number types, decimal types, bool, enum, DateTime, DateTimeOffset, TimeSpan, and Guid.
         /// </summary>
@@ -48,11 +49,12 @@ namespace CruddyDemo.Helpers
         public static bool Supported(Type type)
         {
             var t = Nullable.GetUnderlyingType(type) ?? type;
+
             if (t == typeof(string) ||
+                t.IsEnum ||
                 IsNumber(t.Name) || 
                 IsDecimal(t.Name) ||
                 t == typeof(bool) ||
-                t.IsEnum || 
                 t == typeof(DateTime) ||
                 t == typeof(DateTimeOffset) ||
                 t == typeof(TimeSpan) ||
@@ -207,6 +209,29 @@ namespace CruddyDemo.Helpers
 
             return null;
         }
+
+        static public string GetFormattedValue(PropertyInfo prop, object? item)
+        {
+            string formattedValue;
+            var format = CruddyDemo.Helpers.PropertyHelper.GetDisplayFormat(prop);
+            var value = prop.GetValue(item);
+
+            if (value == null)
+            {
+                formattedValue = string.Empty;
+            }
+            else if (!string.IsNullOrEmpty(format) && value is System.IFormattable f)
+            {
+                formattedValue = f.ToString(format, System.Globalization.CultureInfo.CurrentCulture);
+            }
+            else
+            {
+                formattedValue = value?.ToString() ?? string.Empty;
+            }
+
+            return formattedValue;
+        }
+
 
     }
 }

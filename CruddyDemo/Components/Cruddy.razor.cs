@@ -57,22 +57,22 @@ namespace CruddyDemo.Components
         public string? ActionsTitle { get; set; } = "Actions";
 
         /// <summary>
-        /// Whether to enable the delete functionality for each row.
+        /// Whether to enable the details functionality for each row.
         /// </summary>
         [Parameter]
-        public bool AllowDelete { get; set; } = false;
+        public bool AllowDetails { get; set; } = false;
 
         /// <summary>
         /// Whether to enable the edit functionality for each row.
         /// </summary>
         [Parameter]
         public bool AllowEdit { get; set; } = false;
-
+       
         /// <summary>
-        /// Whether to enable the details functionality for each row.
+        /// Whether to enable the delete functionality for each row.
         /// </summary>
         [Parameter]
-        public bool AllowDetails { get; set; } = false;
+        public bool AllowDelete { get; set; } = false;
 
         /// <summary>
         /// The name of the column/field, used for display purposes in the UX. 
@@ -116,73 +116,6 @@ namespace CruddyDemo.Components
 
         #endregion
 
-        #region Delete
-
-        /// <summary>
-        /// The currently selected item pending delete confirmation.
-        /// </summary>
-        protected TEntity? DeletePendingItem { get; set; }
-
-        /// <summary>
-        /// Whether the delete confirmation modal is visible.
-        /// </summary>
-        protected bool ShowDeleteModal { get; set; }
-
-        private Task ConfirmAndDeleteAsync(TEntity item)
-        {
-            DeletePendingItem = item;
-            ShowDeleteModal = true;
-            return Task.CompletedTask;
-        }
-
-        private void CancelDelete()
-        {
-            ShowDeleteModal = false;
-            DeletePendingItem = default;
-        }
-
-        private async Task ConfirmDeleteAsync()
-        {
-            var item = DeletePendingItem;
-            ShowDeleteModal = false;
-            DeletePendingItem = default;
-            //TODO: Can we just delete line "if (item == null) return;"?
-#pragma warning disable S2955   // SonarQube: "null" should not be passed as an argument to a non-nullable parameter
-            if (item == null) return;
-#pragma warning restore S2955
-
-            try
-            {
-                var keyValue = PropertyHelper.GetValue(item, KeyColumn!);
-                Delete(DbConnection, keyValue);
-
-                // Remove the item from the in-memory rows and refresh UI
-                Rows?.Remove(item);
-                await InvokeAsync(StateHasChanged);
-            }
-            catch (Exception ex)
-            {
-                // Show an error message to the user and refresh the UI
-                ErrorMessage = $"Delete failed: {ex.Message}";
-                await ShowErrorMessage();
-            }
-        }
-
-        private string DeleteMessage(TEntity item)
-        {
-            var sureToDelete = "Sure you want to delete " + typeof(TEntity).Name.ToLower();
-            var keyInfo = $"({KeyColumn}={PropertyHelper.GetValue(item!, KeyColumn!)})";
-            string nameUxValue = PropertyHelper.GetValue(item!, NameUx!);
-
-            var message = string.IsNullOrEmpty(nameUxValue)
-                ? $"{sureToDelete} {keyInfo}?"
-                : $"{sureToDelete} {nameUxValue} {keyInfo}?";
-
-            return message;
-        }
-
-        #endregion
-
         #region Details
 
         /// <summary>
@@ -205,6 +138,14 @@ namespace CruddyDemo.Components
             DetailsItem = item;
             ShowDetailsModal = true;
         }
+
+        private void CloseDetails()
+        {
+            ShowDetailsModal = false;
+            DetailsItem = default;
+        }
+
+        #endregion
 
         #region Edit
 
@@ -311,14 +252,22 @@ namespace CruddyDemo.Components
                 {
                     var targetType = Nullable.GetUnderlyingType(prop.PropertyType) ?? prop.PropertyType;
                     if (targetType == typeof(string)) converted = value.ToString();
+                    else if (targetType.IsEnum) converted = Enum.Parse(targetType, value.ToString()!);
                     else if (targetType == typeof(int)) converted = int.TryParse(value.ToString(), out var i) ? i : (int?)null;
                     else if (targetType == typeof(long)) converted = long.TryParse(value.ToString(), out var l) ? l : (long?)null;
+                    else if (targetType == typeof(short)) converted = short.TryParse(value.ToString(), out var s) ? s : (short?)null;
+                    else if (targetType == typeof(uint)) converted = uint.TryParse(value.ToString(), out var ui) ? ui : (uint?)null;
+                    else if (targetType == typeof(ulong)) converted = ulong.TryParse(value.ToString(), out var ul) ? ul : (ulong?)null;
+                    else if (targetType == typeof(ushort)) converted = ushort.TryParse(value.ToString(), out var us) ? us : (ushort?)null;
+                    else if (targetType == typeof(byte)) converted = byte.TryParse(value.ToString(), out var by) ? by : (byte?)null;
+                    else if (targetType == typeof(sbyte)) converted = sbyte.TryParse(value.ToString(), out var sby) ? sby : (sbyte?)null;
                     else if (targetType == typeof(decimal)) converted = decimal.TryParse(value.ToString(), out var d) ? d : (decimal?)null;
                     else if (targetType == typeof(double)) converted = double.TryParse(value.ToString(), out var dd) ? dd : (double?)null;
                     else if (targetType == typeof(float)) converted = float.TryParse(value.ToString(), out var f) ? f : (float?)null;
                     else if (targetType == typeof(bool)) converted = bool.TryParse(value.ToString(), out var b) ? b : (bool?)null;
                     else if (targetType == typeof(DateTime)) converted = DateTime.TryParse(value.ToString(), out var dt) ? dt : (DateTime?)null;
-                    else if (targetType.IsEnum) converted = Enum.Parse(targetType, value.ToString()!);
+                    else if (targetType == typeof(TimeSpan)) converted = TimeSpan.TryParse(value.ToString(), out var ts) ? ts : (TimeSpan?)null;
+                    else if (targetType == typeof(DateTimeOffset)) converted = DateTimeOffset.TryParse(value.ToString(), out var dto) ? dto : (DateTimeOffset?)null;
                     else if (targetType == typeof(Guid)) converted = Guid.TryParse(value.ToString(), out var g) ? g : (Guid?)null;
                     else converted = value;
                 }
@@ -339,10 +288,69 @@ namespace CruddyDemo.Components
 
         #endregion
 
-        private void CloseDetails()
+        #region Delete
+
+        /// <summary>
+        /// The currently selected item pending delete confirmation.
+        /// </summary>
+        protected TEntity? DeletePendingItem { get; set; }
+
+        /// <summary>
+        /// Whether the delete confirmation modal is visible.
+        /// </summary>
+        protected bool ShowDeleteModal { get; set; }
+
+        private Task ConfirmAndDeleteAsync(TEntity item)
         {
-            ShowDetailsModal = false;
-            DetailsItem = default;
+            DeletePendingItem = item;
+            ShowDeleteModal = true;
+            return Task.CompletedTask;
+        }
+
+        private void CancelDelete()
+        {
+            ShowDeleteModal = false;
+            DeletePendingItem = default;
+        }
+
+        private async Task ConfirmDeleteAsync()
+        {
+            var item = DeletePendingItem;
+            ShowDeleteModal = false;
+            DeletePendingItem = default;
+            //TODO: Can we just delete line "if (item == null) return;"?
+#pragma warning disable S2955   // SonarQube: "null" should not be passed as an argument to a non-nullable parameter
+            if (item == null) return;
+#pragma warning restore S2955
+
+            try
+            {
+                var keyValue = PropertyHelper.GetValue(item, KeyColumn!);
+                Delete(DbConnection, keyValue);
+
+                // Remove the item from the in-memory rows and refresh UI
+                Rows?.Remove(item);
+                await InvokeAsync(StateHasChanged);
+            }
+            catch (Exception ex)
+            {
+                // Show an error message to the user and refresh the UI
+                ErrorMessage = $"Delete failed: {ex.Message}";
+                await ShowErrorMessage();
+            }
+        }
+
+        private string DeleteMessage(TEntity item)
+        {
+            var sureToDelete = "Sure you want to delete " + typeof(TEntity).Name.ToLower();
+            var keyInfo = $"({KeyColumn}={PropertyHelper.GetValue(item!, KeyColumn!)})";
+            string nameUxValue = PropertyHelper.GetValue(item!, NameUx!);
+
+            var message = string.IsNullOrEmpty(nameUxValue)
+                ? $"{sureToDelete} {keyInfo}?"
+                : $"{sureToDelete} {nameUxValue} {keyInfo}?";
+
+            return message;
         }
 
         #endregion
