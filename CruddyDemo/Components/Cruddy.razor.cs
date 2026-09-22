@@ -109,37 +109,6 @@ namespace CruddyDemo.Components
 
         #endregion
 
-        #region Details
-
-        /// <summary>
-        /// The currently selected item shown in the details modal.
-        /// </summary>
-        protected TEntity? DetailsItem { get; set; }
-
-        /// <summary>
-        /// Whether the details modal is visible.
-        /// </summary>
-        protected bool ShowDetailsModal { get; set; }
-
-        private void ShowDetails(TEntity item)
-        {
-            // TODO: Get the the item from the database. For now, we just use the item as is.
-
-            // TODO: Consider making this modal a separate component, so that it can be reused and customized.
-            // For example, we could have a CruddyDetails<TEntity> component that takes a TEntity parameter and displays
-            // its properties in a table or form. Then we could use that component here instead of the inline modal.
-            DetailsItem = item;
-            ShowDetailsModal = true;
-        }
-
-        private void CloseDetails()
-        {
-            ShowDetailsModal = false;
-            DetailsItem = default;
-        }
-
-        #endregion
-
         #region Delete
 
         /// <summary>
@@ -207,6 +176,37 @@ namespace CruddyDemo.Components
 
         #endregion
 
+        #region Details
+
+        /// <summary>
+        /// The currently selected item shown in the details modal.
+        /// </summary>
+        protected TEntity? DetailsItem { get; set; }
+
+        /// <summary>
+        /// Whether the details modal is visible.
+        /// </summary>
+        protected bool ShowDetailsModal { get; set; }
+
+        private void ShowDetails(TEntity item)
+        {
+            // TODO: Get the the item from the database. For now, we just use the item as is.
+
+            // TODO: Consider making this modal a separate component, so that it can be reused and customized.
+            // For example, we could have a CruddyDetails<TEntity> component that takes a TEntity parameter and displays
+            // its properties in a table or form. Then we could use that component here instead of the inline modal.
+            DetailsItem = item;
+            ShowDetailsModal = true;
+        }
+
+        private void CloseDetails()
+        {
+            ShowDetailsModal = false;
+            DetailsItem = default;
+        }
+
+        #endregion
+
         #region AddColumns 
 
         /// <summary>
@@ -250,21 +250,21 @@ namespace CruddyDemo.Components
         {
             RenderFragment deleteTemplate(TEntity item) => (builder) =>
             {
-                if (AllowDelete)
-                {
-                    builder.OpenElement(0, "button");
-                    builder.AddAttribute(1, "class", "btn btn-sm btn-danger me-1");
-                    builder.AddAttribute(2, "onclick", EventCallback.Factory.Create<MouseEventArgs>(this, async () => await ConfirmAndDeleteAsync(item)));
-                    builder.AddContent(3, "Delete");
-                    builder.CloseElement();
-                }
-
                 if (AllowDetails)
                 {
                     builder.OpenElement(0, "button");
-                    builder.AddAttribute(1, "class", "btn btn-sm btn-primary");
+                    builder.AddAttribute(1, "class", "btn btn-sm btn-primary me-1");
                     builder.AddAttribute(2, "onclick", EventCallback.Factory.Create<MouseEventArgs>(this, () => ShowDetails(item)));
                     builder.AddContent(3, "Details");
+                    builder.CloseElement();
+                }
+
+                if (AllowDelete)
+                {
+                    builder.OpenElement(0, "button");
+                    builder.AddAttribute(1, "class", "btn btn-sm btn-danger");
+                    builder.AddAttribute(2, "onclick", EventCallback.Factory.Create<MouseEventArgs>(this, async () => await ConfirmAndDeleteAsync(item)));
+                    builder.AddContent(3, "Delete");
                     builder.CloseElement();
                 }
             };
