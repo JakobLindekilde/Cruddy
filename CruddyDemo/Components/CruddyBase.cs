@@ -224,13 +224,11 @@ namespace CruddyDemo.Components
             var sql = $"UPDATE {DefaultSchema}.{TableName} SET {string.Join(", ", setClauses)} WHERE {KeyColumn} = @keyValue";
 
             var dp = new Dapper.DynamicParameters();
-            // add all property values
-            foreach (var p in props)
+            foreach (var prop in props)
             {
-                var val = p.GetValue(entity);
-                dp.Add(p.Name, val);
+                var val = prop.GetValue(entity);
+                dp.Add(prop.Name, val);
             }
-
             dp.Add("keyValue", keyValue);
 
             return DbConnection.Execute(sql, dp);

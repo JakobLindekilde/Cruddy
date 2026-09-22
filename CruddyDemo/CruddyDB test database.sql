@@ -115,7 +115,7 @@ CREATE TABLE [dbo].[TestAllTypes](
 	[ByteNoNull] [tinyint] NOT NULL,
 	[ByteNullable] [tinyint] NULL,
 	[DecimalNoNull] [decimal](18, 4) NOT NULL,
-	[DecimalNummalble] [decimal](18, 4) NULL,
+	[DecimalNullable] [decimal](18, 4) NULL,
 	[DoubleNoNull] [float] NOT NULL,
 	[DoubleNullable] [float] NULL,
 	[SingleNoNull] [real] NOT NULL,
@@ -173,9 +173,7 @@ INSERT [dbo].[Customers] ([Id], [Name], [Email], [Vip], [Phone], [Birthdate], [S
 GO
 INSERT [dbo].[Customers] ([Id], [Name], [Email], [Vip], [Phone], [Birthdate], [Salary]) VALUES (6, N'Pia', N'pia@valby.dk', 0, 11161111, CAST(N'1983-04-04T00:00:00.000' AS DateTime), 12345.4999)
 GO
-INSERT [dbo].[Customers] ([Id], [Name], [Email], [Vip], [Phone], [Birthdate], [Salary]) VALUES (13, N'Jjjjjjj', N'jj@mail.dk', 1, 333333333, CAST(N'1991-11-11T00:00:00.000' AS DateTime), 12345.5600)
-GO
-INSERT [dbo].[Customers] ([Id], [Name], [Email], [Vip], [Phone], [Birthdate], [Salary]) VALUES (22, N'12', N'12', 1, 12, CAST(N'2012-11-11T00:00:00.000' AS DateTime), 12.0000)
+INSERT [dbo].[Customers] ([Id], [Name], [Email], [Vip], [Phone], [Birthdate], [Salary]) VALUES (13, N'Jjjjjjj', N'jj@mail.dk', 1, 55432, CAST(N'1991-11-11T00:00:00.000' AS DateTime), 12345.5600)
 GO
 SET IDENTITY_INSERT [dbo].[Customers] OFF
 GO
@@ -235,9 +233,9 @@ SET IDENTITY_INSERT [dbo].[Products] OFF
 GO
 SET IDENTITY_INSERT [dbo].[TestAllTypes] ON 
 GO
-INSERT [dbo].[TestAllTypes] ([IdInt], [IdGuid], [Int32NoNull], [Int32Nullable], [Int64NoNull], [Int64Nullable], [Int16NoNull], [Int16Nullable], [ByteNoNull], [ByteNullable], [DecimalNoNull], [DecimalNummalble], [DoubleNoNull], [DoubleNullable], [SingleNoNull], [SingleNullable], [BoolNoNull], [BoolNullable], [StringNoNull], [StringNullable], [DateTimeNoNull], [DateTimeNullable], [TimeSpanNoNull], [TimeSpanNullable], [DateTimeOffsetNoNull], [DateTimeOffsetNullable], [GuidNoNull], [GuidNullable]) VALUES (2, N'514a1c66-d201-4b2f-95fe-7725c97edbc5', 1, NULL, 2, NULL, 3, NULL, 4, NULL, CAST(5.5000 AS Decimal(18, 4)), NULL, 6.6, NULL, 7.7, NULL, 0, NULL, N'Abc', NULL, CAST(N'2026-01-01T11:12:13.457' AS DateTime), NULL, CAST(N'11:12:13' AS Time), NULL, CAST(N'2026-09-21T11:12:13.4567890+02:00' AS DateTimeOffset), NULL, N'00000000-0000-0000-0000-000000000000', NULL)
+INSERT [dbo].[TestAllTypes] ([IdInt], [IdGuid], [Int32NoNull], [Int32Nullable], [Int64NoNull], [Int64Nullable], [Int16NoNull], [Int16Nullable], [ByteNoNull], [ByteNullable], [DecimalNoNull], [DecimalNullable], [DoubleNoNull], [DoubleNullable], [SingleNoNull], [SingleNullable], [BoolNoNull], [BoolNullable], [StringNoNull], [StringNullable], [DateTimeNoNull], [DateTimeNullable], [TimeSpanNoNull], [TimeSpanNullable], [DateTimeOffsetNoNull], [DateTimeOffsetNullable], [GuidNoNull], [GuidNullable]) VALUES (2, N'514a1c66-d201-4b2f-95fe-7725c97edbc5', 1, NULL, 2, NULL, 3, NULL, 4, NULL, CAST(5.5000 AS Decimal(18, 4)), NULL, 6.6, NULL, 7.7, NULL, 0, NULL, N'Abc', NULL, CAST(N'2026-01-01T11:12:13.457' AS DateTime), NULL, CAST(N'11:12:13' AS Time), NULL, CAST(N'2026-09-21T11:12:13.4567890+02:00' AS DateTimeOffset), NULL, N'00000000-0000-0000-0000-000000000000', NULL)
 GO
-INSERT [dbo].[TestAllTypes] ([IdInt], [IdGuid], [Int32NoNull], [Int32Nullable], [Int64NoNull], [Int64Nullable], [Int16NoNull], [Int16Nullable], [ByteNoNull], [ByteNullable], [DecimalNoNull], [DecimalNummalble], [DoubleNoNull], [DoubleNullable], [SingleNoNull], [SingleNullable], [BoolNoNull], [BoolNullable], [StringNoNull], [StringNullable], [DateTimeNoNull], [DateTimeNullable], [TimeSpanNoNull], [TimeSpanNullable], [DateTimeOffsetNoNull], [DateTimeOffsetNullable], [GuidNoNull], [GuidNullable]) VALUES (4, N'514a1c66-d201-4b2f-95fe-7725c97edbc6', 11, NULL, 22, NULL, 33, NULL, 44, NULL, CAST(5.1234 AS Decimal(18, 4)), NULL, 6.1234, NULL, 7.1234, NULL, 1, NULL, N'ÆØÅ æøå', NULL, CAST(N'9999-12-31T00:00:00.000' AS DateTime), NULL, CAST(N'00:00:00' AS Time), NULL, CAST(N'2016-01-01T00:00:00.0000000+01:00' AS DateTimeOffset), NULL, N'11111111-1111-1111-1111-111111111111', NULL)
+INSERT [dbo].[TestAllTypes] ([IdInt], [IdGuid], [Int32NoNull], [Int32Nullable], [Int64NoNull], [Int64Nullable], [Int16NoNull], [Int16Nullable], [ByteNoNull], [ByteNullable], [DecimalNoNull], [DecimalNullable], [DoubleNoNull], [DoubleNullable], [SingleNoNull], [SingleNullable], [BoolNoNull], [BoolNullable], [StringNoNull], [StringNullable], [DateTimeNoNull], [DateTimeNullable], [TimeSpanNoNull], [TimeSpanNullable], [DateTimeOffsetNoNull], [DateTimeOffsetNullable], [GuidNoNull], [GuidNullable]) VALUES (4, N'514a1c66-d201-4b2f-95fe-7725c97edbc6', 11, NULL, 22, NULL, 33, NULL, 44, NULL, CAST(5.1234 AS Decimal(18, 4)), NULL, 6.1234, NULL, 7.1234, NULL, 1, NULL, N'ÆØÅ æøå', NULL, CAST(N'9999-12-31T00:00:00.000' AS DateTime), NULL, CAST(N'00:00:00' AS Time), NULL, CAST(N'2016-01-01T00:00:00.0000000+01:00' AS DateTimeOffset), NULL, N'11111111-1111-1111-1111-111111111111', NULL)
 GO
 SET IDENTITY_INSERT [dbo].[TestAllTypes] OFF
 GO

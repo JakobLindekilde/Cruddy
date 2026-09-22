@@ -22,7 +22,7 @@
         public byte? ByteNullable { get; set; }            // tinyint NULL
 
         public decimal DecimalNoNull { get; set; }         // decimal(18,0) NOT NULL
-        public decimal? DecimalNummalble { get; set; }     // decimal(18,0) NULL
+        public decimal? DecimalNullable { get; set; }      // decimal(18,0) NULL
 
         public double DoubleNoNull { get; set; }           // float(53) NOT NULL
         public double? DoubleNullable { get; set; }        // float(53) NULL
