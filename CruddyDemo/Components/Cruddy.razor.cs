@@ -6,6 +6,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using Microsoft.AspNetCore.Components.Web;
 using CruddyDemo.Helpers;
+using Microsoft.AspNetCore.Components.Forms;
 
 // More stuff to do:
 // TODO: Details: Get data from database, not from the item passed in
@@ -60,6 +61,12 @@ namespace CruddyDemo.Components
         /// </summary>
         [Parameter]
         public bool AllowDelete { get; set; } = false;
+
+        /// <summary>
+        /// Whether to enable the edit functionality for each row.
+        /// </summary>
+        [Parameter]
+        public bool AllowEdit { get; set; } = false;
 
         /// <summary>
         /// Whether to enable the details functionality for each row.
@@ -199,6 +206,139 @@ namespace CruddyDemo.Components
             ShowDetailsModal = true;
         }
 
+        #region Edit
+
+        /// <summary>
+        /// The currently selected item being edited (a copy until saved).
+        /// </summary>
+        protected TEntity? EditItem { get; set; }
+
+        /// <summary>
+        /// Whether the edit modal is visible.
+        /// </summary>
+        protected bool ShowEditModal { get; set; }
+
+        /// <summary>
+        /// EditContext used for DataAnnotations validation.
+        /// </summary>
+        protected EditContext? EditCtx { get; set; }
+
+        private Task ShowEdit(TEntity item)
+        {
+            // Create a deep copy of the item so edits are not applied until saved
+            var options = new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            var json = System.Text.Json.JsonSerializer.Serialize(item, options);
+            EditItem = System.Text.Json.JsonSerializer.Deserialize<TEntity>(json, options);
+            EditCtx = new EditContext(EditItem!);
+            ShowEditModal = true;
+            return Task.CompletedTask;
+        }
+
+        private void CancelEdit()
+        {
+            ShowEditModal = false;
+            EditItem = default;
+            EditCtx = null;
+        }
+
+        private async Task ConfirmEditAsync()
+        {
+            if (EditItem == null)
+            {
+                return;
+            }
+
+            try
+            {
+                // Get key value from edited item
+                var keyProp = typeof(TEntity).GetProperty(KeyColumn!, BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
+                object? keyValue = null;
+                if (keyProp != null) keyValue = keyProp.GetValue(EditItem);
+
+                // Validate using DataAnnotations
+                if (EditCtx != null && !EditCtx.Validate())
+                {
+                    // validation failed - keep modal open and show messages (ValidationSummary will display)
+                    await InvokeAsync(StateHasChanged);
+                    return;
+                }
+
+                // Call base Update method to persist changes
+                var rowsAffected = Update(DbConnection, EditItem, keyValue!);
+
+                // Update in-memory list
+                if (rowsAffected > 0 && Rows != null)
+                {
+                    // find original item by key and replace
+                    var original = Rows.FirstOrDefault(r => string.Equals(PropertyHelper.GetValue(r!, KeyColumn!), PropertyHelper.GetValue(EditItem!, KeyColumn!), StringComparison.OrdinalIgnoreCase));
+                    if (original != null)
+                    {
+                        var idx = Rows.IndexOf(original);
+                        if (idx >= 0) Rows[idx] = EditItem!;
+                    }
+                }
+
+                ShowEditModal = false;
+                EditItem = default;
+                EditCtx = null;
+                await InvokeAsync(StateHasChanged);
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = $"Update failed: {ex.Message}";
+                await ShowErrorMessage();
+            }
+        }
+
+        /// <summary>
+        /// Called when a single field is changed in the edit form. Updates the EditItem property via reflection
+        /// and notifies the EditContext for validation.
+        /// </summary>
+        /// <param name="prop">Property being changed.</param>
+        /// <param name="value">New value (as string) from the input event.</param>
+        protected void OnFieldChanged(PropertyInfo prop, object? value)
+        {
+            if (EditItem == null) return;
+
+            try
+            {
+                object? converted = null;
+                if (value == null)
+                {
+                    converted = null;
+                }
+                else
+                {
+                    var targetType = Nullable.GetUnderlyingType(prop.PropertyType) ?? prop.PropertyType;
+                    if (targetType == typeof(string)) converted = value.ToString();
+                    else if (targetType == typeof(int)) converted = int.TryParse(value.ToString(), out var i) ? i : (int?)null;
+                    else if (targetType == typeof(long)) converted = long.TryParse(value.ToString(), out var l) ? l : (long?)null;
+                    else if (targetType == typeof(decimal)) converted = decimal.TryParse(value.ToString(), out var d) ? d : (decimal?)null;
+                    else if (targetType == typeof(double)) converted = double.TryParse(value.ToString(), out var dd) ? dd : (double?)null;
+                    else if (targetType == typeof(float)) converted = float.TryParse(value.ToString(), out var f) ? f : (float?)null;
+                    else if (targetType == typeof(bool)) converted = bool.TryParse(value.ToString(), out var b) ? b : (bool?)null;
+                    else if (targetType == typeof(DateTime)) converted = DateTime.TryParse(value.ToString(), out var dt) ? dt : (DateTime?)null;
+                    else if (targetType.IsEnum) converted = Enum.Parse(targetType, value.ToString()!);
+                    else if (targetType == typeof(Guid)) converted = Guid.TryParse(value.ToString(), out var g) ? g : (Guid?)null;
+                    else converted = value;
+                }
+
+                prop.SetValue(EditItem, converted);
+
+                if (EditCtx != null)
+                {
+                    var field = new FieldIdentifier(EditItem, prop.Name);
+                    EditCtx.NotifyFieldChanged(field);
+                }
+            }
+            catch
+            {
+                // ignore conversion errors here; validation will catch invalid values on submit
+            }
+        }
+
+        #endregion
+
         private void CloseDetails()
         {
             ShowDetailsModal = false;
@@ -256,6 +396,15 @@ namespace CruddyDemo.Components
                     builder.AddAttribute(1, "class", "btn btn-sm btn-primary me-1");
                     builder.AddAttribute(2, "onclick", EventCallback.Factory.Create<MouseEventArgs>(this, () => ShowDetails(item)));
                     builder.AddContent(3, "Details");
+                    builder.CloseElement();
+                }
+
+                if (AllowEdit)
+                {
+                    builder.OpenElement(0, "button");
+                    builder.AddAttribute(1, "class", "btn btn-sm btn-secondary me-1");
+                    builder.AddAttribute(2, "onclick", EventCallback.Factory.Create<MouseEventArgs>(this, async () => await ShowEdit(item)));
+                    builder.AddContent(3, "Edit");
                     builder.CloseElement();
                 }
 

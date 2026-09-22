@@ -197,14 +197,45 @@ namespace CruddyDemo.Components
             return sql;
         }
 
+#pragma warning disable S2077   // SonarQube rule S2077: "SQL queries should not be vulnerable to injection attacks".
+
         public object? Delete(DbConnection DbConnection, object keyValue)
         {
             var sql = $"DELETE FROM {DefaultSchema}.{TableName} WHERE {KeyColumn} = @keyValue";
-#pragma warning disable S2077   // SonarQube rule S2077: "SQL queries should not be vulnerable to injection attacks".
             return DbConnection.ExecuteScalar(sql, param: new { keyValue });
-#pragma warning restore S2077
         }
 
+        public int Update(DbConnection DbConnection, TEntity entity, object keyValue)
+        {
+            // Build an UPDATE statement that sets all public writable properties except the key column.
+            if (entity == null) throw new ArgumentNullException(nameof(entity));
+
+            var props = entity.GetType()
+                .GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance)
+                .Where(p => p.CanRead && p.CanWrite && !string.Equals(p.Name, KeyColumn, StringComparison.OrdinalIgnoreCase))
+                .ToArray();
+
+            if (props.Length == 0)
+            {
+                return 0;
+            }
+
+            var setClauses = props.Select(p => $"{p.Name} = @{p.Name}");
+            var sql = $"UPDATE {DefaultSchema}.{TableName} SET {string.Join(", ", setClauses)} WHERE {KeyColumn} = @keyValue";
+
+            var dp = new Dapper.DynamicParameters();
+            // add all property values
+            foreach (var p in props)
+            {
+                var val = p.GetValue(entity);
+                dp.Add(p.Name, val);
+            }
+
+            dp.Add("keyValue", keyValue);
+
+            return DbConnection.Execute(sql, dp);
+        }
+#pragma warning restore S2077
 
         /// <summary>
         /// Gets rows from the database table in <seealso cref="TableName"/> or <seealso cref="Select"/>

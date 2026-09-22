@@ -20,6 +20,7 @@ public class Customer
     [DisplayName("Customer Name")]
     public required string Name { get; set; }
 
+    [MaxLength(10, ErrorMessage = "Email cannot exceed 10 digits.")]    
     public required string Email { get; set; }
 
     public bool Vip { get; set; }

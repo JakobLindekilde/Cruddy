@@ -7,6 +7,66 @@
 {
     <p>Loading data...</p>
 }
+
+    @if (ShowEditModal && EditItem != null)
+    {
+        <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Edit - @typeof(TEntity).Name</h5>
+                        <button type="button" class="btn-close" aria-label="Close" @onclick="CancelEdit"></button>
+                    </div>
+                    <div class="modal-body">
+                        <EditForm EditContext="@(EditCtx!)" OnValidSubmit="ConfirmEditAsync">
+                            <DataAnnotationsValidator />
+                            <ValidationSummary />
+
+                            <table class="table table-sm table-striped">
+                                <tbody>
+                                    @foreach (var prop in typeof(TEntity).GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance))
+                                    {
+                                        if (!CruddyDemo.Helpers.PropertyHelper.Supported(prop.PropertyType)) continue;
+
+                                        var displayName = CruddyDemo.Helpers.PropertyHelper.GetDisplayName(prop);
+                                        var val = prop.GetValue(EditItem);
+
+                                        <tr>
+                                            <th>@displayName</th>
+                                            <td>
+                                                @if (prop.PropertyType == typeof(bool) || Nullable.GetUnderlyingType(prop.PropertyType) == typeof(bool))
+                                                {
+                                                    <input type="checkbox" class="form-check-input" checked="@(val is bool b && b)" @onchange="(e) => OnFieldChanged(prop, e.Value)" />
+                                                }
+                                                else if (prop.PropertyType == typeof(DateTime) || Nullable.GetUnderlyingType(prop.PropertyType) == typeof(DateTime))
+                                                {
+                                                    var dateVal = val is DateTime dt ? dt.ToString("yyyy-MM-dd") : string.Empty;
+                                                    <input type="date" class="form-control" value="@dateVal" @onchange="(e) => OnFieldChanged(prop, e.Value)" />
+                                                }
+                                                else if (CruddyDemo.Helpers.PropertyHelper.IsNumber(prop.PropertyType.Name) || CruddyDemo.Helpers.PropertyHelper.IsDecimal(prop.PropertyType.Name))
+                                                {
+                                                    <input type="number" class="form-control" value="@(val?.ToString() ?? string.Empty)" @onchange="(e) => OnFieldChanged(prop, e.Value)" />
+                                                }
+                                                else
+                                                {
+                                                    <input type="text" class="form-control" value="@(val?.ToString() ?? string.Empty)" @onchange="(e) => OnFieldChanged(prop, e.Value)" />
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+
+                            <div class="modal-footer">
+                                <button class="btn btn-secondary" type="button" @onclick="CancelEdit">Cancel</button>
+                                <button class="btn btn-primary" type="submit">Save</button>
+                            </div>
+                        </EditForm>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
 else if (!Rows.Any())
 {
     <p>No data found.</p>
