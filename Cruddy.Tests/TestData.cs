@@ -39,4 +39,11 @@ namespace Cruddy.Tests
 
         protected string ProtectedProperty { get; set; } = "Protected";
     }
+
+    public class Person : ClassWithKey
+    {
+        public Person() { }
+
+        public string? Email{ get; set; }
+    }
 }

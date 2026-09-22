@@ -163,7 +163,7 @@ namespace CruddyDemo.Components
         /// If <seealso cref="OrderBy"/> is specified it will be appended (including <seealso cref="SortOrder"/>).
         /// </summary>
         /// <returns>The final SQL SELECT statement.</returns>  
-        protected virtual string BuildSql()
+        public virtual string BuildSql()
         {
             if (!string.IsNullOrEmpty(Select))
             {
