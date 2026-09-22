@@ -1,8 +1,12 @@
-﻿using CruddyDemo.Components;
-using CruddyDemo.Helpers;
+﻿#pragma warning disable BL0005 // Component parameter should not be set outside of its component.
+#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
+
+using CruddyDemo.Components;
 
 namespace Cruddy.Tests
 {
+    #region Pluralize
+
     public class CruddyBaseTests
     {
         [Theory]
@@ -67,6 +71,10 @@ namespace Cruddy.Tests
             var plural = CruddyBase<object>.Pluralize(singular);
             Assert.Equal(expectedPlural, plural);
         }
+
+        #endregion
+
+        #region BuildSql
 
         [Theory]
         [InlineData("", "Id, Name", "Persons", "SELECT TOP 10000  Id, Name FROM dbo.Persons")]
@@ -152,6 +160,9 @@ namespace Cruddy.Tests
             Assert.Equal(expected, sql);
         }
 
+        #endregion
+
+        #region ColumnAliasDict
 
         [Fact]
         public void FillColumnAliasDict_FillsDictionaryCorrectlyNoAS()
@@ -250,5 +261,132 @@ namespace Cruddy.Tests
             Assert.Equal(expectedDict, dut.ColumnAliasDict);
         }
 
+        #endregion
+
+        #region Map
+
+        private class MapTarget
+        {
+#pragma warning disable S1144   // Unused private types or members should be removed
+            public int Id { get; set; }
+            public string? Name { get; set; }
+            public DayOfWeek Day { get; set; }
+            public decimal? Amount { get; set; }
+#pragma warning restore S1144
+        }
+
+        [Fact]
+        public void Map_Returns_Empty_List_When_Null()
+        {
+            IEnumerable<dynamic>? dyn = null;
+            var list = CruddyBase<object>.Map<MapTarget>(dyn!);
+            Assert.NotNull(list);
+            Assert.Empty(list);
+        }
+
+        [Fact]
+        public void Map_Maps_Anonymous_Object_To_StrongType()
+        {
+            var dynList = new List<dynamic>
+            {
+                new { Id = 7, Name = "Zoe", Day = 1, Amount = 12.34m }
+            };
+
+            var result = CruddyBase<object>.Map<MapTarget>(dynList);
+            Assert.Single(result);
+            var item = result[0];
+            Assert.Equal(7, item.Id);
+            Assert.Equal("Zoe", item.Name);
+            // Day provided as numeric -> maps to enum
+            Assert.Equal(DayOfWeek.Monday, item.Day);
+            Assert.Equal(12.34m, item.Amount);
+        }
+
+        [Fact]
+        public void Map_Is_CaseInsensitive_On_PropertyNames()
+        {
+            dynamic d = new System.Dynamic.ExpandoObject();
+            var dict = (IDictionary<string, object?>)d;
+            dict["id"] = 3;
+            dict["name"] = "Case";
+
+            var list = new List<dynamic> { d };
+            var result = CruddyBase<object>.Map<MapTarget>(list);
+            Assert.Single(result);
+            Assert.Equal(3, result[0].Id);
+            Assert.Equal("Case", result[0].Name);
+        }
+
+        [Fact]
+        public void Map_Handles_Nullable_Values()
+        {
+            var dynList = new List<dynamic>
+            {
+                new { Id = 1, Name = (string?)null, Amount = (decimal?)null }
+            };
+
+            var result = CruddyBase<object>.Map<MapTarget>(dynList);
+            Assert.Single(result);
+            Assert.Equal(1, result[0].Id);
+            Assert.Null(result[0].Name);
+            Assert.Null(result[0].Amount);
+        }
+        private static readonly int[] itemArray = [1, 2, 3];
+
+        [Fact]
+        public void Map_Maps_Array_Property()
+        {
+            var dynList = new List<dynamic>
+            {
+                new { Id = 5, Name = "Arr", Numbers = itemArray }
+            };
+
+            var result = CruddyBase<object>.Map<DynamicArrayTarget>(dynList);
+            Assert.Single(result);
+            var item = result[0];
+            Assert.Equal(5, item.Id);
+            Assert.Equal([1, 2, 3], item.Numbers!);
+        }
+
+        [Fact]
+        public void Map_Maps_Enum_ByName()
+        {
+            var dynList = new List<dynamic>
+            {
+                new { Id = 8, Name = "EnumName", Day = "Friday" }
+            };
+
+            var result = CruddyBase<object>.Map<MapTarget>(dynList);
+            Assert.Single(result);
+            Assert.Equal(DayOfWeek.Friday, result[0].Day);
+        }
+
+        [Fact]
+        public void Map_Throws_On_Invalid_Type_For_Property()
+        {
+            var dynList = new List<dynamic>
+            {
+                // Amount is expected to be a decimal; provide an unparsable string
+                new { Id = 9, Name = "Bad", Amount = "not-a-decimal" }
+            };
+
+            Assert.Throws<System.Text.Json.JsonException>(() =>
+            {
+                _ = CruddyBase<object>.Map<MapTarget>(dynList);
+            });
+        }
+
+        // Helper target for array mapping
+        private class DynamicArrayTarget
+        {
+#pragma warning disable S1144   // Unused private types or members should be removed
+            public int Id { get; set; }
+            public int[]? Numbers { get; set; }
+#pragma warning restore S1144
+        }
+
+        #endregion
     }
 }
+#pragma warning restore BL0005 // Component parameter should not be set outside of its component.
+#pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
