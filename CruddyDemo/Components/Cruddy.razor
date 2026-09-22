@@ -93,7 +93,15 @@ else
                                                 @{
                                                     var type = Nullable.GetUnderlyingType(prop.PropertyType) ?? prop.PropertyType;
 
-                                                    if (type == typeof(bool))
+                                                    if (CruddyDemo.Helpers.PropertyHelper.IsNumber(type.Name))
+                                                    {
+                                                        <input type="number" class="form-control" value="@(val?.ToString() ?? string.Empty)" @onchange="(e) => OnFieldChanged(prop, e.Value)" />
+                                                    }
+                                                    else if (CruddyDemo.Helpers.PropertyHelper.IsDecimal(type.Name))
+                                                    {
+                                                        <input type="number" step="any" class="form-control" value="@(val?.ToString() ?? string.Empty)" @onchange="(e) => OnFieldChanged(prop, e.Value)" />
+                                                    }
+                                                    else if (type == typeof(bool))
                                                     {
                                                         <input type="checkbox" class="form-check-input" checked="@(val is bool b && b)" @onchange="(e) => OnFieldChanged(prop, e.Value)" />
                                                     }
@@ -101,10 +109,6 @@ else
                                                     {
                                                         var dateVal = val is DateTime dt ? dt.ToString("yyyy-MM-dd") : string.Empty;
                                                         <input type="date" class="form-control" value="@dateVal" @onchange="(e) => OnFieldChanged(prop, e.Value)" />
-                                                    }
-                                                    else if (CruddyDemo.Helpers.PropertyHelper.IsNumber(type.Name) || CruddyDemo.Helpers.PropertyHelper.IsDecimal(type.Name))
-                                                    {
-                                                        <input type="number" class="form-control" value="@(val?.ToString() ?? string.Empty)" @onchange="(e) => OnFieldChanged(prop, e.Value)" />
                                                     }
                                                     else
                                                     {
