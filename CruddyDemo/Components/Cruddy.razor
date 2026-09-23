@@ -98,18 +98,18 @@ else
                                                     {
                                                         <input type="number" class="form-control" value="@(val?.ToString() ?? string.Empty)" @onchange="(e) => OnFieldChanged(prop, e.Value)" />
                                                     }
-                                                    else if (PropertyHelper.IsDecimal(type))
-                                                    {
-                                                        <input type="number" step="any" class="form-control" value="@(val?.ToString() ?? string.Empty)" @onchange="(e) => OnFieldChanged(prop, e.Value)" />
-                                                    }
                                                     else if (type == typeof(bool))
                                                     {
                                                         <input type="checkbox" class="form-check-input" checked="@(val is bool b && b)" @onchange="(e) => OnFieldChanged(prop, e.Value)" />
                                                     }
                                                     else if (type == typeof(DateTime))
                                                     {
-                                                        var dateVal = val is DateTime dt ? dt.ToString("yyyy-MM-dd") : string.Empty;
-                                                        <input type="date" class="form-control" value="@dateVal" @onchange="(e) => OnFieldChanged(prop, e.Value)" />
+                                                        var dateVal = val is DateTime dt ? dt.ToString("yyyy-MM-ddThh:mm") : string.Empty;
+                                                        <input type="datetime-local" class="form-control" value="@dateVal" @onchange="(e) => OnFieldChanged(prop, e.Value)" />
+                                                    }
+                                                    else if (type == typeof(TimeSpan))
+                                                    {
+                                                        <input type="time" class="form-control" value="@(val?.ToString() ?? string.Empty)" @onchange="(e) => OnFieldChanged(prop, e.Value)" />
                                                     }
                                                     else
                                                     {

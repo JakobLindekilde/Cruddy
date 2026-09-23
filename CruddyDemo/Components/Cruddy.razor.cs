@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Components.Web;
 using QuickGrid.Toolkit;
 using QuickGrid.Toolkit.Columns;
 using System.Linq.Expressions;
+using System.Net.Http.Headers;
 using System.Reflection;
 
 // More stuff to do:
@@ -30,22 +31,36 @@ namespace CruddyDemo.Components
         #region Parameters
 
         /// <summary>
-        /// The default date format to use when displaying date values 
-        /// when not using <seealso cref="DisplayFormatAttribute"/>.
+        /// The default date format to use when displaying date values when not 
+        /// using <seealso cref="DisplayFormatAttribute"/>. Default format is d (aka 'Short date pattern').
         /// </summary>
         [Parameter]
-        public string? DefaultDateFormat { get; set; } = "dd-MM-yyyy";
+        public string? DefaultDateFormat { get; set; } = "d";
+
+        /// <summary>
+        /// The default date format to use when displaying datetime values when not using <seealso cref="DisplayFormatAttribute"/>.
+        /// Default format is g (aka 'general date/time pattern (short time)').
+        /// </summary>
+        [Parameter]
+        public string? DefaultDateTimeFormat { get; set; } = "g";
+
+        /// <summary>
+        /// The default date format to use when displaying time values when not 
+        /// using <seealso cref="DisplayFormatAttribute"/>. Default format is t (aka 'short time pattern').
+        /// </summary>
+        [Parameter]
+        public string? DefaultTimeFormat { get; set; } = "t";
 
         /// <summary>
         /// The default decimal, double and float format to use when displaying decimal values 
-        /// when not using <seealso cref="DisplayFormatAttribute"/>.
+        /// when not using <seealso cref="DisplayFormatAttribute"/>. Default format is 0.00.
         /// </summary>
         [Parameter]
         public string? DefaultDecimalFormat { get; set; } = "0.00";
 
         /// <summary>
-        /// The default format to use when displaying numbers 
-        /// when not using <seealso cref="DisplayFormatAttribute"/>.
+        /// The default format to use when displaying numbers when not 
+        /// using <seealso cref="DisplayFormatAttribute"/>. Default format is 0.
         /// </summary>
         [Parameter]
         public string? DefaultNumberFormat { get; set; } = "0";
@@ -649,13 +664,13 @@ namespace CruddyDemo.Components
                 return string.IsNullOrEmpty(DefaultNumberFormat) ? null : DefaultNumberFormat;
             }
 
-            // TODO: Should we handle DateTimeOffset like DateTime?
-            if (propertyType == typeof(DateTime))
+            switch (propertyType.Name)
             {
-                return string.IsNullOrEmpty(DefaultDateFormat) ? null : DefaultDateFormat;
+                case "TimeOnly" : return string.IsNullOrEmpty(DefaultTimeFormat) ? null : DefaultTimeFormat;
+                case "DateOnly" : return string.IsNullOrEmpty(DefaultDateFormat) ? null : DefaultDateFormat;
+                case "DateTime" : return string.IsNullOrEmpty(DefaultDateTimeFormat) ? null : DefaultDateTimeFormat;
+                default: return null;
             }
-
-            return null;
         }
 
         #endregion
