@@ -210,15 +210,17 @@ namespace CruddyDemo.Components
             // Build an UPDATE statement that sets all public writable properties except the key column.
             if (entity == null) throw new ArgumentNullException(nameof(entity));
 
-            var props = entity.GetType()
-                .GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance)
-                .Where(p => p.CanRead && p.CanWrite && !string.Equals(p.Name, KeyColumn, StringComparison.OrdinalIgnoreCase))
+            var cols = TableColumns == "*"
+                ? new List<string>()    
+                : TableColumns.Split(",", StringSplitOptions.TrimEntries).ToList();
+
+            var props = PropertyHelper.GetPublicProperties(entity.GetType())
+                .Where(p => p.CanRead && p.CanWrite && 
+                            (cols.Count == 0 || (cols.Count > 0 && cols.Contains(p.Name)))  && 
+                            !string.Equals(p.Name, KeyColumn, StringComparison.OrdinalIgnoreCase))
                 .ToArray();
 
-            if (props.Length == 0)
-            {
-                return 0;
-            }
+            if (props.Length == 0) return 0;
 
             var setClauses = props.Select(p => $"{p.Name} = @{p.Name}");
             var sql = $"UPDATE {DefaultSchema}.{TableName} SET {string.Join(", ", setClauses)} WHERE {KeyColumn} = @keyValue";
