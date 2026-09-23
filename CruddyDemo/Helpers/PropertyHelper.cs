@@ -65,15 +65,12 @@ namespace CruddyDemo.Helpers
             return false;
         }
 
-        public static Type GetUnderlyingType(Type type)
-        {
-            return Nullable.GetUnderlyingType(type) ?? type;
-        }
+        public static bool IsNullable(Type type) => Nullable.GetUnderlyingType(type) != null;
 
-        public static PropertyInfo[] GetPublicProperties(Type type)
-        {
-            return type.GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
-        }
+        public static Type GetUnderlyingType(Type type) => Nullable.GetUnderlyingType(type) ?? type;
+
+        public static PropertyInfo[] GetPublicProperties(Type type) =>
+            type.GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
 
         /// <summary>
         /// Gets all public instance properties of the specified type that can be read (i.e., have a getter).
