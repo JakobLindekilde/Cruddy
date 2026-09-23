@@ -1,5 +1,4 @@
 ﻿using System.Reflection;
-using static Dapper.SqlMapper;
 
 namespace CruddyDemo.Helpers
 {
@@ -48,7 +47,7 @@ namespace CruddyDemo.Helpers
         /// <returns>True if the type is supported; otherwise, false.</returns>
         public static bool Supported(Type type)
         {
-            var t = Nullable.GetUnderlyingType(type) ?? type;
+            var t = GetUnderlyingType(type);
 
             if (t == typeof(string) ||
                 t.IsEnum ||
@@ -66,6 +65,15 @@ namespace CruddyDemo.Helpers
             return false;
         }
 
+        public static Type GetUnderlyingType(Type type)
+        {
+            return Nullable.GetUnderlyingType(type) ?? type;
+        }
+
+        public static PropertyInfo[] GetPublicProperties(Type type)
+        {
+            return type.GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+        }
 
         /// <summary>
         /// Gets all public instance properties of the specified type that can be read (i.e., have a getter).

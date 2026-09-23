@@ -1,5 +1,6 @@
 ﻿@using Microsoft.AspNetCore.Components.QuickGrid
 @using QuickGrid.Toolkit
+@using CruddyDemo.Helpers
 @inherits CruddyBase<TEntity>
 @typeparam TEntity
 
@@ -42,12 +43,12 @@ else
                     <div class="modal-body">
                         <table class="table table-sm table-striped">
                             <tbody>
-                                @foreach (var prop in typeof(TEntity).GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance))
+                                @foreach (var prop in PropertyHelper.GetPublicProperties(typeof(TEntity)))
                                 {
-                                    if (!CruddyDemo.Helpers.PropertyHelper.Supported(prop.PropertyType)) continue;
+                                    if (!PropertyHelper.Supported(prop.PropertyType)) continue;
 
-                                    var displayName = CruddyDemo.Helpers.PropertyHelper.GetDisplayName(prop);
-                                    var formattedValue = CruddyDemo.Helpers.PropertyHelper.GetFormattedValue(prop, DetailsItem);
+                                    var displayName = PropertyHelper.GetDisplayName(prop);
+                                    var formattedValue = PropertyHelper.GetFormattedValue(prop, DetailsItem);
                                     <tr>
                                         <th>@displayName</th>
                                         <td>@formattedValue</td>
@@ -80,24 +81,24 @@ else
 
                             <table class="table table-sm table-striped">
                                 <tbody>
-                                    @foreach (var prop in typeof(TEntity).GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance))
+                                    @foreach (var prop in PropertyHelper.GetPublicProperties(typeof(TEntity)))
                                     {
-                                        if (!CruddyDemo.Helpers.PropertyHelper.Supported(prop.PropertyType)) continue;
+                                        if (!PropertyHelper.Supported(prop.PropertyType)) continue;
 
-                                        var displayName = CruddyDemo.Helpers.PropertyHelper.GetDisplayName(prop);
+                                        var displayName = PropertyHelper.GetDisplayName(prop);
                                         var val = prop.GetValue(EditItem);
 
                                         <tr>
                                             <th>@displayName</th>
                                             <td>
                                                 @{
-                                                    var type = Nullable.GetUnderlyingType(prop.PropertyType) ?? prop.PropertyType;
+                                                    var type = PropertyHelper.GetUnderlyingType(prop.PropertyType);
 
-                                                    if (CruddyDemo.Helpers.PropertyHelper.IsNumber(type.Name))
+                                                    if (PropertyHelper.IsNumber(type.Name))
                                                     {
                                                         <input type="number" class="form-control" value="@(val?.ToString() ?? string.Empty)" @onchange="(e) => OnFieldChanged(prop, e.Value)" />
                                                     }
-                                                    else if (CruddyDemo.Helpers.PropertyHelper.IsDecimal(type.Name))
+                                                    else if (PropertyHelper.IsDecimal(type.Name))
                                                     {
                                                         <input type="number" step="any" class="form-control" value="@(val?.ToString() ?? string.Empty)" @onchange="(e) => OnFieldChanged(prop, e.Value)" />
                                                     }

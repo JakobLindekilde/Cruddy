@@ -13,7 +13,7 @@
 
 ## Examples 
 
-Most simple use:
+Most simple use (no CRUD):
 ```razor
 @page "/Products"
 @inject Microsoft.Data.SqlClient.SqlConnection dbConnection
@@ -26,17 +26,14 @@ Most simple use:
 @code {}
 ```
 
-Typical use:
+Typical use (with CRUD):
 ```razor
 @page "/Customers"
 @inject Microsoft.Data.SqlClient.SqlConnection dbConnection
 
 <h3>Table Customers</h3>
 
-<h4>Columns specified in parameter TableColumns</h4>
-
-<Cruddy TEntity="Models.Customer" TableName="Customers" TableColumns="Id, Vip, Name, Email, Phone" 
-AllowDelete="true" AllowDetails="true" DbConnection="dbConnection" />
+<Cruddy TEntity="Models.Customer" TableName="Customers" AllowCrud="true" DbConnection="dbConnection" />
 
 @code {}
 ```
@@ -94,8 +91,10 @@ Note how attribute Key, DisplayName and DisplayFormat are used in the model clas
 | DefaultDecimalFormat | Default decimal/double/float format when no DisplayFormatAttribute is present (default: "0.00"). |
 | DefaultNumberFormat | Default integer number format when no DisplayFormatAttribute is present (default: "0"). |
 | ActionsTitle | Title to use for the actions column (default: "Actions"). |
-| AllowDelete | Enable per-row delete button and delete behaviour. |
 | AllowDetails | Enable per-row Details button that opens a modal showing all TEntity fields. |
+| AllowEdit | Enable per-row edit button and edit functionality. |
+| AllowDelete | Enable per-row delete button and delete behaviour. |
+| AllowCrud | Same as setting AllowDetails, AllowEdit and AllowDelete to true |
 | NameUx | The property name used as the human-readable item label in UX prompts (e.g. in delete confirmation messages). |
 
 ## Requirements
@@ -114,4 +113,4 @@ Note how attribute Key, DisplayName and DisplayFormat are used in the model clas
 - It's an early beta! Needs beautification...
 - Class as property in a model class not supported (yet) (maybe partly supported in version 1)
 - List and collection properties in a model class not supported (no plans for that to version 1)
-- Current version cannot Create or Edit (only Delete and Details are implemented).
+- CRUD: Current version cannot Create (only Details, Edit and Delete implemented).

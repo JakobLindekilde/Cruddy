@@ -1,9 +1,9 @@
+using CruddyDemo.Helpers;
 using Dapper;
 using Microsoft.AspNetCore.Components;
 using System.Data.Common;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using CruddyDemo.Helpers;
 
 namespace CruddyDemo.Components
 {

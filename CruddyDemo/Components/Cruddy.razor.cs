@@ -1,12 +1,12 @@
+using CruddyDemo.Helpers;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Components.QuickGrid;
+using Microsoft.AspNetCore.Components.Web;
 using QuickGrid.Toolkit;
 using QuickGrid.Toolkit.Columns;
 using System.Linq.Expressions;
 using System.Reflection;
-using Microsoft.AspNetCore.Components.Web;
-using CruddyDemo.Helpers;
-using Microsoft.AspNetCore.Components.Forms;
 
 // More stuff to do:
 // TODO: Details: Get data from database, not from the item passed in
@@ -55,6 +55,13 @@ namespace CruddyDemo.Components
         /// </summary>
         [Parameter]
         public string? ActionsTitle { get; set; } = "Actions";
+
+        /// <summary>
+        /// Same as setting AllowDetails, AllowEdit and AllowDelete to true.
+        /// </summary>
+        [Parameter]
+        public bool AllowCrud { get; set; } = false;
+
 
         /// <summary>
         /// Whether to enable the details functionality for each row.
@@ -211,7 +218,8 @@ namespace CruddyDemo.Components
                 if (rowsAffected > 0 && Rows != null)
                 {
                     // find original item by key and replace
-                    var original = Rows.FirstOrDefault(r => string.Equals(PropertyHelper.GetValue(r!, KeyColumn!), PropertyHelper.GetValue(EditItem!, KeyColumn!), StringComparison.OrdinalIgnoreCase));
+                    var original = Rows.FirstOrDefault(r => string.Equals(PropertyHelper.GetValue(r!, KeyColumn!), 
+                        PropertyHelper.GetValue(EditItem!, KeyColumn!), StringComparison.OrdinalIgnoreCase));
                     if (original != null)
                     {
                         var idx = Rows.IndexOf(original);
@@ -250,7 +258,7 @@ namespace CruddyDemo.Components
                 }
                 else
                 {
-                    var targetType = Nullable.GetUnderlyingType(prop.PropertyType) ?? prop.PropertyType;
+                    var targetType = PropertyHelper.GetUnderlyingType(prop.PropertyType);
                     if (targetType == typeof(string)) converted = value.ToString();
                     else if (targetType.IsEnum) converted = Enum.Parse(targetType, value.ToString()!);
                     else if (targetType == typeof(int)) converted = int.TryParse(value.ToString(), out var i) ? i : (int?)null;
@@ -383,7 +391,7 @@ namespace CruddyDemo.Components
                 }
             }
 
-            if (AllowDelete || AllowDetails)
+            if (AllowCrud || AllowDetails || AllowEdit || AllowDelete)
             {
                 AddActionColumn();
             }
@@ -398,7 +406,7 @@ namespace CruddyDemo.Components
         {
             RenderFragment deleteTemplate(TEntity item) => (builder) =>
             {
-                if (AllowDetails)
+                if (AllowCrud || AllowDetails)
                 {
                     builder.OpenElement(0, "button");
                     builder.AddAttribute(1, "class", "btn btn-sm btn-primary me-1");
@@ -407,7 +415,7 @@ namespace CruddyDemo.Components
                     builder.CloseElement();
                 }
 
-                if (AllowEdit)
+                if (AllowCrud || AllowEdit)
                 {
                     builder.OpenElement(0, "button");
                     builder.AddAttribute(1, "class", "btn btn-sm btn-secondary me-1");
@@ -416,7 +424,7 @@ namespace CruddyDemo.Components
                     builder.CloseElement();
                 }
 
-                if (AllowDelete)
+                if (AllowCrud || AllowDelete)
                 {
                     builder.OpenElement(0, "button");
                     builder.AddAttribute(1, "class", "btn btn-sm btn-danger");
@@ -629,7 +637,7 @@ namespace CruddyDemo.Components
                 return displayFormat;
             }
 
-            var propertyType = Nullable.GetUnderlyingType(prop.PropertyType) ?? prop.PropertyType;
+            var propertyType = PropertyHelper.GetUnderlyingType(prop.PropertyType);
 
             if (PropertyHelper.IsDecimal(propertyType.Name))
             {
