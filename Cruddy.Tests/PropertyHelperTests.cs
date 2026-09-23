@@ -5,51 +5,47 @@ namespace Cruddy.Tests
     public class PropertyHelperTests
     {
         [Theory]
-        [InlineData("Decimal",true)]
-        [InlineData("Double",true)]
-        [InlineData("Single",true)]
-        [InlineData("decimal", false)]
-        [InlineData("double", false)]
-        [InlineData("single", false)]
-        [InlineData("Int32", false)]
-        [InlineData("Bool", false)]
-        [InlineData("DateTime",false)]
-        [InlineData("String", false)]
-        [InlineData("Number", false)]
-        [InlineData("5.67", false)]
-        public void IsDecimal_ReturnsTrueForDecimalTypes(string typeName, bool expected)
+        [InlineData(typeof(int), false)]
+        [InlineData(typeof(long), false)]
+        [InlineData(typeof(short), false)]
+        [InlineData(typeof(uint), false)]
+        [InlineData(typeof(ulong), false)]
+        [InlineData(typeof(ushort), false)]
+        [InlineData(typeof(byte), false)]
+        [InlineData(typeof(sbyte), false)]
+        [InlineData(typeof(decimal), true)]
+        [InlineData(typeof(double), true)]
+        [InlineData(typeof(float), true)]
+        [InlineData(typeof(bool), false)]
+        [InlineData(typeof(DateTime), false)]
+        [InlineData(typeof(TimeSpan), false)]
+        [InlineData(typeof(DateTimeOffset), false)]
+        [InlineData(typeof(Guid), false)]
+        public void IsDecimal_ReturnsTrueForDecimalTypes(Type type, bool expected)
         {
-            Assert.Equal(expected, PropertyHelper.IsDecimal(typeName));
+            Assert.Equal(expected, PropertyHelper.IsDecimal(type));
         }
 
         [Theory]
-        [InlineData("Int32", true)]
-        [InlineData("Int64", true)]
-        [InlineData("Int16", true)]
-        [InlineData("UInt32", true)]
-        [InlineData("UInt64", true)]
-        [InlineData("UInt16", true)]
-        [InlineData("int32", false)]
-        [InlineData("int64", false)]
-        [InlineData("int16", false)]
-        [InlineData("uint32", false)]
-        [InlineData("uint64", false)]
-        [InlineData("uint16", false)]
-        [InlineData("int", false)]
-        [InlineData("long", false)]
-        [InlineData("byte", false)]
-        [InlineData("sbyte", false)]
-        [InlineData("decimal", false)]
-        [InlineData("double", false)]
-        [InlineData("single", false)]
-        [InlineData("bool", false)]
-        [InlineData("datetime", false)]
-        [InlineData("string", false)]
-        [InlineData("number", false)]
-        [InlineData("5", false)]
-        public void IsNumber_ReturnsTrueForNumberTypes(string typeName, bool expected)
+        [InlineData(typeof(int), true)]
+        [InlineData(typeof(long), true)]
+        [InlineData(typeof(short), true)]
+        [InlineData(typeof(uint), true)]
+        [InlineData(typeof(ulong), true)]
+        [InlineData(typeof(ushort), true)]
+        [InlineData(typeof(byte), true)]
+        [InlineData(typeof(sbyte), true)]
+        [InlineData(typeof(decimal), false)]
+        [InlineData(typeof(double), false)]
+        [InlineData(typeof(float), false)]
+        [InlineData(typeof(bool), false)]
+        [InlineData(typeof(DateTime), false)]
+        [InlineData(typeof(TimeSpan), false)]
+        [InlineData(typeof(DateTimeOffset), false)]
+        [InlineData(typeof(Guid), false)]
+        public void IsNumber_ReturnsTrueForNumberTypes(Type type, bool expected)
         {
-            Assert.Equal(expected, PropertyHelper.IsNumber(typeName));
+            Assert.Equal(expected, PropertyHelper.IsNumber(type));
         }
 
         [Fact]

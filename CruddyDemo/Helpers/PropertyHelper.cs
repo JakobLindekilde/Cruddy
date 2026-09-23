@@ -13,17 +13,17 @@ namespace CruddyDemo.Helpers
         /// </summary>
         /// <param name="typeName">The name of the type to check.</param>
         /// <returns>True if the type name is a number type; otherwise, false.</returns>
-        public static bool IsNumber(string typeName)
+        public static bool IsNumber(Type type)
         {
             return
-                typeName == "Int32" ||
-                typeName == "Int64" ||
-                typeName == "Int16" ||
-                typeName == "UInt32" ||
-                typeName == "UInt64" ||
-                typeName == "UInt16" ||
-                typeName == "Byte" ||
-                typeName == "SByte";
+                type == typeof(int) ||
+                type == typeof(long) ||
+                type == typeof(short) ||
+                type == typeof(uint) ||
+                type == typeof(ulong) ||
+                type == typeof(ushort) ||
+                type == typeof(byte) ||
+                type == typeof(sbyte);
         }
 
         /// <summary>
@@ -31,12 +31,12 @@ namespace CruddyDemo.Helpers
         /// </summary>
         /// <param name="typeName">The name of the type to check.</param>
         /// <returns>True if the type is a decimal type; otherwise, false.</returns>
-        public static bool IsDecimal(string typeName)
+        public static bool IsDecimal(Type type)
         {
             return
-                typeName == "Decimal" ||
-                typeName == "Double" ||
-                typeName == "Single";
+                type == typeof(decimal) ||
+                type == typeof(double) ||
+                type == typeof(float);
         }
 
         /// <summary>
@@ -45,14 +45,14 @@ namespace CruddyDemo.Helpers
         /// </summary>
         /// <param name="type">The type to check for support.</param>
         /// <returns>True if the type is supported; otherwise, false.</returns>
-        public static bool Supported(Type type)
+        public static bool IsSupported(Type type)
         {
             var t = GetUnderlyingType(type);
 
             if (t == typeof(string) ||
                 t.IsEnum ||
-                IsNumber(t.Name) || 
-                IsDecimal(t.Name) ||
+                IsNumber(t) || 
+                IsDecimal(t) ||
                 t == typeof(bool) ||
                 t == typeof(DateTime) ||
                 t == typeof(DateTimeOffset) ||

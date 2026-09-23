@@ -442,9 +442,9 @@ namespace CruddyDemo.Components
         /// </summary>
         protected virtual void AddColumn(PropertyInfo prop)
         {
-            if (!PropertyHelper.Supported(prop.PropertyType)) return;
+            if (!PropertyHelper.IsSupported(prop.PropertyType)) return;
 
-            if (PropertyHelper.IsNumber(prop.PropertyType.Name))
+            if (PropertyHelper.IsNumber(prop.PropertyType))
             {
                 AddNumberColumn(prop);
             }
@@ -639,12 +639,12 @@ namespace CruddyDemo.Components
 
             var propertyType = PropertyHelper.GetUnderlyingType(prop.PropertyType);
 
-            if (PropertyHelper.IsDecimal(propertyType.Name))
+            if (PropertyHelper.IsDecimal(propertyType))
             {
                 return string.IsNullOrEmpty(DefaultDecimalFormat) ? null : DefaultDecimalFormat;
             }
 
-            if (PropertyHelper.IsNumber(propertyType.Name))
+            if (PropertyHelper.IsNumber(propertyType))
             {
                 return string.IsNullOrEmpty(DefaultNumberFormat) ? null : DefaultNumberFormat;
             }
