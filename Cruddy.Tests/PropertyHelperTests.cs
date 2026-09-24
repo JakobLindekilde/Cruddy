@@ -48,6 +48,60 @@ namespace Cruddy.Tests
             Assert.Equal(expected, PropertyHelper.IsNumber(type));
         }
 
+        [Theory]
+        [InlineData(typeof(int), false)]
+        [InlineData(typeof(int?), true)]
+        [InlineData(typeof(decimal), false)]
+        [InlineData(typeof(decimal?), true)]
+        [InlineData(typeof(bool), false)]
+        [InlineData(typeof(bool?), true)]
+        [InlineData(typeof(string), false)]
+        //[InlineData(typeof(string?), true)]   // TODO: Hmmm... How does GetUnderlyingType() work?
+        [InlineData(typeof(DateTime), false)]
+        [InlineData(typeof(DateTime?), true)]
+        public void IsNullable_ReturnsExpected(Type type, bool expected)
+        {
+            Assert.Equal(expected, PropertyHelper.IsNullable(type));
+        }
+
+        [Theory]
+        [InlineData(typeof(int), typeof(int))]
+        [InlineData(typeof(int?), typeof(int))]
+        [InlineData(typeof(decimal), typeof(decimal))]
+        [InlineData(typeof(decimal?), typeof(decimal))]
+        [InlineData(typeof(bool), typeof(bool))]
+        [InlineData(typeof(bool?), typeof(bool))]
+        [InlineData(typeof(string), typeof(string))]
+        [InlineData(typeof(DateTime), typeof(DateTime))]
+        [InlineData(typeof(DateTime?), typeof(DateTime))]
+        public void GetUnderlyingType_ReturnsNonNullableType(Type input, Type expected)
+        {
+            var actual = PropertyHelper.GetUnderlyingType(input);
+            Assert.Equal(expected, actual);
+        }
+
+        [Fact]
+        public void GetPublicProperties_IncludesPublicInstancePropertiesAndInheritedOnes()
+        {
+            var withoutKeyProps = PropertyHelper.GetPublicProperties(typeof(ClassWithoutKey));
+            // Public instance properties declared on ClassWithoutKey (Id, Firstname, Lastname, Age, Hight)
+            Assert.Equal(5, withoutKeyProps.Length);
+            Assert.Contains(withoutKeyProps, p => p.Name == "Id");
+            Assert.Contains(withoutKeyProps, p => p.Name == "Firstname");
+            Assert.Contains(withoutKeyProps, p => p.Name == "Lastname");
+            Assert.Contains(withoutKeyProps, p => p.Name == "Age");
+            Assert.Contains(withoutKeyProps, p => p.Name == "Hight");
+
+            var personProps = PropertyHelper.GetPublicProperties(typeof(Person));
+            // Person inherits ClassWithKey (Id, Name, Description) and adds Email
+            Assert.Contains(personProps, p => p.Name == "Id");
+            Assert.Contains(personProps, p => p.Name == "Name");
+            Assert.Contains(personProps, p => p.Name == "Description");
+            Assert.Contains(personProps, p => p.Name == "Email");
+            Assert.Equal(4, personProps.Length);
+        }
+
+
         [Fact]
         public void GetReadProperties_ReturnsOnlyReadableProperties()
         {

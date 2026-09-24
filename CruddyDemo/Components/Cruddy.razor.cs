@@ -10,6 +10,7 @@ using System.Net.Http.Headers;
 using System.Reflection;
 
 // More stuff to do:
+// TODO: Get PropertyHelper.IsNullable to work with string?
 // TODO: Details: Get data from database, not from the item passed in
 // TODO: Display all column headers in bold (not just the Actions column)
 // TODO: Make unittests for the Cruddy component: AddColumnsToGrid(). GetDisplayFormat() etc.
