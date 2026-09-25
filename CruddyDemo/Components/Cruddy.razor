@@ -113,6 +113,23 @@ else
                                                     {
                                                         <input type="time" class="form-control" value="@(val?.ToString() ?? string.Empty)" disabled="@disabled" required="@required" @onchange="(e) => OnFieldChanged(prop, e.Value)" />
                                                     }
+                                                    else if (type.IsEnum)
+                                                    {
+                                                        var enumValues = Enum.GetValues(type);
+                                                        <select class="form-select" disabled="@disabled" required="@required" @onchange="(e) => OnFieldChanged(prop, e.Value)">
+                                                            @if (PropertyHelper.IsNullable(prop.PropertyType))
+                                                            {
+                                                                <option value="">--</option>
+                                                            }
+
+                                                            @foreach (var enumVal in enumValues)
+                                                            {
+                                                                var enumName = enumVal?.ToString();
+                                                                var selected = val != null && val.ToString() == enumName;
+                                                                <option value="@enumName" selected="@selected">@enumName</option>
+                                                            }
+                                                        </select>
+                                                    }
                                                     else
                                                     {
                                                         <input type="text" class="form-control" value="@(val?.ToString() ?? string.Empty)" disabled="@disabled" required="@required" @onchange="(e) => OnFieldChanged(prop, e.Value)" />
