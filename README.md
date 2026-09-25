@@ -113,4 +113,3 @@ Note how attribute Key, DisplayName and DisplayFormat are used in the model clas
 - It's an early beta! Needs beautification...
 - Class as property in a model class not supported (yet) (maybe partly supported in version 1)
 - List and collection properties in a model class not supported (no plans for that to version 1)
-- CRUD: Current version cannot Create (only Details, Edit and Delete implemented).
