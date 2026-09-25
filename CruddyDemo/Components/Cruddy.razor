@@ -27,9 +27,103 @@ else
         </div>
     }
 
+    @if (AllowCrud || AllowCreate)
+    {
+        <div class="mb-2">
+            <button class="btn btn-success" @onclick="ShowCreate">Create</button>
+        </div>
+    }
+
     <QuickGrid @ref="MyGrid" id="CruddyGrid" Items="@Rows.AsQueryable()" Class="table table-sm table-index table-striped small table-fit table-thead-sticky mb-0" Theme="twentyAI">
         @QuickGridColumns.Columns(MyColumnManager)
     </QuickGrid>
+
+    @if (ShowCreateModal && CreateItem != null)
+    {
+        <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Create - @typeof(TEntity).Name</h5>
+                        <button type="button" class="btn-close" aria-label="Close" @onclick="CancelCreate"></button>
+                    </div>
+                    <div class="modal-body">
+                        <EditForm EditContext="@(CreateCtx!)" OnValidSubmit="ConfirmCreateAsync">
+                            <DataAnnotationsValidator />
+                            <ValidationSummary />
+
+                            <table class="table table-sm table-striped">
+                                <tbody>
+                                    @foreach (var prop in PropertyHelper.GetPublicProperties(typeof(TEntity)))
+                                    {
+                                        if (!PropertyHelper.IsSupported(prop.PropertyType)) continue;
+
+                                        var displayName = PropertyHelper.GetDisplayName(prop);
+                                        var val = prop.GetValue(CreateItem);
+
+                                        <tr>
+                                            <th>@displayName</th>
+                                            <td>
+                                                @{
+                                                    var type = PropertyHelper.GetUnderlyingType(prop.PropertyType);
+                                                    var disabled = prop.Name == KeyColumn;
+                                                    var required = !PropertyHelper.IsNullable(prop.PropertyType);
+
+                                                    if (PropertyHelper.IsNumber(type))
+                                                    {
+                                                        <input type="number" class="form-control" value="@(val?.ToString() ?? string.Empty)" disabled="@disabled" required="@required" @onchange="(e) => OnCreateFieldChanged(prop, e.Value)" />
+                                                    }
+                                                    else if (type == typeof(bool))
+                                                    {
+                                                        <input type="checkbox" class="form-check-input" checked="@(val is bool b && b)" disabled="@disabled" @onchange="(e) => OnCreateFieldChanged(prop, e.Value)" />
+                                                    }
+                                                    else if (type == typeof(DateTime))
+                                                    {
+                                                        var dateVal = val is DateTime dt ? dt.ToString("yyyy-MM-ddThh:mm") : string.Empty;
+                                                        <input type="datetime-local" class="form-control" value="@dateVal" disabled="@disabled" required="@required" @onchange="(e) => OnCreateFieldChanged(prop, e.Value)" />
+                                                    }
+                                                    else if (type == typeof(TimeSpan))
+                                                    {
+                                                        <input type="time" class="form-control" value="@(val?.ToString() ?? string.Empty)" disabled="@disabled" required="@required" @onchange="(e) => OnCreateFieldChanged(prop, e.Value)" />
+                                                    }
+                                                    else if (type.IsEnum)
+                                                    {
+                                                        var enumValues = Enum.GetValues(type);
+                                                        <select class="form-select" disabled="@disabled" required="@required" @onchange="(e) => OnCreateFieldChanged(prop, e.Value)">
+                                                            @if (PropertyHelper.IsNullable(prop.PropertyType))
+                                                            {
+                                                                <option value="">--</option>
+                                                            }
+
+                                                            @foreach (var enumVal in enumValues)
+                                                            {
+                                                                var enumName = enumVal?.ToString();
+                                                                var selected = val != null && val.ToString() == enumName;
+                                                                <option value="@enumName" selected="@selected">@enumName</option>
+                                                            }
+                                                        </select>
+                                                    }
+                                                    else
+                                                    {
+                                                        <input type="text" class="form-control" value="@(val?.ToString() ?? string.Empty)" disabled="@disabled" required="@required" @onchange="(e) => OnCreateFieldChanged(prop, e.Value)" />
+                                                    }
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+
+                            <div class="modal-footer">
+                                <button class="btn btn-secondary" type="button" @onclick="CancelCreate">Cancel</button>
+                                <button class="btn btn-primary" type="submit">Create</button>
+                            </div>
+                        </EditForm>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
 
     @if (ShowDetailsModal && DetailsItem != null)
     {

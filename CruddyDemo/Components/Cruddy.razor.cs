@@ -73,11 +73,16 @@ namespace CruddyDemo.Components
         public string? ActionsTitle { get; set; } = "Actions";
 
         /// <summary>
-        /// Same as setting AllowDetails, AllowEdit and AllowDelete to true.
+        /// Same as setting AllowCreate, AllowDetails, AllowEdit and AllowDelete to true.
         /// </summary>
         [Parameter]
         public bool AllowCrud { get; set; } = false;
 
+        /// <summary>
+        /// Whether to enable the create functionality for each row.
+        /// </summary>
+        [Parameter]
+        public bool AllowCreate { get; set; } = false;
 
         /// <summary>
         /// Whether to enable the details functionality for each row.
@@ -135,6 +140,153 @@ namespace CruddyDemo.Components
         {
             await base.OnInitializedAsync();
             AddColumnsToGrid();
+        }
+
+        #endregion
+
+        #region Create
+
+        /// <summary>
+        /// The item being created in the create modal.
+        /// </summary>
+        protected TEntity? CreateItem { get; set; }
+
+        /// <summary>
+        /// Whether the create modal is visible.
+        /// </summary>
+        protected bool ShowCreateModal { get; set; }
+
+        /// <summary>
+        /// EditContext for create form validation.
+        /// </summary>
+        protected EditContext? CreateCtx { get; set; }
+
+        private Task ShowCreate()
+        {
+            // Try to create a new instance of TEntity. If that fails, try JSON-deserialize an empty object.
+            try
+            {
+                CreateItem = Activator.CreateInstance<TEntity>();
+            }
+            catch
+            {
+                var options = new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                CreateItem = System.Text.Json.JsonSerializer.Deserialize<TEntity>("{}", options);
+            }
+
+            CreateCtx = new EditContext(CreateItem!);
+            ShowCreateModal = true;
+            return Task.CompletedTask;
+        }
+
+        private void CancelCreate()
+        {
+            ShowCreateModal = false;
+            CreateItem = default;
+            CreateCtx = null;
+        }
+
+        private async Task ConfirmCreateAsync()
+        {
+            if (CreateItem == null) return;
+
+            try
+            {
+                // Validate
+                if (CreateCtx != null && !CreateCtx.Validate())
+                {
+                    await InvokeAsync(StateHasChanged);
+                    return;
+                }
+
+                // Persist via base Create method
+                var result = Create(DbConnection, CreateItem);
+
+                // If a scalar id was returned, attempt to set the key property
+                var keyProp = typeof(TEntity).GetProperty(KeyColumn!, BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
+                if (keyProp != null && result != null)
+                {
+                    try
+                    {
+                        var converted = Convert.ChangeType(result, PropertyHelper.GetUnderlyingType(keyProp.PropertyType));
+                        keyProp.SetValue(CreateItem, converted);
+                    }
+                    catch
+                    {
+                        // ignore conversion errors
+                    }
+                }
+
+                if (Rows != null)
+                {
+                    Rows.Insert(0, CreateItem);
+                }
+
+                ShowCreateModal = false;
+                CreateItem = default;
+                CreateCtx = null;
+                await InvokeAsync(StateHasChanged);
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = $"Create failed: {ex.Message}";
+                await ShowErrorMessage();
+            }
+        }
+
+        /// <summary>
+        /// Called when a single field is changed in the create form.
+        /// Works like OnFieldChanged but targets CreateItem/create-editcontext.
+        /// </summary>
+        /// <param name="prop"></param>
+        /// <param name="value"></param>
+        protected void OnCreateFieldChanged(PropertyInfo prop, object? value)
+        {
+            if (CreateItem == null) return;
+
+            try
+            {
+                object? converted = null;
+                if (value == null)
+                {
+                    converted = null;
+                }
+                else
+                {
+                    var targetType = PropertyHelper.GetUnderlyingType(prop.PropertyType);
+                    if (targetType == typeof(string)) converted = value.ToString();
+                    else if (targetType.IsEnum) converted = Enum.Parse(targetType, value.ToString()!);
+                    else if (targetType == typeof(int)) converted = int.TryParse(value.ToString(), out var i) ? i : (int?)null;
+                    else if (targetType == typeof(long)) converted = long.TryParse(value.ToString(), out var l) ? l : (long?)null;
+                    else if (targetType == typeof(short)) converted = short.TryParse(value.ToString(), out var s) ? s : (short?)null;
+                    else if (targetType == typeof(uint)) converted = uint.TryParse(value.ToString(), out var ui) ? ui : (uint?)null;
+                    else if (targetType == typeof(ulong)) converted = ulong.TryParse(value.ToString(), out var ul) ? ul : (ulong?)null;
+                    else if (targetType == typeof(ushort)) converted = ushort.TryParse(value.ToString(), out var us) ? us : (ushort?)null;
+                    else if (targetType == typeof(byte)) converted = byte.TryParse(value.ToString(), out var by) ? by : (byte?)null;
+                    else if (targetType == typeof(sbyte)) converted = sbyte.TryParse(value.ToString(), out var sby) ? sby : (sbyte?)null;
+                    else if (targetType == typeof(decimal)) converted = decimal.TryParse(value.ToString(), out var d) ? d : (decimal?)null;
+                    else if (targetType == typeof(double)) converted = double.TryParse(value.ToString(), out var dd) ? dd : (double?)null;
+                    else if (targetType == typeof(float)) converted = float.TryParse(value.ToString(), out var f) ? f : (float?)null;
+                    else if (targetType == typeof(bool)) converted = bool.TryParse(value.ToString(), out var b) ? b : (bool?)null;
+                    else if (targetType == typeof(DateTime)) converted = DateTime.TryParse(value.ToString(), out var dt) ? dt : (DateTime?)null;
+                    else if (targetType == typeof(TimeSpan)) converted = TimeSpan.TryParse(value.ToString(), out var ts) ? ts : (TimeSpan?)null;
+                    else if (targetType == typeof(DateTimeOffset)) converted = DateTimeOffset.TryParse(value.ToString(), out var dto) ? dto : (DateTimeOffset?)null;
+                    else if (targetType == typeof(Guid)) converted = Guid.TryParse(value.ToString(), out var g) ? g : (Guid?)null;
+                    else converted = value;
+                }
+
+                prop.SetValue(CreateItem, converted);
+
+                if (CreateCtx != null)
+                {
+                    var field = new FieldIdentifier(CreateItem, prop.Name);
+                    CreateCtx.NotifyFieldChanged(field);
+                }
+            }
+            catch
+            {
+                // ignore conversion errors here; validation will catch invalid values on submit
+            }
         }
 
         #endregion

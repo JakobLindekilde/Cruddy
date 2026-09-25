@@ -33,8 +33,7 @@ CREATE TABLE [dbo].[Customers](
 	[Email] [nvarchar](50) NOT NULL,
 	[Vip] [bit] NOT NULL,
 	[Phone] [int] NOT NULL,
-	[Birthdate] [datetime] NOT NULL,
-	[Salary] [money] NOT NULL,
+	[Birthdate] [datetime] NOT NULL
  CONSTRAINT [PK__Customer__3214EC07EA9BFF16] PRIMARY KEY CLUSTERED 
 (
 	[Id] ASC
@@ -163,17 +162,17 @@ SET IDENTITY_INSERT [dbo].[Addresses] OFF
 GO
 SET IDENTITY_INSERT [dbo].[Customers] ON 
 GO
-INSERT [dbo].[Customers] ([Id], [Name], [Email], [Vip], [Phone], [Birthdate], [Salary]) VALUES (1, N'Ole', N'Ole@val.dk', 1, 1111111366, CAST(N'1995-10-10T00:00:00.000' AS DateTime), 12345.5600)
+INSERT [dbo].[Customers] ([Id], [Name], [Email], [Vip], [Phone], [Birthdate]) VALUES (1, N'Ole', N'Ole@val.dk', 1, 1111111366, CAST(N'1995-10-10T00:00:00.000' AS DateTime))
 GO
-INSERT [dbo].[Customers] ([Id], [Name], [Email], [Vip], [Phone], [Birthdate], [Salary]) VALUES (2, N'UUU', N'Ove@valby.dk', 1, 5, CAST(N'1992-11-29T00:00:00.000' AS DateTime), 12345.5600)
+INSERT [dbo].[Customers] ([Id], [Name], [Email], [Vip], [Phone], [Birthdate]) VALUES (2, N'UUU', N'Ove@valby.dk', 1, 5, CAST(N'1992-11-29T00:00:00.000' AS DateTime))
 GO
-INSERT [dbo].[Customers] ([Id], [Name], [Email], [Vip], [Phone], [Birthdate], [Salary]) VALUES (4, N'Kurt', N'krt@valby.dk', 1, 11151111, CAST(N'2000-02-10T00:00:00.000' AS DateTime), 12345.9199)
+INSERT [dbo].[Customers] ([Id], [Name], [Email], [Vip], [Phone], [Birthdate]) VALUES (4, N'Kurt', N'krt@valby.dk', 1, 11151111, CAST(N'2000-02-10T00:00:00.000' AS DateTime))
 GO
-INSERT [dbo].[Customers] ([Id], [Name], [Email], [Vip], [Phone], [Birthdate], [Salary]) VALUES (5, N'Mia', N'mia@valby.dk', 0, 11171111, CAST(N'1975-10-20T00:00:00.000' AS DateTime), 12345.9999)
+INSERT [dbo].[Customers] ([Id], [Name], [Email], [Vip], [Phone], [Birthdate]) VALUES (5, N'Mia', N'mia@valby.dk', 0, 11171111, CAST(N'1975-10-20T00:00:00.000' AS DateTime))
 GO
-INSERT [dbo].[Customers] ([Id], [Name], [Email], [Vip], [Phone], [Birthdate], [Salary]) VALUES (6, N'looiu', N'pia@valby.dk', 0, 11161111, CAST(N'1983-04-04T00:00:00.000' AS DateTime), 12345.4999)
+INSERT [dbo].[Customers] ([Id], [Name], [Email], [Vip], [Phone], [Birthdate]) VALUES (6, N'looiu', N'pia@valby.dk', 0, 11161111, CAST(N'1983-04-04T00:00:00.000' AS DateTime))
 GO
-INSERT [dbo].[Customers] ([Id], [Name], [Email], [Vip], [Phone], [Birthdate], [Salary]) VALUES (13, N'asdasd', N'jj@mail.dk', 1, 1133, CAST(N'2026-09-23T00:00:00.000' AS DateTime), 12345.5600)
+INSERT [dbo].[Customers] ([Id], [Name], [Email], [Vip], [Phone], [Birthdate]) VALUES (13, N'asdasd', N'jj@mail.dk', 1, 1133, CAST(N'2026-09-23T00:00:00.000' AS DateTime))
 GO
 SET IDENTITY_INSERT [dbo].[Customers] OFF
 GO

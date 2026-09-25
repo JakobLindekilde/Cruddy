@@ -238,6 +238,50 @@ namespace CruddyDemo.Components
 #pragma warning restore S2077
 
         /// <summary>
+        /// Inserts a new entity into the database table. By default the key column is excluded from the INSERT
+        /// (useful when the key is an identity column). Returns the database scalar result if available
+        /// (for example SCOPE_IDENTITY()), otherwise returns the number of rows affected.
+        /// </summary>
+        /// <param name="DbConnection">Database connection to use.</param>
+        /// <param name="entity">The entity to insert.</param>
+        /// <returns>Scalar result from the DB (e.g. new id) or rows affected.</returns>
+        public object? Create(DbConnection DbConnection, TEntity entity)
+        {
+            if (entity == null) throw new ArgumentNullException(nameof(entity));
+
+            var props = PropertyHelper.GetPublicProperties(entity.GetType())
+                .Where(p => p.CanRead && p.CanWrite && 
+                            !string.Equals(p.Name, KeyColumn, StringComparison.OrdinalIgnoreCase))
+                .ToArray();
+
+            if (props.Length == 0) return 0;
+
+            var colNames = props.Select(p => p.Name).ToArray();
+            var paramNames = props.Select(p => "@" + p.Name).ToArray();
+
+            var sql = $"INSERT INTO {DefaultSchema}.{TableName} ({string.Join(", ", colNames)}) VALUES ({string.Join(", ", paramNames)})";
+
+            var dp = new Dapper.DynamicParameters();
+            foreach (var prop in props)
+            {
+                var val = prop.GetValue(entity);
+                dp.Add(prop.Name, val);
+            }
+
+            // Try to return an identity value for SQL Server. If that fails, fall back to Execute (rows affected).
+            try
+            {
+                var identitySql = sql + "; SELECT SCOPE_IDENTITY();";
+                return DbConnection.ExecuteScalar(identitySql, dp);
+            }
+            catch
+            {
+                return DbConnection.Execute(sql, dp);
+            }
+        }
+#pragma warning restore S2077
+
+        /// <summary>
         /// Gets rows from the database table in <seealso cref="TableName"/> or <seealso cref="Select"/>
         /// and maps them to a list of <typeparamref name="T1"/>.
         /// </summary>
