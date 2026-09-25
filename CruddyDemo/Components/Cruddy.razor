@@ -54,7 +54,7 @@ else
 
                             <table class="table table-sm table-striped">
                                 <tbody>
-                                    @foreach (var prop in PropertyHelper.GetPublicProperties(typeof(TEntity)))
+                                    @foreach (var prop in PropertyHelper.GetColumnProperties(typeof(TEntity)))
                                     {
                                         if (!PropertyHelper.IsSupported(prop.PropertyType)) continue;
 
@@ -137,7 +137,7 @@ else
                     <div class="modal-body">
                         <table class="table table-sm table-striped">
                             <tbody>
-                                @foreach (var prop in PropertyHelper.GetPublicProperties(typeof(TEntity)))
+                                @foreach (var prop in PropertyHelper.GetColumnProperties(typeof(TEntity)))
                                 {
                                     if (!PropertyHelper.IsSupported(prop.PropertyType)) continue;
 
@@ -175,7 +175,7 @@ else
 
                             <table class="table table-sm table-striped">
                                 <tbody>
-                                    @foreach (var prop in PropertyHelper.GetPublicProperties(typeof(TEntity)))
+                                    @foreach (var prop in PropertyHelper.GetColumnProperties(typeof(TEntity)))
                                     {
                                         if (!PropertyHelper.IsSupported(prop.PropertyType)) continue;
 

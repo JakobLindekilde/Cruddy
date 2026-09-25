@@ -56,7 +56,6 @@ namespace Cruddy.Tests
         [InlineData(typeof(bool), false)]
         [InlineData(typeof(bool?), true)]
         [InlineData(typeof(string), false)]
-        //[InlineData(typeof(string?), true)]   // TODO: Hmmm... How does GetUnderlyingType() work?
         [InlineData(typeof(DateTime), false)]
         [InlineData(typeof(DateTime?), true)]
         public void IsNullable_ReturnsExpected(Type type, bool expected)
@@ -83,7 +82,7 @@ namespace Cruddy.Tests
         [Fact]
         public void GetPublicProperties_IncludesPublicInstancePropertiesAndInheritedOnes()
         {
-            var withoutKeyProps = PropertyHelper.GetPublicProperties(typeof(ClassWithoutKey));
+            var withoutKeyProps = PropertyHelper.GetColumnProperties(typeof(ClassWithoutKey));
             // Public instance properties declared on ClassWithoutKey (Id, Firstname, Lastname, Age, Hight)
             Assert.Equal(5, withoutKeyProps.Length);
             Assert.Contains(withoutKeyProps, p => p.Name == "Id");
@@ -92,7 +91,7 @@ namespace Cruddy.Tests
             Assert.Contains(withoutKeyProps, p => p.Name == "Age");
             Assert.Contains(withoutKeyProps, p => p.Name == "Hight");
 
-            var personProps = PropertyHelper.GetPublicProperties(typeof(Person));
+            var personProps = PropertyHelper.GetColumnProperties(typeof(Person));
             // Person inherits ClassWithKey (Id, Name, Description) and adds Email
             Assert.Contains(personProps, p => p.Name == "Id");
             Assert.Contains(personProps, p => p.Name == "Name");

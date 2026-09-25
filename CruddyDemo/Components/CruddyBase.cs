@@ -214,7 +214,7 @@ namespace CruddyDemo.Components
                 ? new List<string>()    
                 : TableColumns.Split(",", StringSplitOptions.TrimEntries).ToList();
 
-            var props = PropertyHelper.GetPublicProperties(entity.GetType())
+            var props = PropertyHelper.GetColumnProperties(entity.GetType())
                 .Where(p => p.CanRead && p.CanWrite && 
                             (cols.Count == 0 || (cols.Count > 0 && cols.Contains(p.Name)))  && 
                             !string.Equals(p.Name, KeyColumn, StringComparison.OrdinalIgnoreCase))
@@ -249,7 +249,7 @@ namespace CruddyDemo.Components
         {
             if (entity == null) throw new ArgumentNullException(nameof(entity));
 
-            var props = PropertyHelper.GetPublicProperties(entity.GetType())
+            var props = PropertyHelper.GetColumnProperties(entity.GetType())
                 .Where(p => p.CanRead && p.CanWrite && 
                             !string.Equals(p.Name, KeyColumn, StringComparison.OrdinalIgnoreCase))
                 .ToArray();

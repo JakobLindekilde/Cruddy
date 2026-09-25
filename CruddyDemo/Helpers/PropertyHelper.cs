@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.Linq;
+using System.Reflection;
 
 namespace CruddyDemo.Helpers
 {
@@ -65,12 +66,29 @@ namespace CruddyDemo.Helpers
             return false;
         }
 
+        /// <summary>
+        /// Returns true if the specified type is a nullable type; otherwise, false.
+        /// </summary>
+        /// <param name="type">The type to check for nullability.</param>
+        /// <returns>True if the type is nullable; otherwise, false.</returns>
         public static bool IsNullable(Type type) => Nullable.GetUnderlyingType(type) != null;
 
+        /// <summary>
+        /// Gets the underlying type of a nullable type, or the type itself if it is not nullable.
+        /// </summary>
+        /// <param name="type">The type for which to get the underlying type.</param>
+        /// <returns>The underlying type if the type is nullable; otherwise, the type itself.</returns>
         public static Type GetUnderlyingType(Type type) => Nullable.GetUnderlyingType(type) ?? type;
 
-        public static PropertyInfo[] GetPublicProperties(Type type) =>
-            type.GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+        /// <summary>
+        /// Gets all public instance properties of the specified type that are considered "table column" properties.
+        /// </summary>
+        /// <param name="type">The type for which to get the column properties.</param>
+        /// <returns>An array of PropertyInfo objects representing the column properties.</returns>
+        public static PropertyInfo[] GetColumnProperties(Type type) =>
+            type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                .Where(p => !(p.PropertyType.IsClass && p.PropertyType != typeof(string)))
+                .ToArray();
 
         /// <summary>
         /// Gets all public instance properties of the specified type that can be read (i.e., have a getter).
