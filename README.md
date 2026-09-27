@@ -75,6 +75,7 @@ Note how attribute Key, DisplayName and DisplayFormat are used in the model clas
 | PluralizeTableName | Whether to pluralize TableName when building SQL (adds an 's'). |
 | TableColumns | The columns to retrieve from the table, separated by commas (default: "*"). |
 | KeyColumn | The primary key column name. If not specified the component will try to infer it from attributes or common naming (Id / {Class}Id). |
+| AllowKeyColumnEdit | Whether to allow editing of the key column in the grid when creating rows (not when updating). Default is false. |
 | Top | Maximum number of rows to retrieve (default: 10000). |
 | Distinct | Whether to retrieve only distinct rows. |
 | OrderBy | Columns to order the result by (comma separated). Works together with SortOrder. |

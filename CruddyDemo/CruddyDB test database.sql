@@ -33,7 +33,7 @@ CREATE TABLE [dbo].[Customers](
 	[Email] [nvarchar](50) NOT NULL,
 	[Vip] [bit] NOT NULL,
 	[Phone] [int] NOT NULL,
-	[Birthdate] [datetime] NOT NULL
+	[Birthdate] [datetime] NOT NULL,
  CONSTRAINT [PK__Customer__3214EC07EA9BFF16] PRIMARY KEY CLUSTERED 
 (
 	[Id] ASC
@@ -52,6 +52,24 @@ CREATE TABLE [dbo].[Employees](
 	[Name] [nvarchar](50) NOT NULL,
 	[Salary] [money] NOT NULL,
  CONSTRAINT [PK__Employee__3214EC07F30F2950] PRIMARY KEY CLUSTERED 
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+END
+GO
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[KeyColumnIsGuid]') AND type in (N'U'))
+BEGIN
+CREATE TABLE [dbo].[KeyColumnIsGuid](
+	[Id] [uniqueidentifier] NOT NULL,
+	[Name] [nvarchar](50) NOT NULL,
+	[Description] [nvarchar](2000) NULL,
+	[Active] [bit] NOT NULL,
+ CONSTRAINT [PK_KeyColumnIsGuid] PRIMARY KEY CLUSTERED 
 (
 	[Id] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
@@ -154,7 +172,7 @@ INSERT [dbo].[Addresses] ([Id], [CustomerId], [Town], [Street], [StreetNo], [Zip
 GO
 INSERT [dbo].[Addresses] ([Id], [CustomerId], [Town], [Street], [StreetNo], [ZipCode], [AddressType]) VALUES (10, 4, N'Kbh', N'5555', 123, N'123', 1)
 GO
-INSERT [dbo].[Addresses] ([Id], [CustomerId], [Town], [Street], [StreetNo], [ZipCode], [AddressType]) VALUES (14, 1, N'Helsi', N'sadfasd', 5556666, N'555', 1)
+INSERT [dbo].[Addresses] ([Id], [CustomerId], [Town], [Street], [StreetNo], [ZipCode], [AddressType]) VALUES (14, 1, N'Helsi', N'sadfasd', 5556666, N'555', 2)
 GO
 INSERT [dbo].[Addresses] ([Id], [CustomerId], [Town], [Street], [StreetNo], [ZipCode], [AddressType]) VALUES (15, 13, N'sdfef', N'sdf', 3, N'3', 1)
 GO
@@ -162,17 +180,23 @@ SET IDENTITY_INSERT [dbo].[Addresses] OFF
 GO
 SET IDENTITY_INSERT [dbo].[Customers] ON 
 GO
-INSERT [dbo].[Customers] ([Id], [Name], [Email], [Vip], [Phone], [Birthdate]) VALUES (1, N'Ole', N'Ole@val.dk', 1, 1111111366, CAST(N'1995-10-10T00:00:00.000' AS DateTime))
+INSERT [dbo].[Customers] ([Id], [Name], [Email], [Vip], [Phone], [Birthdate]) VALUES (1, N'OleOle', N'Ole@val.dk', 1, 1111111366, CAST(N'1995-10-10T00:00:00.000' AS DateTime))
 GO
 INSERT [dbo].[Customers] ([Id], [Name], [Email], [Vip], [Phone], [Birthdate]) VALUES (2, N'UUU', N'Ove@valby.dk', 1, 5, CAST(N'1992-11-29T00:00:00.000' AS DateTime))
 GO
 INSERT [dbo].[Customers] ([Id], [Name], [Email], [Vip], [Phone], [Birthdate]) VALUES (4, N'Kurt', N'krt@valby.dk', 1, 11151111, CAST(N'2000-02-10T00:00:00.000' AS DateTime))
 GO
-INSERT [dbo].[Customers] ([Id], [Name], [Email], [Vip], [Phone], [Birthdate]) VALUES (5, N'Mia', N'mia@valby.dk', 0, 11171111, CAST(N'1975-10-20T00:00:00.000' AS DateTime))
+INSERT [dbo].[Customers] ([Id], [Name], [Email], [Vip], [Phone], [Birthdate]) VALUES (5, N'Mia', N'mia@valby.dk', 1, 11171112, CAST(N'1975-10-20T00:00:00.000' AS DateTime))
 GO
 INSERT [dbo].[Customers] ([Id], [Name], [Email], [Vip], [Phone], [Birthdate]) VALUES (6, N'looiu', N'pia@valby.dk', 0, 11161111, CAST(N'1983-04-04T00:00:00.000' AS DateTime))
 GO
 INSERT [dbo].[Customers] ([Id], [Name], [Email], [Vip], [Phone], [Birthdate]) VALUES (13, N'asdasd', N'jj@mail.dk', 1, 1133, CAST(N'2026-09-23T00:00:00.000' AS DateTime))
+GO
+INSERT [dbo].[Customers] ([Id], [Name], [Email], [Vip], [Phone], [Birthdate]) VALUES (38, N'Jakob Lindekilde', N'asd ', 1, 3234, CAST(N'2026-09-25T12:00:00.000' AS DateTime))
+GO
+INSERT [dbo].[Customers] ([Id], [Name], [Email], [Vip], [Phone], [Birthdate]) VALUES (39, N'Jens Hansen', N'sdf', 0, 345, CAST(N'2026-09-25T12:00:00.000' AS DateTime))
+GO
+INSERT [dbo].[Customers] ([Id], [Name], [Email], [Vip], [Phone], [Birthdate]) VALUES (46, N'Peter', N'sdf', 1, 33, CAST(N'2026-09-27T12:00:00.000' AS DateTime))
 GO
 SET IDENTITY_INSERT [dbo].[Customers] OFF
 GO
@@ -191,6 +215,20 @@ GO
 INSERT [dbo].[Employees] ([Id], [Name], [Salary]) VALUES (6, N'Johnny', 40000.0000)
 GO
 SET IDENTITY_INSERT [dbo].[Employees] OFF
+GO
+INSERT [dbo].[KeyColumnIsGuid] ([Id], [Name], [Description], [Active]) VALUES (N'00000000-0000-0000-0000-000000000034', N'zxc', N'zxc', 0)
+GO
+INSERT [dbo].[KeyColumnIsGuid] ([Id], [Name], [Description], [Active]) VALUES (N'00000000-0000-0000-0000-000000000099', N'sdf', N'sdf', 1)
+GO
+INSERT [dbo].[KeyColumnIsGuid] ([Id], [Name], [Description], [Active]) VALUES (N'00000000-0000-0000-0000-000000000555', N'Jakob3', N'qw', 1)
+GO
+INSERT [dbo].[KeyColumnIsGuid] ([Id], [Name], [Description], [Active]) VALUES (N'f0644cbf-be20-47a9-a4c8-0cfc948fba89', N'hhhhhhhhhhhhhhhhhhhhhhhhhhhhh', N'sdaf', 1)
+GO
+INSERT [dbo].[KeyColumnIsGuid] ([Id], [Name], [Description], [Active]) VALUES (N'de484d78-32f2-4481-bf31-1df61a4d8a4e', N'nnnnnnnnnnnnnnnnnnnn', N'dfg', 1)
+GO
+INSERT [dbo].[KeyColumnIsGuid] ([Id], [Name], [Description], [Active]) VALUES (N'387e650d-e418-4fa0-820c-31f8e799d796', N'dgfg', N'dfgdf', 0)
+GO
+INSERT [dbo].[KeyColumnIsGuid] ([Id], [Name], [Description], [Active]) VALUES (N'58b182bd-de47-48eb-8d70-94f4334e626e', N'333', N'3333', 1)
 GO
 SET IDENTITY_INSERT [dbo].[Orders] ON 
 GO
@@ -232,7 +270,7 @@ SET IDENTITY_INSERT [dbo].[Products] OFF
 GO
 SET IDENTITY_INSERT [dbo].[TestAllTypes] ON 
 GO
-INSERT [dbo].[TestAllTypes] ([IdInt], [IdGuid], [Int32NotNull], [Int32Nullable], [Int64NotNull], [Int64Nullable], [Int16NotNull], [Int16Nullable], [ByteNotNull], [ByteNullable], [DecimalNotNull], [DecimalNullable], [DoubleNotNull], [DoubleNullable], [SingleNotNull], [SingleNullable], [BoolNotNull], [BoolNullable], [StringNotNull], [StringNullable], [DateTimeNotNull], [DateTimeNullable], [TimeSpanNotNull], [TimeSpanNullable], [DateTimeOffsetNotNull], [DateTimeOffsetNullable], [GuidNotNull], [GuidNullable]) VALUES (2, N'514a1c66-d201-4b2f-95fe-7725c97edbc5', 1, NULL, 2, NULL, 3, NULL, 4, NULL, CAST(223.0002 AS Decimal(18, 4)), NULL, 33, NULL, 44, NULL, 0, NULL, N'AbcHest', N'iyui', CAST(N'2018-01-23T12:12:00.000' AS DateTime), CAST(N'2026-09-05T00:00:00.000' AS DateTime), CAST(N'21:22:00' AS Time), NULL, CAST(N'2026-09-21T11:12:13.4567890+02:00' AS DateTimeOffset), NULL, N'00000000-0000-0000-0000-000000000002', NULL)
+INSERT [dbo].[TestAllTypes] ([IdInt], [IdGuid], [Int32NotNull], [Int32Nullable], [Int64NotNull], [Int64Nullable], [Int16NotNull], [Int16Nullable], [ByteNotNull], [ByteNullable], [DecimalNotNull], [DecimalNullable], [DoubleNotNull], [DoubleNullable], [SingleNotNull], [SingleNullable], [BoolNotNull], [BoolNullable], [StringNotNull], [StringNullable], [DateTimeNotNull], [DateTimeNullable], [TimeSpanNotNull], [TimeSpanNullable], [DateTimeOffsetNotNull], [DateTimeOffsetNullable], [GuidNotNull], [GuidNullable]) VALUES (2, N'514a1c66-d201-4b2f-95fe-7725c97edbc5', 1, NULL, 2, NULL, 3, NULL, 4, NULL, CAST(223.0777 AS Decimal(18, 4)), NULL, 33, NULL, 44, NULL, 0, NULL, N'AbcHest', N'iyui', CAST(N'2018-01-23T12:12:00.000' AS DateTime), CAST(N'2026-09-05T00:00:00.000' AS DateTime), CAST(N'21:22:00' AS Time), NULL, CAST(N'2026-09-21T11:12:13.4567890+02:00' AS DateTimeOffset), NULL, N'00000000-0000-0000-0000-000000000002', NULL)
 GO
 INSERT [dbo].[TestAllTypes] ([IdInt], [IdGuid], [Int32NotNull], [Int32Nullable], [Int64NotNull], [Int64Nullable], [Int16NotNull], [Int16Nullable], [ByteNotNull], [ByteNullable], [DecimalNotNull], [DecimalNullable], [DoubleNotNull], [DoubleNullable], [SingleNotNull], [SingleNullable], [BoolNotNull], [BoolNullable], [StringNotNull], [StringNullable], [DateTimeNotNull], [DateTimeNullable], [TimeSpanNotNull], [TimeSpanNullable], [DateTimeOffsetNotNull], [DateTimeOffsetNullable], [GuidNotNull], [GuidNullable]) VALUES (4, N'514a1c66-d201-4b2f-95fe-7725c97edbc6', 11, NULL, 22, NULL, 33, NULL, 44, NULL, CAST(5.1234 AS Decimal(18, 4)), NULL, 6.1234, NULL, 7.1234, NULL, 1, NULL, N'ÆØÅ æøå', N'fghgfh', CAST(N'9999-12-31T00:00:00.000' AS DateTime), NULL, CAST(N'00:00:00' AS Time), NULL, CAST(N'2016-01-01T00:00:00.0000000+01:00' AS DateTimeOffset), NULL, N'11111111-1111-1111-1111-111111111111', NULL)
 GO
@@ -243,6 +281,11 @@ ALTER TABLE [dbo].[TestAllTypes] ADD  CONSTRAINT [IX_TestAllTypes] UNIQUE NONCLU
 (
 	[IdGuid] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+GO
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[DF_KeyColumnIsGuid_Id]') AND type = 'D')
+BEGIN
+ALTER TABLE [dbo].[KeyColumnIsGuid] ADD  CONSTRAINT [DF_KeyColumnIsGuid_Id]  DEFAULT (newid()) FOR [Id]
+END
 GO
 IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[DF__Orders__Qty__534D60F1]') AND type = 'D')
 BEGIN

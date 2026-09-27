@@ -64,6 +64,12 @@ namespace CruddyDemo.Components
         public string? KeyColumn { get; set; }
 
         /// <summary>
+        /// Whether to allow editing of the key column in the grid when creating rows (not when updating). Default is false.
+        /// </summary>
+        [Parameter]
+        public bool AllowKeyColumnEdit { get; set; } = false;
+
+        /// <summary>
         /// The maximum number of rows to retrieve from table <seealso cref="TableName"/>.
         /// </summary>
         /// <remarks>Default is 10000.</remarks>
@@ -197,6 +203,28 @@ namespace CruddyDemo.Components
             return sql;
         }
 
+        /// <summary>
+        /// Determines whether a given property name should be included in the
+        /// SQL operation based on the operation type. For example, the key column 
+        /// is excluded from UPDATE operations unless AllowKeyColumnEdit is true.
+        /// </summary>
+        /// <param name="operation">The CRUD operation type.</param>
+        /// <param name="propName">The name of the property.</param>
+        /// <returns>True if the property should be included; otherwise, false.</returns>
+        public bool IncludeColumn(CrudOperation operation, string propName)
+        {
+            if (string.Equals(propName, KeyColumn, StringComparison.OrdinalIgnoreCase))
+            {
+                if (operation == CrudOperation.Create)
+                {
+                    return AllowKeyColumnEdit;
+                } 
+                return false;
+            }
+
+            return true;
+        }
+
 #pragma warning disable S2077   // SonarQube rule S2077: "SQL queries should not be vulnerable to injection attacks".
 
         public object? Delete(DbConnection DbConnection, object keyValue)
@@ -216,8 +244,7 @@ namespace CruddyDemo.Components
 
             var props = PropertyHelper.GetColumnProperties(entity.GetType())
                 .Where(p => p.CanRead && p.CanWrite && 
-                            (cols.Count == 0 || (cols.Count > 0 && cols.Contains(p.Name)))  && 
-                            !string.Equals(p.Name, KeyColumn, StringComparison.OrdinalIgnoreCase))
+                            (cols.Count == 0 || (cols.Count > 0 && cols.Contains(p.Name)))  && IncludeColumn(CrudOperation.Update, p.Name))
                 .ToArray();
 
             if (props.Length == 0) return 0;
@@ -250,8 +277,7 @@ namespace CruddyDemo.Components
             if (entity == null) throw new ArgumentNullException(nameof(entity));
 
             var props = PropertyHelper.GetColumnProperties(entity.GetType())
-                .Where(p => p.CanRead && p.CanWrite && 
-                            !string.Equals(p.Name, KeyColumn, StringComparison.OrdinalIgnoreCase))
+                .Where(p => p.CanRead && p.CanWrite && IncludeColumn(CrudOperation.Create, p.Name))
                 .ToArray();
 
             if (props.Length == 0) return 0;
@@ -366,4 +392,11 @@ namespace CruddyDemo.Components
         }
 
     }
+
+    public enum CrudOperation
+    {
+        Create = 1,
+        Update,
+    }
+
 }
