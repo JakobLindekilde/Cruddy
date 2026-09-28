@@ -66,11 +66,68 @@ namespace Cruddy.Helpers
         }
 
         /// <summary>
-        /// Returns true if the specified type is a nullable type; otherwise, false.
+        /// Returns true if the specified property is nullable. This handles both
+        /// nullable value types (Nullable<T>) and C# 8+ nullable reference types
+        /// by inspecting NullableAttribute/NullableContextAttribute on the property,
+        /// declaring type or assembly.
         /// </summary>
-        /// <param name="type">The type to check for nullability.</param>
-        /// <returns>True if the type is nullable; otherwise, false.</returns>
-        public static bool IsNullable(Type type) => Nullable.GetUnderlyingType(type) != null;
+        /// <param name="property">The PropertyInfo to check for nullability.</param>
+        /// <returns>True if the property is nullable; otherwise, false.</returns>
+        public static bool IsNullable(PropertyInfo property)
+        {
+            if (property == null) return false;
+
+            // Value type Nullable<T>
+            if (Nullable.GetUnderlyingType(property.PropertyType) != null)
+            {
+                return true;
+            }
+
+            // Reference types: inspect NullableAttribute on the property
+            if (!property.PropertyType.IsValueType)
+            {
+                var nullableAttr = property.CustomAttributes
+                    .FirstOrDefault(a => a.AttributeType.FullName == "System.Runtime.CompilerServices.NullableAttribute");
+
+                if (nullableAttr != null && nullableAttr.ConstructorArguments.Count == 1)
+                {
+                    var arg = nullableAttr.ConstructorArguments[0];
+                    // Constructor may be a byte or a byte[]
+                    if (arg.ArgumentType == typeof(byte[]))
+                    {
+                        var args = (IReadOnlyCollection<CustomAttributeTypedArgument>?)arg.Value;
+                        if (args != null && args.Count > 0 && args.First().Value is byte b)
+                        {
+                            return b == 2;
+                        }
+                    }
+                    else if (arg.Value is byte b)
+                    {
+                        return b == 2;
+                    }
+                }
+
+                // If no NullableAttribute on the property, check NullableContext on declaring type
+                var contextAttr = property.DeclaringType?.CustomAttributes
+                    .FirstOrDefault(a => a.AttributeType.FullName == "System.Runtime.CompilerServices.NullableContextAttribute");
+
+                if (contextAttr != null && contextAttr.ConstructorArguments.Count == 1 && contextAttr.ConstructorArguments[0].Value is byte cb)
+                {
+                    return cb == 2;
+                }
+
+                // Finally, check assembly-level NullableContextAttribute
+                var asmContext = property.DeclaringType?.Assembly.CustomAttributes
+                    .FirstOrDefault(a => a.AttributeType.FullName == "System.Runtime.CompilerServices.NullableContextAttribute");
+
+                if (asmContext != null && asmContext.ConstructorArguments.Count == 1 && asmContext.ConstructorArguments[0].Value is byte cb2)
+                {
+                    return cb2 == 2;
+                }
+            }
+
+            return false;
+        }
 
         /// <summary>
         /// Gets the underlying type of a nullable type, or the type itself if it is not nullable.

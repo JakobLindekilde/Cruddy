@@ -67,7 +67,7 @@ else
                                                 @{
                                                     var type = PropertyHelper.GetUnderlyingType(prop.PropertyType);
                                                     var disabled = !IncludeColumn(CrudOperation.Create, prop.Name);
-                                                    var required = !PropertyHelper.IsNullable(prop.PropertyType);
+                                                    var required = !PropertyHelper.IsNullable(prop);
 
                                                     if (PropertyHelper.IsNumber(type))
                                                     {
@@ -90,7 +90,7 @@ else
                                                     {
                                                         var enumValues = Enum.GetValues(type);
                                                         <select class="form-select" disabled="@disabled" required="@required" @onchange="(e) => OnCreateFieldChanged(prop, e.Value)">
-                                                            @if (PropertyHelper.IsNullable(prop.PropertyType))
+                                                            @if (PropertyHelper.IsNullable(prop))
                                                             {
                                                                 <option value="">--</option>
                                                             }
@@ -188,7 +188,7 @@ else
                                                 @{
                                                     var type = PropertyHelper.GetUnderlyingType(prop.PropertyType);
                                                     var disabled = !IncludeColumn(CrudOperation.Update, prop.Name);
-                                                    var required = !PropertyHelper.IsNullable(prop.PropertyType);
+                                                    var required = !PropertyHelper.IsNullable(prop);
     
                                                     if (PropertyHelper.IsNumber(type))
                                                     {
@@ -211,7 +211,7 @@ else
                                                     {
                                                         var enumValues = Enum.GetValues(type);
                                                         <select class="form-select" disabled="@disabled" required="@required" @onchange="(e) => OnFieldChanged(prop, e.Value)">
-                                                            @if (PropertyHelper.IsNullable(prop.PropertyType))
+                                                            @if (PropertyHelper.IsNullable(prop))
                                                             {
                                                                 <option value="">--</option>
                                                             }

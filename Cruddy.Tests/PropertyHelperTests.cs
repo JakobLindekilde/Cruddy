@@ -48,19 +48,43 @@ namespace Cruddy.Tests
             Assert.Equal(expected, PropertyHelper.IsNumber(type));
         }
 
-        [Theory]
-        [InlineData(typeof(int), false)]
-        [InlineData(typeof(int?), true)]
-        [InlineData(typeof(decimal), false)]
-        [InlineData(typeof(decimal?), true)]
-        [InlineData(typeof(bool), false)]
-        [InlineData(typeof(bool?), true)]
-        [InlineData(typeof(string), false)]
-        [InlineData(typeof(DateTime), false)]
-        [InlineData(typeof(DateTime?), true)]
-        public void IsNullable_ReturnsExpected(Type type, bool expected)
+        [Fact]
+        public void IsNullable_ReturnsExpected2()
         {
-            Assert.Equal(expected, PropertyHelper.IsNullable(type));
+            var all = new TestAllType() { StringNotNull = "Test" };
+            var t = all.GetType();
+
+            Assert.False(PropertyHelper.IsNullable(t.GetProperty(nameof(all.Int32NotNull))!));
+            Assert.True(PropertyHelper.IsNullable(t.GetProperty(nameof(all.Int32Nullable))!));
+            Assert.False(PropertyHelper.IsNullable(t.GetProperty(nameof(all.Int64NotNull))!));
+            Assert.True(PropertyHelper.IsNullable(t.GetProperty(nameof(all.Int64Nullable))!));
+            Assert.False(PropertyHelper.IsNullable(t.GetProperty(nameof(all.Int16NotNull))!));
+            Assert.True(PropertyHelper.IsNullable(t.GetProperty(nameof(all.Int16Nullable))!));
+            Assert.False(PropertyHelper.IsNullable(t.GetProperty(nameof(all.ByteNotNull))!));
+            Assert.True(PropertyHelper.IsNullable(t.GetProperty(nameof(all.ByteNullable))!));
+
+            Assert.False(PropertyHelper.IsNullable(t.GetProperty(nameof(all.DecimalNotNull))!));
+            Assert.True(PropertyHelper.IsNullable(t.GetProperty(nameof(all.DecimalNullable))!));
+            Assert.False(PropertyHelper.IsNullable(t.GetProperty(nameof(all.DoubleNotNull))!));
+            Assert.True(PropertyHelper.IsNullable(t.GetProperty(nameof(all.DoubleNullable))!));
+            Assert.False(PropertyHelper.IsNullable(t.GetProperty(nameof(all.SingleNotNull))!));
+            Assert.True(PropertyHelper.IsNullable(t.GetProperty(nameof(all.SingleNullable))!));
+
+            Assert.False(PropertyHelper.IsNullable(t.GetProperty(nameof(all.BoolNotNull))!));
+            Assert.True(PropertyHelper.IsNullable(t.GetProperty(nameof(all.BoolNullable))!));
+
+            Assert.False(PropertyHelper.IsNullable(t.GetProperty(nameof(all.StringNotNull))!));
+            Assert.True(PropertyHelper.IsNullable(t.GetProperty(nameof(all.StringNullable))!));
+
+            Assert.False(PropertyHelper.IsNullable(t.GetProperty(nameof(all.DateTimeNotNull))!));
+            Assert.True(PropertyHelper.IsNullable(t.GetProperty(nameof(all.DateTimeNullable))!));
+            Assert.False(PropertyHelper.IsNullable(t.GetProperty(nameof(all.TimeSpanNotNull))!));
+            Assert.True(PropertyHelper.IsNullable(t.GetProperty(nameof(all.TimeSpanNullable))!));
+            Assert.False(PropertyHelper.IsNullable(t.GetProperty(nameof(all.DateTimeOffsetNotNull))!));
+            Assert.True(PropertyHelper.IsNullable(t.GetProperty(nameof(all.DateTimeOffsetNullable))!));
+
+            Assert.False(PropertyHelper.IsNullable(t.GetProperty(nameof(all.GuidNotNull))!));
+            Assert.True(PropertyHelper.IsNullable(t.GetProperty(nameof(all.GuidNullable))!));
         }
 
         [Theory]
