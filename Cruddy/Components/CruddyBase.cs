@@ -262,20 +262,31 @@ namespace Cruddy.Components
             return DbConnection.ExecuteScalar(sql, param: new { keyValue });
         }
 
+        public PropertyInfo[] GetPropertiesForCreateOrUpdate(TEntity entity, CrudOperation operation)
+        {
+            if (operation != CrudOperation.Create && operation != CrudOperation.Update)
+            {
+                throw new ArgumentException("Invalid operation. Must be either Create or Update.", nameof(operation));
+            }
+
+            var cols = TableColumns == "*" || operation == CrudOperation.Create
+                ? new List<string>()
+                : TableColumns.Split(",", StringSplitOptions.TrimEntries).ToList();
+
+            var props = PropertyHelper.GetColumnProperties(entity.GetType())
+                .Where(p => p.CanRead && p.CanWrite &&
+                            (cols.Count == 0 || (cols.Count > 0 && cols.Contains(p.Name))) && IncludeColumn(operation, p.Name))
+                .ToArray();
+
+            return props;
+        }
+
         public int Update(DbConnection DbConnection, TEntity entity, object keyValue)
         {
             // Build an UPDATE statement that sets all public writable properties except the key column.
             if (entity == null) throw new ArgumentNullException(nameof(entity));
 
-            var cols = TableColumns == "*"
-                ? new List<string>()    
-                : TableColumns.Split(",", StringSplitOptions.TrimEntries).ToList();
-
-            var props = PropertyHelper.GetColumnProperties(entity.GetType())
-                .Where(p => p.CanRead && p.CanWrite && 
-                            (cols.Count == 0 || (cols.Count > 0 && cols.Contains(p.Name)))  && IncludeColumn(CrudOperation.Update, p.Name))
-                .ToArray();
-
+            var props = GetPropertiesForCreateOrUpdate(entity, CrudOperation.Update);
             if (props.Length == 0) return 0;
 
             var setClauses = props.Select(p => $"{p.Name} = @{p.Name}");
@@ -304,10 +315,7 @@ namespace Cruddy.Components
         {
             if (entity == null) throw new ArgumentNullException(nameof(entity));
 
-            var props = PropertyHelper.GetColumnProperties(entity.GetType())
-                .Where(p => p.CanRead && p.CanWrite && IncludeColumn(CrudOperation.Create, p.Name))
-                .ToArray();
-
+            var props = GetPropertiesForCreateOrUpdate(entity, CrudOperation.Create);
             if (props.Length == 0) return 0;
 
             var colNames = props.Select(p => p.Name).ToArray();
