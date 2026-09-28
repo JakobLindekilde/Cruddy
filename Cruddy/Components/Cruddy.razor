@@ -54,10 +54,8 @@ else
 
                             <table class="table table-sm table-striped">
                                 <tbody>
-                                    @foreach (var prop in PropertyHelper.GetColumnProperties(typeof(TEntity)))
+                                    @foreach (var prop in GetPropertiesForTableColumns(CreateItem, CrudOperation.Create))
                                     {
-                                        if (!PropertyHelper.IsSupported(prop.PropertyType)) continue;
-
                                         var displayName = PropertyHelper.GetDisplayName(prop);
                                         var val = prop.GetValue(CreateItem);
 
@@ -137,10 +135,8 @@ else
                     <div class="modal-body">
                         <table class="table table-sm table-striped">
                             <tbody>
-                                @foreach (var prop in PropertyHelper.GetColumnProperties(typeof(TEntity)))
+                                @foreach (var prop in GetPropertiesForTableColumns(DetailsItem, CrudOperation.Read))
                                 {
-                                    if (!PropertyHelper.IsSupported(prop.PropertyType)) continue;
-
                                     var displayName = PropertyHelper.GetDisplayName(prop);
                                     var formattedValue = PropertyHelper.GetFormattedValue(prop, DetailsItem);
                                     <tr>
@@ -175,10 +171,8 @@ else
 
                             <table class="table table-sm table-striped">
                                 <tbody>
-                                    @foreach (var prop in PropertyHelper.GetColumnProperties(typeof(TEntity)))
+                                    @foreach (var prop in GetPropertiesForTableColumns(EditItem, CrudOperation.Update))
                                     {
-                                        if (!PropertyHelper.IsSupported(prop.PropertyType)) continue;
-
                                         var displayName = PropertyHelper.GetDisplayName(prop);
                                         var val = prop.GetValue(EditItem);
 

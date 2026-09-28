@@ -2,6 +2,7 @@ using Cruddy.Helpers;
 using Dapper;
 using Microsoft.AspNetCore.Components;
 using System.Data.Common;
+using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -67,7 +68,7 @@ namespace Cruddy.Components
         /// Whether to allow editing of the key column in the grid when creating rows (not when updating). Default is false.
         /// </summary>
         [Parameter]
-        public bool AllowKeyColumnEdit { get; set; } = false;
+        public bool AllowKeyColumnEditOnCreate { get; set; } = false;
 
         /// <summary>
         /// The maximum number of rows to retrieve from table <seealso cref="TableName"/>.
@@ -204,9 +205,37 @@ namespace Cruddy.Components
         }
 
         /// <summary>
+        /// Gets the properties of <typeparamref name="TEntity"/> that correspond
+        /// to the columns specified in <seealso cref="TableColumns"/>.
+        /// Only public readable and writable properties of supported types are returned. 
+        /// NOTE: When operation is <seealso cref="CrudOperation.Create"/>, 
+        /// all properties are returned regardless of <seealso cref="TableColumns"/>.
+        /// </summary>
+        /// <param name="entity">The entity instance.</param>
+        /// <param name="operation">The CRUD operation type.</param>
+        /// <returns>An array of <see cref="PropertyInfo"/> objects that match the specified columns and operation.</returns>
+        /// <exception cref="ArgumentNullException"></exception>
+        public PropertyInfo[] GetPropertiesForTableColumns(TEntity entity, CrudOperation operation)
+        {
+            if (entity == null) throw new ArgumentNullException(nameof(entity));
+
+            var cols = TableColumns == "*" || operation == CrudOperation.Create
+                ? new List<string>()
+                : TableColumns.Split(",", StringSplitOptions.TrimEntries).ToList();
+
+            var props = PropertyHelper.GetColumnProperties(entity.GetType())
+                .Where(p => PropertyHelper.IsSupported(p.PropertyType) &&
+                            p.CanRead && p.CanWrite &&
+                            (cols.Count == 0 || (cols.Count > 0 && cols.Contains(p.Name))))
+                .ToArray();
+
+            return props;
+        }
+
+        /// <summary>
         /// Determines whether a given property name should be included in the
         /// SQL operation based on the operation type. For example, the key column 
-        /// is excluded from UPDATE operations unless AllowKeyColumnEdit is true.
+        /// is excluded from UPDATE operations unless AllowKeyColumnEditOnCreate is true.
         /// </summary>
         /// <param name="operation">The CRUD operation type.</param>
         /// <param name="propName">The name of the property.</param>
@@ -217,7 +246,7 @@ namespace Cruddy.Components
             {
                 if (operation == CrudOperation.Create)
                 {
-                    return AllowKeyColumnEdit;
+                    return AllowKeyColumnEditOnCreate;
                 } 
                 return false;
             }
@@ -395,7 +424,8 @@ namespace Cruddy.Components
     public enum CrudOperation
     {
         Create = 1,
-        Update,
+        Read,
+        Update
     }
 
 }
