@@ -1,7 +1,6 @@
-﻿using System.Linq;
-using System.Reflection;
+﻿using System.Reflection;
 
-namespace CruddyDemo.Helpers
+namespace Cruddy.Helpers
 {
     /// <summary>
     /// Provides helper methods for Property operations.
@@ -236,7 +235,7 @@ namespace CruddyDemo.Helpers
         static public string GetFormattedValue(PropertyInfo prop, object? item)
         {
             string formattedValue;
-            var format = CruddyDemo.Helpers.PropertyHelper.GetDisplayFormat(prop);
+            var format = Cruddy.Helpers.PropertyHelper.GetDisplayFormat(prop);
             var value = prop.GetValue(item);
 
             if (value == null)

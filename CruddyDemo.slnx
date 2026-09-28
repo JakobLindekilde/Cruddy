@@ -3,6 +3,7 @@
     <File Path="README.md" />
   </Folder>
   <Project Path="Cruddy.Tests/Cruddy.Tests.csproj" Id="a1b15fb4-f022-4fb1-9f5c-d53f19b5716e" />
+  <Project Path="Cruddy/Cruddy.csproj" Id="4ebafc52-177f-4300-8ad7-36d1dbda277e" />
   <Project Path="CruddyDemo/CruddyDemo.csproj" />
   <Project Path="QuickGrid.Toolkit/QuickGrid.Toolkit.csproj" />
 </Solution>

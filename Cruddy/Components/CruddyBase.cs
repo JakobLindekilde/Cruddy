@@ -1,11 +1,11 @@
-using CruddyDemo.Helpers;
+using Cruddy.Helpers;
 using Dapper;
 using Microsoft.AspNetCore.Components;
 using System.Data.Common;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace CruddyDemo.Components
+namespace Cruddy.Components
 {
     /// <summary>
     /// Base class for simple CRUD operations in a blazor component.
@@ -262,7 +262,6 @@ namespace CruddyDemo.Components
 
             return DbConnection.Execute(sql, dp);
         }
-#pragma warning restore S2077
 
         /// <summary>
         /// Inserts a new entity into the database table. By default the key column is excluded from the INSERT

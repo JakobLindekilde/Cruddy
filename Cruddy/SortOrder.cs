@@ -1,4 +1,6 @@
-﻿namespace CruddyDemo.Components
+﻿using Cruddy.Components;
+
+namespace Cruddy
 {
     /// <summary>
     /// Specifies the direction in which to sort the results of a SQL SELECT statement.

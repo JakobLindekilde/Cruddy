@@ -1,7 +1,7 @@
 ﻿#pragma warning disable BL0005 // Component parameter should not be set outside of its component.
 #pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
 
-using CruddyDemo.Components;
+using Cruddy.Components;
 
 namespace Cruddy.Tests
 {

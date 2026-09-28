@@ -1,4 +1,4 @@
-using CruddyDemo.Helpers;
+using Cruddy.Helpers;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Components.QuickGrid;
@@ -21,7 +21,7 @@ using System.Reflection;
 // TODO: Dont show ICollection properties (e.g. Employee.Orders)
 // TODO: Write code that finds the correct generics like AddSimple and AddNumber in ColumnManager
 
-namespace CruddyDemo.Components
+namespace Cruddy.Components
 {
     /// <summary>
     /// Lists the rows of a database table in a QuickGrid component, 
