@@ -57,6 +57,7 @@ namespace Cruddy.Helpers
                 t == typeof(DateTime) ||
                 t == typeof(DateTimeOffset) ||
                 t == typeof(TimeSpan) ||
+                t == typeof(TimeOnly) ||
                 t == typeof(Guid))
             {
                 return true;

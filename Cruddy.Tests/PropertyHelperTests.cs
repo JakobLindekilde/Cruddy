@@ -18,8 +18,10 @@ namespace Cruddy.Tests
         [InlineData(typeof(float), true)]
         [InlineData(typeof(bool), false)]
         [InlineData(typeof(DateTime), false)]
-        [InlineData(typeof(TimeSpan), false)]
         [InlineData(typeof(DateTimeOffset), false)]
+        [InlineData(typeof(TimeSpan), false)]
+        [InlineData(typeof(TimeOnly), false)]
+        [InlineData(typeof(DateOnly), false)]
         [InlineData(typeof(Guid), false)]
         public void IsDecimal_ReturnsTrueForDecimalTypes(Type type, bool expected)
         {
@@ -46,6 +48,30 @@ namespace Cruddy.Tests
         public void IsNumber_ReturnsTrueForNumberTypes(Type type, bool expected)
         {
             Assert.Equal(expected, PropertyHelper.IsNumber(type));
+        }
+
+        [Theory]
+        [InlineData(typeof(int), true)]
+        [InlineData(typeof(long), true)]
+        [InlineData(typeof(short), true)]
+        [InlineData(typeof(uint), true)]
+        [InlineData(typeof(ulong), true)]
+        [InlineData(typeof(ushort), true)]
+        [InlineData(typeof(byte), true)]
+        [InlineData(typeof(sbyte), true)]
+        [InlineData(typeof(decimal), true)]
+        [InlineData(typeof(double), true)]
+        [InlineData(typeof(float), true)]
+        [InlineData(typeof(bool), true)]
+        [InlineData(typeof(DateTime), true)]
+        [InlineData(typeof(DateTimeOffset), true)]
+        [InlineData(typeof(TimeSpan), true)]
+        [InlineData(typeof(TimeOnly), true)]
+        [InlineData(typeof(DateOnly), false)]
+        [InlineData(typeof(Guid), true)]
+        public void IsSupported_ReturnsTrueForSupportedTypes(Type type, bool expected)
+        {
+            Assert.Equal(expected, PropertyHelper.IsSupported(type));
         }
 
         [Fact]
@@ -76,15 +102,17 @@ namespace Cruddy.Tests
             Assert.False(PropertyHelper.IsNullable(t.GetProperty(nameof(all.StringNotNull))!));
             Assert.True(PropertyHelper.IsNullable(t.GetProperty(nameof(all.StringNullable))!));
 
-            Assert.False(PropertyHelper.IsNullable(t.GetProperty(nameof(all.DateTimeNotNull))!));
-            Assert.True(PropertyHelper.IsNullable(t.GetProperty(nameof(all.DateTimeNullable))!));
-            Assert.False(PropertyHelper.IsNullable(t.GetProperty(nameof(all.TimeSpanNotNull))!));
-            Assert.True(PropertyHelper.IsNullable(t.GetProperty(nameof(all.TimeSpanNullable))!));
-            Assert.False(PropertyHelper.IsNullable(t.GetProperty(nameof(all.DateTimeOffsetNotNull))!));
-            Assert.True(PropertyHelper.IsNullable(t.GetProperty(nameof(all.DateTimeOffsetNullable))!));
-
             Assert.False(PropertyHelper.IsNullable(t.GetProperty(nameof(all.GuidNotNull))!));
             Assert.True(PropertyHelper.IsNullable(t.GetProperty(nameof(all.GuidNullable))!));
+
+            Assert.False(PropertyHelper.IsNullable(t.GetProperty(nameof(all.DateTimeNotNull))!));
+            Assert.True(PropertyHelper.IsNullable(t.GetProperty(nameof(all.DateTimeNullable))!));
+            Assert.False(PropertyHelper.IsNullable(t.GetProperty(nameof(all.DateTimeOffsetNotNull))!));
+            Assert.True(PropertyHelper.IsNullable(t.GetProperty(nameof(all.DateTimeOffsetNullable))!));
+            Assert.False(PropertyHelper.IsNullable(t.GetProperty(nameof(all.TimeSpanNotNull))!));
+            Assert.True(PropertyHelper.IsNullable(t.GetProperty(nameof(all.TimeSpanNullable))!));
+            Assert.False(PropertyHelper.IsNullable(t.GetProperty(nameof(all.TimeOnlyNotNull))!));
+            Assert.True(PropertyHelper.IsNullable(t.GetProperty(nameof(all.TimeOnlyNullable))!));
         }
 
         [Theory]

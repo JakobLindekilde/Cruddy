@@ -15,7 +15,7 @@ else if (!Rows.Any())
 }
 else
 {
-    @if (!string.IsNullOrEmpty(ErrorMessage))
+    @if (!ShowEditModal && !ShowCreateModal && !string.IsNullOrEmpty(ErrorMessage))
     {
         <div class="alert alert-danger" role="alert">@ErrorMessage</div>
     }
@@ -47,6 +47,10 @@ else
                         <h5 class="modal-title">Create - @typeof(TEntity).Name</h5>
                         <button type="button" class="btn-close" aria-label="Close" @onclick="CancelCreate"></button>
                     </div>
+                    @if (!string.IsNullOrEmpty(ErrorMessage))
+                    {
+                        <div class="alert alert-danger" role="alert">@ErrorMessage</div>
+                    }
                     <div class="modal-body">
                         <EditForm EditContext="@(CreateCtx!)" OnValidSubmit="ConfirmCreateAsync">
                             <DataAnnotationsValidator />
@@ -80,7 +84,7 @@ else
                                                         var dateVal = val is DateTime dt ? dt.ToString("yyyy-MM-ddThh:mm") : string.Empty;
                                                         <input type="datetime-local" class="form-control" value="@dateVal" disabled="@disabled" required="@required" @onchange="(e) => OnCreateFieldChanged(prop, e.Value)" />
                                                     }
-                                                    else if (type == typeof(TimeSpan))
+                                                    else if (type == typeof(TimeSpan) || type == typeof(TimeOnly))
                                                     {
                                                         <input type="time" class="form-control" value="@(val?.ToString() ?? string.Empty)" disabled="@disabled" required="@required" @onchange="(e) => OnCreateFieldChanged(prop, e.Value)" />
                                                     }
@@ -164,6 +168,10 @@ else
                         <h5 class="modal-title">Edit - @typeof(TEntity).Name</h5>
                         <button type="button" class="btn-close" aria-label="Close" @onclick="CancelEdit"></button>
                     </div>
+                    @if (!string.IsNullOrEmpty(ErrorMessage))
+                    {
+                        <div class="alert alert-danger" role="alert">@ErrorMessage</div>
+                    }
                     <div class="modal-body">
                         <EditForm EditContext="@(EditCtx!)" OnValidSubmit="ConfirmEditAsync">
                             <DataAnnotationsValidator />
@@ -197,7 +205,7 @@ else
                                                         var dateVal = val is DateTime dt ? dt.ToString("yyyy-MM-ddThh:mm") : string.Empty;
                                                         <input type="datetime-local" class="form-control" value="@dateVal" disabled="@disabled" required="@required" @onchange="(e) => OnFieldChanged(prop, e.Value)" />
                                                     }
-                                                    else if (type == typeof(TimeSpan))
+                                                    else if (type == typeof(TimeSpan) || type == typeof(TimeOnly))
                                                     {
                                                         <input type="time" class="form-control" value="@(val?.ToString() ?? string.Empty)" disabled="@disabled" required="@required" @onchange="(e) => OnFieldChanged(prop, e.Value)" />
                                                     }
