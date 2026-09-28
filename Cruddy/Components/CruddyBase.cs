@@ -65,7 +65,7 @@ namespace Cruddy.Components
         public string? KeyColumn { get; set; }
 
         /// <summary>
-        /// Whether to allow editing of the key column in the grid when creating rows (not when updating). Default is false.
+        /// Whether to allow editing of the key column when creating rows (not when updating). Default is false.
         /// </summary>
         [Parameter]
         public bool AllowKeyColumnEditOnCreate { get; set; } = false;
