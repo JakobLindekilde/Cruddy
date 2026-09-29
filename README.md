@@ -97,6 +97,7 @@ Note how attribute Key, DisplayName and DisplayFormat are used in the model clas
 | AllowEdit | Enable per-row edit button and edit functionality. |
 | AllowDelete | Enable per-row delete button and delete behaviour. |
 | AllowCrud | Same as setting AllowCreate, AllowDetails, AllowEdit and AllowDelete to true |
+| DetailsColumns | List of table columns, separated by commas, to display in the Details modal. If "*" is specified, all public readable properties of TEntity will be displayed. If empty string TableColumns is used. |
 | ReloadPageAfterChange | Whether to update the whole page after a change (create, edit, delete) is made, or just the component. If true, the page will be refreshed after a change is made. If false, the in-memory list of rows will be updated and the UI will be refreshed without reloading the page. |
 | NameUx | The property name used as the human-readable item label in UX prompts (e.g. in delete confirmation messages). |
 

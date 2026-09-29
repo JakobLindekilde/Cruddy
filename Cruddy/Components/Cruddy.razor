@@ -139,7 +139,7 @@ else
                     <div class="modal-body">
                         <table class="table table-sm table-striped">
                             <tbody>
-                                @foreach (var prop in GetPropertiesForTableColumns(DetailsItem, CrudOperation.Read))
+                                @foreach (var prop in GetPropertiesForTableColumns(DetailsItem, CrudOperation.Read, DetailsColumns))
                                 {
                                     var displayName = PropertyHelper.GetDisplayName(prop);
                                     var formattedValue = PropertyHelper.GetFormattedValue(prop, DetailsItem);

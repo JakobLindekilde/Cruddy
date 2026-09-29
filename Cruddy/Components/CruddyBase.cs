@@ -213,15 +213,17 @@ namespace Cruddy.Components
         /// </summary>
         /// <param name="entity">The entity instance.</param>
         /// <param name="operation">The CRUD operation type.</param>
+        /// <param name="columnsAlt">An optional alternative set of columns to use instead of <seealso cref="TableColumns"/>.</param>
         /// <returns>An array of <see cref="PropertyInfo"/> objects that match the specified columns and operation.</returns>
         /// <exception cref="ArgumentNullException"></exception>
-        public PropertyInfo[] GetPropertiesForTableColumns(TEntity entity, CrudOperation operation)
+        public PropertyInfo[] GetPropertiesForTableColumns(TEntity entity, CrudOperation operation, string columnsAlt = "")
         {
             if (entity == null) throw new ArgumentNullException(nameof(entity));
 
-            var cols = TableColumns == "*" || operation == CrudOperation.Create
+            var colsToUse = string.IsNullOrEmpty(columnsAlt) ? TableColumns : columnsAlt;
+            var cols = colsToUse == "*" || operation == CrudOperation.Create
                 ? new List<string>()
-                : TableColumns.Split(",", StringSplitOptions.TrimEntries).ToList();
+                : colsToUse.Split(",", StringSplitOptions.TrimEntries).ToList();
 
             var props = PropertyHelper.GetColumnProperties(entity.GetType())
                 .Where(p => PropertyHelper.IsSupported(p.PropertyType) &&
@@ -341,7 +343,6 @@ namespace Cruddy.Components
                 return DbConnection.Execute(sql, dp);
             }
         }
-#pragma warning restore S2077
 
         /// <summary>
         /// Gets rows from the database table in <seealso cref="TableName"/> or <seealso cref="Select"/>
@@ -355,6 +356,16 @@ namespace Cruddy.Components
             IEnumerable<dynamic> dynRows = DbConnection.Query(sql);
             return [.. Map<T>(dynRows)];
         }
+
+        public TEntity? GetTableRow(DbConnection DbConnection, object id, string columns = "*")
+        {
+            var sql = $"SELECT {columns} FROM {DefaultSchema}.{TableName} WHERE {KeyColumn} = @Id";
+
+            IEnumerable<dynamic> dynRows = DbConnection.Query(sql, new { Id = id });
+            return Map<TEntity>(dynRows).FirstOrDefault();
+        }
+
+#pragma warning restore S2077
 
         /// <summary>
         /// Maps a collection of dynamics to a list of strongly typed objects of type T.

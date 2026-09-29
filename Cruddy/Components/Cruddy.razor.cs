@@ -82,6 +82,14 @@ namespace Cruddy.Components
         public bool AllowDetails { get; set; } = false;
 
         /// <summary>
+        /// List of table columns, separated by commas, to display in the Details modal. 
+        /// If "*" is specified, all public readable properties of TEntity will be displayed.
+        /// If empty string TableColumns is used.
+        /// </summary>
+        [Parameter]
+        public string DetailsColumns { get; set; } = "*";
+
+        /// <summary>
         /// Whether to enable the edit functionality for each row.
         /// </summary>
         [Parameter]
@@ -320,12 +328,15 @@ namespace Cruddy.Components
 
         private void ShowDetails(TEntity item)
         {
-            // TODO: Get the the item from the database. For now, we just use the item as is.
-
-            // TODO: Consider making this modal a separate component, so that it can be reused and customized.
-            // For example, we could have a CruddyDetails<TEntity> component that takes a TEntity parameter and displays
-            // its properties in a table or form. Then we could use that component here instead of the inline modal.
-            DetailsItem = item;
+            if (string.IsNullOrEmpty(DetailsColumns))   
+            {
+                DetailsItem = item;
+            }
+            else
+            {
+                var keyValue = PropertyHelper.GetValue(item!, KeyColumn!);
+                DetailsItem = GetTableRow(DbConnection, keyValue, DetailsColumns);
+            }
             ShowDetailsModal = true;
         }
 
