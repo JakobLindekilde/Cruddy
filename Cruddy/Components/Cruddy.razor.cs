@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Components.Web;
 using QuickGrid.Toolkit;
 using QuickGrid.Toolkit.Columns;
 using System.Linq.Expressions;
-using System.Net.Http.Headers;
 using System.Reflection;
 
 // More stuff to do:
@@ -648,20 +647,26 @@ namespace Cruddy.Components
         /// </summary>
         protected virtual void AddColumn(PropertyInfo prop)
         {
-            if (!PropertyHelper.IsSupported(prop.PropertyType)) return;
+            if (!PropertyHelper.IsSupported(prop.PropertyType))
+            {
+                return;
+            }
 
-            if (PropertyHelper.IsNumber(prop.PropertyType))
-            {
-                AddNumberColumn(prop);
-            }
-            else if (prop.PropertyType.Name == "DateTime")
-            {
-                AddSimpleDateColumn(prop);
-            }
-            else
-            {
-                AddSimpleColumn(prop);
-            }
+             AddSimpleColumn(prop);
+
+
+            //if (PropertyHelper.IsNumber(prop.PropertyType))
+            //{
+            //    AddNumberColumn(prop);
+            //}
+            //else if (prop.PropertyType.Name == "DateTime")
+            //{
+            //    AddSimpleDateColumn(prop);
+            //}
+            //else
+            //{
+            //    AddSimpleColumn(prop);
+            //}
         }
 
         //public DynamicColumn<TGridItem> AddNumber(Expression<Func<TGridItem, decimal?>>        expression, string? title = null, string? fullTitle = null, string format = "N0", string? @class = null, Align align = Align.Right, bool visible = true, string? propertyName = null, bool? calculateTotal = null)
@@ -670,14 +675,33 @@ namespace Cruddy.Components
         //public DynamicColumn<TGridItem> AddSimple    <TValue>(Expression<Func<TGridItem, TValue?>> expression, ColumnInfo columnInfo, string? format = null, Align align = Align.Left, CellStyleMap<TValue>? cellStyle = null, GridSort<TGridItem>? sortBy = null,  bool visible = true, string? propertyName = null)
 
         /// <summary>
+        /// Make sure to get the correct overload of method AddSimple() in ColumnManager in QuickGrid.Toolkit.
+        /// </summary>
+        /// <returns>AddSimple from ColumnManager</returns>
+        public static MethodInfo? GetAddSimpleMethod()
+        {
+            var m = typeof(ColumnManager<TEntity>).GetMethods()
+                .FirstOrDefault(m =>
+                    m.Name == "AddSimple" &&
+                    m.GetParameters().Count() == 8 &&
+                    m.GetParameters()[0].ParameterType.Name.StartsWith("Expression") &&
+                    m.GetParameters()[1].ParameterType.Name.StartsWith("ColumnInfo") &&
+                    m.GetParameters()[2].ParameterType.Name.StartsWith("String") &&
+                    m.GetParameters()[3].ParameterType.Name.StartsWith("Align") &&
+                    m.GetParameters()[4].ParameterType.Name.StartsWith("CellStyleMap") &&
+                    m.GetParameters()[5].ParameterType.Name.StartsWith("GridSort") &&
+                    m.GetParameters()[6].ParameterType.Name.StartsWith("Bool") &&
+                    m.GetParameters()[7].ParameterType.Name.StartsWith("String"));
+            return m;
+        }
+
+        /// <summary>
         /// Adds a Toolkit.AddSimple column to the QuickGrid for the specified property.
         /// </summary>
         /// <param name="prop">The property to add a column for.</param>
         private void AddSimpleColumn(PropertyInfo prop)
         {
-            // TODO: Make sure to get the correct overload of AddSimple(). Count the parameters!
-            var method = typeof(ColumnManager<TEntity>).GetMethods()
-                .FirstOrDefault(m => m.Name == "AddSimple" && m.GetParameters()[0].ParameterType.Name.StartsWith("Expression"));
+            var method = GetAddSimpleMethod();
 
             if (method != null)
             {

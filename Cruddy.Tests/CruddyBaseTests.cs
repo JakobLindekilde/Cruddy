@@ -5,10 +5,10 @@ using Cruddy.Components;
 
 namespace Cruddy.Tests
 {
-    #region Pluralize
-
     public class CruddyBaseTests
     {
+        #region Pluralize
+
         [Theory]
         [InlineData('a', true)]
         [InlineData('e', true)]
