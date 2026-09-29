@@ -79,7 +79,7 @@ namespace Cruddy.Components
         public bool AllowCrud { get; set; } = false;
 
         /// <summary>
-        /// Whether to enable the create functionality for each row.
+        /// Whether to enable the create functionality.
         /// </summary>
         [Parameter]
         public bool AllowCreate { get; set; } = false;

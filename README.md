@@ -92,10 +92,12 @@ Note how attribute Key, DisplayName and DisplayFormat are used in the model clas
 | DefaultDecimalFormat | Default decimal/double/float format when no DisplayFormatAttribute is present (default: "0.00"). |
 | DefaultNumberFormat | Default integer number format when no DisplayFormatAttribute is present (default: "0"). |
 | ActionsTitle | Title to use for the actions column (default: "Actions"). |
+| AllowCreate | Enable the create functionality. |
 | AllowDetails | Enable per-row Details button that opens a modal showing all TEntity fields. |
 | AllowEdit | Enable per-row edit button and edit functionality. |
 | AllowDelete | Enable per-row delete button and delete behaviour. |
-| AllowCrud | Same as setting AllowDetails, AllowEdit and AllowDelete to true |
+| AllowCrud | Same as setting AllowCreate, AllowDetails, AllowEdit and AllowDelete to true |
+| ReloadPageAfterChange | Whether to update the whole page after a change (create, edit, delete) is made, or just the component. If true, the page will be refreshed after a change is made. If false, the in-memory list of rows will be updated and the UI will be refreshed without reloading the page. |
 | NameUx | The property name used as the human-readable item label in UX prompts (e.g. in delete confirmation messages). |
 
 ## Requirements
