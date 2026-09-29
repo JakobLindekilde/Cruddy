@@ -45,6 +45,29 @@ SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[DateTimeTypes]') AND type in (N'U'))
+BEGIN
+CREATE TABLE [dbo].[DateTimeTypes](
+	[Id] [int] IDENTITY(1,1) NOT NULL,
+	[DateTimeNotNull] [datetime] NOT NULL,
+	[DateTimeNullable] [datetime] NULL,
+	[DateTimeOffsetNotNull] [datetimeoffset](7) NOT NULL,
+	[DateTimeOffsetNullable] [datetimeoffset](7) NULL,
+	[TimeSpanNotNull] [time](7) NOT NULL,
+	[TimeSpanNullable] [time](7) NULL,
+	[TimeOnlyNotNull] [time](7) NOT NULL,
+	[TimeOnlyNullable] [time](7) NULL,
+ CONSTRAINT [PK_DateTimeType] PRIMARY KEY CLUSTERED 
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+END
+GO
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
 IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Employees]') AND type in (N'U'))
 BEGIN
 CREATE TABLE [dbo].[Employees](
@@ -121,8 +144,7 @@ GO
 IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[TestAllTypes]') AND type in (N'U'))
 BEGIN
 CREATE TABLE [dbo].[TestAllTypes](
-	[IdInt] [int] IDENTITY(1,1) NOT NULL,
-	[IdGuid] [uniqueidentifier] NOT NULL,
+	[Id] [int] IDENTITY(1,1) NOT NULL,
 	[Int32NotNull] [int] NOT NULL,
 	[Int32Nullable] [int] NULL,
 	[Int64NotNull] [bigint] NOT NULL,
@@ -141,24 +163,18 @@ CREATE TABLE [dbo].[TestAllTypes](
 	[BoolNullable] [bit] NULL,
 	[StringNotNull] [nvarchar](50) NOT NULL,
 	[StringNullable] [nvarchar](50) NULL,
-	[DateTimeNotNull] [datetime] NOT NULL,
-	[DateTimeNullable] [datetime] NULL,
-	[TimeSpanNotNull] [time](7) NOT NULL,
-	[TimeSpanNullable] [time](7) NULL,
-	[DateTimeOffsetNotNull] [datetimeoffset](7) NOT NULL,
-	[DateTimeOffsetNullable] [datetimeoffset](7) NULL,
 	[GuidNotNull] [uniqueidentifier] NOT NULL,
 	[GuidNullable] [uniqueidentifier] NULL,
  CONSTRAINT [PK_TestAllTypes] PRIMARY KEY CLUSTERED 
 (
-	[IdInt] ASC
+	[Id] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 END
 GO
 SET IDENTITY_INSERT [dbo].[Addresses] ON 
 GO
-INSERT [dbo].[Addresses] ([Id], [CustomerId], [Town], [Street], [StreetNo], [ZipCode], [AddressType]) VALUES (4, 1, N'1', N'1', 1, N'1', 1)
+INSERT [dbo].[Addresses] ([Id], [CustomerId], [Town], [Street], [StreetNo], [ZipCode], [AddressType]) VALUES (4, 1, N'1', N'1', 1, N'2', 2)
 GO
 INSERT [dbo].[Addresses] ([Id], [CustomerId], [Town], [Street], [StreetNo], [ZipCode], [AddressType]) VALUES (5, 1, N'27777', N'2', 2, N'2', 2)
 GO
@@ -174,17 +190,17 @@ INSERT [dbo].[Addresses] ([Id], [CustomerId], [Town], [Street], [StreetNo], [Zip
 GO
 INSERT [dbo].[Addresses] ([Id], [CustomerId], [Town], [Street], [StreetNo], [ZipCode], [AddressType]) VALUES (14, 1, N'Helsi', N'sadfasd', 5556666, N'555', 2)
 GO
-INSERT [dbo].[Addresses] ([Id], [CustomerId], [Town], [Street], [StreetNo], [ZipCode], [AddressType]) VALUES (15, 13, N'sdfef', N'sdf', 3, N'3', 1)
+INSERT [dbo].[Addresses] ([Id], [CustomerId], [Town], [Street], [StreetNo], [ZipCode], [AddressType]) VALUES (15, 13, N'sdfef', N'sdf', 3, N'3', 2)
 GO
 SET IDENTITY_INSERT [dbo].[Addresses] OFF
 GO
 SET IDENTITY_INSERT [dbo].[Customers] ON 
 GO
-INSERT [dbo].[Customers] ([Id], [Name], [Email], [Vip], [Phone], [Birthdate]) VALUES (1, N'OleOle', N'Ole@val.dk', 1, 1111111366, CAST(N'1995-10-10T00:00:00.000' AS DateTime))
+INSERT [dbo].[Customers] ([Id], [Name], [Email], [Vip], [Phone], [Birthdate]) VALUES (1, N'OleOleo', N'Ole@val.dk', 1, 1111111366, CAST(N'1995-10-10T00:00:00.000' AS DateTime))
 GO
-INSERT [dbo].[Customers] ([Id], [Name], [Email], [Vip], [Phone], [Birthdate]) VALUES (2, N'UUU', N'Ove@valby.dk', 1, 5, CAST(N'1992-11-29T00:00:00.000' AS DateTime))
+INSERT [dbo].[Customers] ([Id], [Name], [Email], [Vip], [Phone], [Birthdate]) VALUES (2, N'UUU', N'Ove@valby.dk', 1, 5, CAST(N'1992-12-29T12:00:00.000' AS DateTime))
 GO
-INSERT [dbo].[Customers] ([Id], [Name], [Email], [Vip], [Phone], [Birthdate]) VALUES (4, N'Kurt', N'krt@valby.dk', 1, 11151111, CAST(N'2000-02-10T00:00:00.000' AS DateTime))
+INSERT [dbo].[Customers] ([Id], [Name], [Email], [Vip], [Phone], [Birthdate]) VALUES (4, N'Kurtd', N'krt@valby.dk', 1, 11151111, CAST(N'2000-02-10T00:00:00.000' AS DateTime))
 GO
 INSERT [dbo].[Customers] ([Id], [Name], [Email], [Vip], [Phone], [Birthdate]) VALUES (5, N'Mia', N'mia@valby.dk', 1, 11171112, CAST(N'1975-10-20T00:00:00.000' AS DateTime))
 GO
@@ -196,9 +212,21 @@ INSERT [dbo].[Customers] ([Id], [Name], [Email], [Vip], [Phone], [Birthdate]) VA
 GO
 INSERT [dbo].[Customers] ([Id], [Name], [Email], [Vip], [Phone], [Birthdate]) VALUES (39, N'Jens Hansen', N'sdf', 0, 345, CAST(N'2026-09-25T12:00:00.000' AS DateTime))
 GO
-INSERT [dbo].[Customers] ([Id], [Name], [Email], [Vip], [Phone], [Birthdate]) VALUES (46, N'Peter', N'sdf', 1, 33, CAST(N'2026-09-27T12:00:00.000' AS DateTime))
+INSERT [dbo].[Customers] ([Id], [Name], [Email], [Vip], [Phone], [Birthdate]) VALUES (46, N'Peter', N'sdf', 1, 3355, CAST(N'2026-09-27T12:00:00.000' AS DateTime))
+GO
+INSERT [dbo].[Customers] ([Id], [Name], [Email], [Vip], [Phone], [Birthdate]) VALUES (48, N'IIIIIIIIII', N'sdfsdf', 1, 23, CAST(N'2026-09-28T12:00:00.000' AS DateTime))
+GO
+INSERT [dbo].[Customers] ([Id], [Name], [Email], [Vip], [Phone], [Birthdate]) VALUES (49, N'1234', N'df', 0, 34, CAST(N'2026-09-28T12:00:00.000' AS DateTime))
 GO
 SET IDENTITY_INSERT [dbo].[Customers] OFF
+GO
+SET IDENTITY_INSERT [dbo].[DateTimeTypes] ON 
+GO
+INSERT [dbo].[DateTimeTypes] ([Id], [DateTimeNotNull], [DateTimeNullable], [DateTimeOffsetNotNull], [DateTimeOffsetNullable], [TimeSpanNotNull], [TimeSpanNullable], [TimeOnlyNotNull], [TimeOnlyNullable]) VALUES (1, CAST(N'2020-11-11T00:00:00.000' AS DateTime), NULL, CAST(N'2020-11-11T00:00:00.0000000+04:00' AS DateTimeOffset), NULL, CAST(N'18:18:00' AS Time), NULL, CAST(N'10:11:12' AS Time), NULL)
+GO
+INSERT [dbo].[DateTimeTypes] ([Id], [DateTimeNotNull], [DateTimeNullable], [DateTimeOffsetNotNull], [DateTimeOffsetNullable], [TimeSpanNotNull], [TimeSpanNullable], [TimeOnlyNotNull], [TimeOnlyNullable]) VALUES (2, CAST(N'2026-09-28T12:00:00.000' AS DateTime), NULL, CAST(N'2020-01-01T00:00:00.0000000+00:00' AS DateTimeOffset), NULL, CAST(N'01:04:00' AS Time), NULL, CAST(N'00:00:00' AS Time), NULL)
+GO
+SET IDENTITY_INSERT [dbo].[DateTimeTypes] OFF
 GO
 SET IDENTITY_INSERT [dbo].[Employees] ON 
 GO
@@ -216,19 +244,25 @@ INSERT [dbo].[Employees] ([Id], [Name], [Salary]) VALUES (6, N'Johnny', 40000.00
 GO
 SET IDENTITY_INSERT [dbo].[Employees] OFF
 GO
-INSERT [dbo].[KeyColumnIsGuid] ([Id], [Name], [Description], [Active]) VALUES (N'00000000-0000-0000-0000-000000000034', N'zxc', N'zxc', 0)
+INSERT [dbo].[KeyColumnIsGuid] ([Id], [Name], [Description], [Active]) VALUES (N'f0000000-0000-0000-0000-000000000000', N'frt', N'frt', 0)
 GO
-INSERT [dbo].[KeyColumnIsGuid] ([Id], [Name], [Description], [Active]) VALUES (N'00000000-0000-0000-0000-000000000099', N'sdf', N'sdf', 1)
+INSERT [dbo].[KeyColumnIsGuid] ([Id], [Name], [Description], [Active]) VALUES (N'00000000-0000-0000-00ff-000000000000', N'ff', N'ff', 0)
 GO
-INSERT [dbo].[KeyColumnIsGuid] ([Id], [Name], [Description], [Active]) VALUES (N'00000000-0000-0000-0000-000000000555', N'Jakob3', N'qw', 1)
+INSERT [dbo].[KeyColumnIsGuid] ([Id], [Name], [Description], [Active]) VALUES (N'00000000-0000-0000-0000-000000000034', N'zxc', N'zxcgg', 0)
 GO
-INSERT [dbo].[KeyColumnIsGuid] ([Id], [Name], [Description], [Active]) VALUES (N'f0644cbf-be20-47a9-a4c8-0cfc948fba89', N'hhhhhhhhhhhhhhhhhhhhhhhhhhhhh', N'sdaf', 1)
+INSERT [dbo].[KeyColumnIsGuid] ([Id], [Name], [Description], [Active]) VALUES (N'00000000-0000-0000-0000-000000000099', N'hhhhhggf', N'hhhhhgg', 1)
+GO
+INSERT [dbo].[KeyColumnIsGuid] ([Id], [Name], [Description], [Active]) VALUES (N'00000000-0000-0000-0000-000000000555', N'Jakob3 gggg', N'qw', 1)
+GO
+INSERT [dbo].[KeyColumnIsGuid] ([Id], [Name], [Description], [Active]) VALUES (N'f0644cbf-be20-47a9-a4c8-0cfc948fba89', N'hhhhhhhhhhhhhhhhhhhhhhhhhhhhh', N'sdaf dfgdfgdfg', 1)
+GO
+INSERT [dbo].[KeyColumnIsGuid] ([Id], [Name], [Description], [Active]) VALUES (N'6f2f64bb-6f6c-489b-a211-1cf4eac80e5d', N'nyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy', N'dfg', 1)
 GO
 INSERT [dbo].[KeyColumnIsGuid] ([Id], [Name], [Description], [Active]) VALUES (N'de484d78-32f2-4481-bf31-1df61a4d8a4e', N'nnnnnnnnnnnnnnnnnnnn', N'dfg', 1)
 GO
-INSERT [dbo].[KeyColumnIsGuid] ([Id], [Name], [Description], [Active]) VALUES (N'387e650d-e418-4fa0-820c-31f8e799d796', N'dgfg', N'dfgdf', 0)
+INSERT [dbo].[KeyColumnIsGuid] ([Id], [Name], [Description], [Active]) VALUES (N'387e650d-e418-4fa0-820c-31f8e799d796', N'dgfg', N'jj', 1)
 GO
-INSERT [dbo].[KeyColumnIsGuid] ([Id], [Name], [Description], [Active]) VALUES (N'58b182bd-de47-48eb-8d70-94f4334e626e', N'333', N'3333', 1)
+INSERT [dbo].[KeyColumnIsGuid] ([Id], [Name], [Description], [Active]) VALUES (N'08cae3c0-9d38-43e3-9e43-cac7ffb85779', N'qwert dd', N'dfdf', 1)
 GO
 SET IDENTITY_INSERT [dbo].[Orders] ON 
 GO
@@ -270,17 +304,15 @@ SET IDENTITY_INSERT [dbo].[Products] OFF
 GO
 SET IDENTITY_INSERT [dbo].[TestAllTypes] ON 
 GO
-INSERT [dbo].[TestAllTypes] ([IdInt], [IdGuid], [Int32NotNull], [Int32Nullable], [Int64NotNull], [Int64Nullable], [Int16NotNull], [Int16Nullable], [ByteNotNull], [ByteNullable], [DecimalNotNull], [DecimalNullable], [DoubleNotNull], [DoubleNullable], [SingleNotNull], [SingleNullable], [BoolNotNull], [BoolNullable], [StringNotNull], [StringNullable], [DateTimeNotNull], [DateTimeNullable], [TimeSpanNotNull], [TimeSpanNullable], [DateTimeOffsetNotNull], [DateTimeOffsetNullable], [GuidNotNull], [GuidNullable]) VALUES (2, N'514a1c66-d201-4b2f-95fe-7725c97edbc5', 1, NULL, 2, NULL, 3, NULL, 4, NULL, CAST(223.0777 AS Decimal(18, 4)), NULL, 33, NULL, 44, NULL, 0, NULL, N'AbcHest', N'iyui', CAST(N'2018-01-23T12:12:00.000' AS DateTime), CAST(N'2026-09-05T00:00:00.000' AS DateTime), CAST(N'21:22:00' AS Time), NULL, CAST(N'2026-09-21T11:12:13.4567890+02:00' AS DateTimeOffset), NULL, N'00000000-0000-0000-0000-000000000002', NULL)
+INSERT [dbo].[TestAllTypes] ([Id], [Int32NotNull], [Int32Nullable], [Int64NotNull], [Int64Nullable], [Int16NotNull], [Int16Nullable], [ByteNotNull], [ByteNullable], [DecimalNotNull], [DecimalNullable], [DoubleNotNull], [DoubleNullable], [SingleNotNull], [SingleNullable], [BoolNotNull], [BoolNullable], [StringNotNull], [StringNullable], [GuidNotNull], [GuidNullable]) VALUES (2, 1, NULL, 2, NULL, 3, NULL, 4, NULL, CAST(223.5544 AS Decimal(18, 4)), NULL, 33, NULL, 0, NULL, 0, NULL, N'adasdf', N'', N'00000000-0000-0000-0000-000000000002', NULL)
 GO
-INSERT [dbo].[TestAllTypes] ([IdInt], [IdGuid], [Int32NotNull], [Int32Nullable], [Int64NotNull], [Int64Nullable], [Int16NotNull], [Int16Nullable], [ByteNotNull], [ByteNullable], [DecimalNotNull], [DecimalNullable], [DoubleNotNull], [DoubleNullable], [SingleNotNull], [SingleNullable], [BoolNotNull], [BoolNullable], [StringNotNull], [StringNullable], [DateTimeNotNull], [DateTimeNullable], [TimeSpanNotNull], [TimeSpanNullable], [DateTimeOffsetNotNull], [DateTimeOffsetNullable], [GuidNotNull], [GuidNullable]) VALUES (4, N'514a1c66-d201-4b2f-95fe-7725c97edbc6', 11, NULL, 22, NULL, 33, NULL, 44, NULL, CAST(5.1234 AS Decimal(18, 4)), NULL, 6.1234, NULL, 7.1234, NULL, 1, NULL, N'ÆØÅ æøå', N'fghgfh', CAST(N'9999-12-31T00:00:00.000' AS DateTime), NULL, CAST(N'00:00:00' AS Time), NULL, CAST(N'2016-01-01T00:00:00.0000000+01:00' AS DateTimeOffset), NULL, N'11111111-1111-1111-1111-111111111111', NULL)
+INSERT [dbo].[TestAllTypes] ([Id], [Int32NotNull], [Int32Nullable], [Int64NotNull], [Int64Nullable], [Int16NotNull], [Int16Nullable], [ByteNotNull], [ByteNullable], [DecimalNotNull], [DecimalNullable], [DoubleNotNull], [DoubleNullable], [SingleNotNull], [SingleNullable], [BoolNotNull], [BoolNullable], [StringNotNull], [StringNullable], [GuidNotNull], [GuidNullable]) VALUES (4, 11, NULL, 22, NULL, 33, NULL, 44, NULL, CAST(5.1234 AS Decimal(18, 4)), NULL, 6.1234, NULL, 7.1234, NULL, 1, NULL, N'ÆØÅ æøå', N'fghgfh', N'11111111-1111-1111-1111-111111111111', NULL)
+GO
+INSERT [dbo].[TestAllTypes] ([Id], [Int32NotNull], [Int32Nullable], [Int64NotNull], [Int64Nullable], [Int16NotNull], [Int16Nullable], [ByteNotNull], [ByteNullable], [DecimalNotNull], [DecimalNullable], [DoubleNotNull], [DoubleNullable], [SingleNotNull], [SingleNullable], [BoolNotNull], [BoolNullable], [StringNotNull], [StringNullable], [GuidNotNull], [GuidNullable]) VALUES (5, 12, NULL, 12, NULL, 12, NULL, 12, NULL, CAST(12.0000 AS Decimal(18, 4)), NULL, 12, NULL, 12, NULL, 0, NULL, N'12', NULL, N'00000000-0000-0000-0000-000000000000', NULL)
+GO
+INSERT [dbo].[TestAllTypes] ([Id], [Int32NotNull], [Int32Nullable], [Int64NotNull], [Int64Nullable], [Int16NotNull], [Int16Nullable], [ByteNotNull], [ByteNullable], [DecimalNotNull], [DecimalNullable], [DoubleNotNull], [DoubleNullable], [SingleNotNull], [SingleNullable], [BoolNotNull], [BoolNullable], [StringNotNull], [StringNullable], [GuidNotNull], [GuidNullable]) VALUES (6, 9, NULL, 9, NULL, 9, NULL, 9, NULL, CAST(9.0000 AS Decimal(18, 4)), NULL, 9, NULL, 9, NULL, 1, NULL, N'9', NULL, N'00000000-0000-0000-0000-000000000009', NULL)
 GO
 SET IDENTITY_INSERT [dbo].[TestAllTypes] OFF
-GO
-IF NOT EXISTS (SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'[dbo].[TestAllTypes]') AND name = N'IX_TestAllTypes')
-ALTER TABLE [dbo].[TestAllTypes] ADD  CONSTRAINT [IX_TestAllTypes] UNIQUE NONCLUSTERED 
-(
-	[IdGuid] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 GO
 IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[DF_KeyColumnIsGuid_Id]') AND type = 'D')
 BEGIN
@@ -300,11 +332,6 @@ GO
 IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[DF__Orders__OrderDat__5535A963]') AND type = 'D')
 BEGIN
 ALTER TABLE [dbo].[Orders] ADD  CONSTRAINT [DF__Orders__OrderDat__5535A963]  DEFAULT (getdate()) FOR [OrderDate]
-END
-GO
-IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[DF_TestAllTypes_IdGuid]') AND type = 'D')
-BEGIN
-ALTER TABLE [dbo].[TestAllTypes] ADD  CONSTRAINT [DF_TestAllTypes_IdGuid]  DEFAULT (newid()) FOR [IdGuid]
 END
 GO
 IF NOT EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[dbo].[FK_Address_Customers]') AND parent_object_id = OBJECT_ID(N'[dbo].[Addresses]'))

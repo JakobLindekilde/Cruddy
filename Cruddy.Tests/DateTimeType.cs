@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace CruddyDemo.Models
+namespace Cruddy.Tests
 {
     public class DateTimeType
     {

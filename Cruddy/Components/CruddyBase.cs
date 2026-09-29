@@ -273,7 +273,7 @@ namespace Cruddy.Components
                 ? new List<string>()
                 : TableColumns.Split(",", StringSplitOptions.TrimEntries).ToList();
 
-            var props = PropertyHelper.GetColumnProperties(entity.GetType())
+            var props = PropertyHelper.GetColumnProperties(entity!.GetType())
                 .Where(p => p.CanRead && p.CanWrite &&
                             (cols.Count == 0 || (cols.Count > 0 && cols.Contains(p.Name))) && IncludeColumn(operation, p.Name))
                 .ToArray();
@@ -427,13 +427,6 @@ namespace Cruddy.Components
             return "aeiouAEIOU".Contains(c);
         }
 
-    }
-
-    public enum CrudOperation
-    {
-        Create = 1,
-        Read,
-        Update
     }
 
 }

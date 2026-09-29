@@ -75,7 +75,7 @@ namespace Cruddy.Tests
         }
 
         [Fact]
-        public void IsNullable_ReturnsExpected2()
+        public void IsNullable_ReturnsExpected()
         {
             var all = new TestAllType() { StringNotNull = "Test" };
             var t = all.GetType();
@@ -104,6 +104,13 @@ namespace Cruddy.Tests
 
             Assert.False(PropertyHelper.IsNullable(t.GetProperty(nameof(all.GuidNotNull))!));
             Assert.True(PropertyHelper.IsNullable(t.GetProperty(nameof(all.GuidNullable))!));
+        }
+
+        [Fact]
+        public void IsNullable_ReturnsExpectedWithDateTimeType()
+        {
+            var all = new DateTimeType();
+            var t = all.GetType();
 
             Assert.False(PropertyHelper.IsNullable(t.GetProperty(nameof(all.DateTimeNotNull))!));
             Assert.True(PropertyHelper.IsNullable(t.GetProperty(nameof(all.DateTimeNullable))!));

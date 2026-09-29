@@ -6,7 +6,7 @@
     public class TestAllType
     {
         [Key]
-        public int IdInt { get; set; }                     // int IDENTITY, PK
+        public int Id { get; set; }                        // int IDENTITY, PK
 
         public int Int32NotNull { get; set; }              // int NOT NULL
         public int? Int32Nullable { get; set; }            // int NULL
