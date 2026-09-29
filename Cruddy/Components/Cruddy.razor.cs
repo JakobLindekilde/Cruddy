@@ -103,6 +103,15 @@ namespace Cruddy.Components
         public bool AllowDelete { get; set; } = false;
 
         /// <summary>
+        /// Whether to update the whole page after a change (create, edit, delete) is made, 
+        /// or just the component. If true, the page will be refreshed after a change is made. 
+        /// If false, the in-memory list of rows will be updated and the UI will be refreshed 
+        /// without reloading the page.
+        /// </summary>
+        [Parameter]
+        public bool ReloadPageAfterChange { get; set; } = false;
+
+        /// <summary>
         /// The name of the column/field, used for display purposes in the UX. 
         /// Used in messages like "Are you sure you want to delete this {NameUx}?".
         /// </summary>
@@ -127,6 +136,12 @@ namespace Cruddy.Components
         /// Holds a user visible error message when e.g. delete fails.
         /// </summary>
         protected string? ErrorMessage { get; set; }
+
+        /// <summary>
+        /// Navigation manager used to reload the page when ReloadPageAfterChange is true.
+        /// </summary>
+        [Inject]
+        protected NavigationManager? NavigationManager { get; set; }
 
         #endregion
 
@@ -225,7 +240,14 @@ namespace Cruddy.Components
                 ShowCreateModal = false;
                 CreateItem = default;
                 CreateCtx = null;
-                await InvokeAsync(StateHasChanged);
+                if (ReloadPageAfterChange)
+                {
+                    NavigationManager?.NavigateTo(NavigationManager.Uri, forceLoad: true);
+                }
+                else
+                {
+                    await InvokeAsync(StateHasChanged);
+                }
             }
             catch (Exception ex)
             {
@@ -400,7 +422,14 @@ namespace Cruddy.Components
                 ShowEditModal = false;
                 EditItem = default;
                 EditCtx = null;
-                await InvokeAsync(StateHasChanged);
+                if (ReloadPageAfterChange)
+                {
+                    NavigationManager?.NavigateTo(NavigationManager.Uri, forceLoad: true);
+                }
+                else
+                {
+                    await InvokeAsync(StateHasChanged);
+                }
             }
             catch (Exception ex)
             {
@@ -508,7 +537,14 @@ namespace Cruddy.Components
 
                 // Remove the item from the in-memory rows and refresh UI
                 Rows?.Remove(item);
-                await InvokeAsync(StateHasChanged);
+                if (ReloadPageAfterChange)
+                {
+                    NavigationManager?.NavigateTo(NavigationManager.Uri, forceLoad: true);
+                }
+                else
+                {
+                    await InvokeAsync(StateHasChanged);
+                }
             }
             catch (Exception ex)
             {
