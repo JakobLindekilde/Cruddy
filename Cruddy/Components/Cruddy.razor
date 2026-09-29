@@ -8,13 +8,13 @@
 {
     <p>Loading data...</p>
 }
-
-else if (!Rows.Any())
-{
-    <p>No data found.</p>
-}
 else
 {
+    @if (!Rows.Any())
+    {
+        <p>No data found.</p>
+    }
+
     @if (!ShowEditModal && !ShowCreateModal && !string.IsNullOrEmpty(ErrorMessage))
     {
         <div class="alert alert-danger" role="alert">@ErrorMessage</div>
