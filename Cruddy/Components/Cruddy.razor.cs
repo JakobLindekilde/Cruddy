@@ -9,16 +9,8 @@ using System.Linq.Expressions;
 using System.Reflection;
 
 // More stuff to do:
-// TODO: Get PropertyHelper.IsNullable to work with string?
-// TODO: Details: Get data from database, not from the item passed in
 // TODO: Display all column headers in bold (not just the Actions column)
 // TODO: Make unittests for the Cruddy component: AddColumnsToGrid(). GetDisplayFormat() etc.
-// TODO: Make the AddSimple, AddNumber and AddSimpleDate methods more robust, so that they can
-//       handle more types of properties (e.g. nullable types)
-// TODO: Make kode to display "class in class" e.g. make a column for a property that is a class,
-//       and display its Name property (e.g. Address.Customer.Name)
-// TODO: Dont show ICollection properties (e.g. Employee.Orders)
-// TODO: Write code that finds the correct generics like AddSimple and AddNumber in ColumnManager
 
 namespace Cruddy.Components
 {
