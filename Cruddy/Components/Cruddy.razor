@@ -61,6 +61,11 @@ else
                                     @foreach (var prop in GetPropertiesForTableColumns(CreateItem, CrudOperation.Create))
                                     {
                                         var ii = GetInputInfo(prop, CreateItem, CrudOperation.Create);
+                                        if (!ii.Visible)
+                                        {
+                                            <input type="hidden" class="form-control" value="@(ii.Value?.ToString() ?? string.Empty)" />
+                                            continue;
+                                        }
                                         <tr>
                                             <th>@ii.DisplayName</th>
                                             <td>
@@ -136,7 +141,7 @@ else
                                 @foreach (var prop in GetPropertiesForTableColumns(DetailsItem, CrudOperation.Read, DetailsColumns))
                                 {
                                     var ii = GetInputInfo(prop, DetailsItem, CrudOperation.Read);
-                                    if (HideKeyColumn && ii.IsKeyColumn) continue;
+                                    if (!ii.Visible) continue;
                                     <tr>
                                         <th>@ii.DisplayName</th>
                                         <td>@ii.FormattedValue</td>
@@ -176,6 +181,11 @@ else
                                     @foreach (var prop in GetPropertiesForTableColumns(EditItem, CrudOperation.Update))
                                     {
                                         var ii = GetInputInfo(prop, EditItem, CrudOperation.Update);
+                                        if (!ii.Visible)
+                                        {
+                                            <input type="hidden" class="form-control" value="@(ii.Value?.ToString() ?? string.Empty)" />
+                                            continue;
+                                        }
                                         <tr>
                                             <th>@ii.DisplayName</th>
                                             <td>

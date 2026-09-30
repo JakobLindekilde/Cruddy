@@ -563,12 +563,16 @@ namespace Cruddy.Components
         private string DeleteMessage(TEntity item)
         {
             var sureToDelete = "Sure you want to delete " + typeof(TEntity).Name.ToLower();
-            var keyInfo = $"({KeyColumn}={PropertyHelper.GetValue(item!, KeyColumn!)})";
+            var keyInfo = HideKeyColumn ? "" : $" ({KeyColumn}={PropertyHelper.GetValue(item!, KeyColumn!)})";
             string nameUxValue = PropertyHelper.GetValue(item!, NameUx!);
+            if (!string.IsNullOrEmpty(nameUxValue))
+            {
+                nameUxValue += " "; 
+            }
 
             var message = string.IsNullOrEmpty(nameUxValue)
-                ? $"{sureToDelete} {keyInfo}?"
-                : $"{sureToDelete} {nameUxValue} {keyInfo}?";
+                ? $"{sureToDelete}{keyInfo}?"
+                : $"{sureToDelete}{nameUxValue}{keyInfo}?";
 
             return message;
         }
@@ -690,7 +694,7 @@ namespace Cruddy.Components
             var m = typeof(ColumnManager<TEntity>).GetMethods()
                 .FirstOrDefault(m =>
                     m.Name == "AddSimple" &&
-                    m.GetParameters().Count() == 8 &&
+                    m.GetParameters().Count() >= 8 &&
                     m.GetParameters()[0].ParameterType.Name.StartsWith("Expression") &&
                     m.GetParameters()[1].ParameterType.Name.StartsWith("ColumnInfo") &&
                     m.GetParameters()[2].ParameterType.Name.StartsWith("String") &&
@@ -735,12 +739,11 @@ namespace Cruddy.Components
                     // create a strongly-typed lambda matching the overload
                     var lambda = Expression.Lambda(delegateType, body, param);
 
-                    var displayName = PropertyHelper.GetDisplayName(prop);
-                    var format = GetDisplayFormat(prop);
-                    var columnInfo = new ColumnInfo(displayName, displayName, null);
-                    genericMethod.Invoke(MyColumnManager, [lambda, columnInfo, format, Align.Left, null, null, true, null]);
+                    var ii = GetInputInfo(prop, default(TEntity), CrudOperation.Read);
+                    var columnInfo = new ColumnInfo(ii.DisplayName, ii.DisplayName, null);
+                    genericMethod.Invoke(MyColumnManager, [lambda, columnInfo, ii.DisplayFormat, Align.Left, null, null, ii.Visible, null]);
                     // Would be nice if the code below worked, but it doesn't because of the generic type parameter. So we have to use reflection to invoke the method.
-                    //MyColumnManager.AddSimple(           lambda, columnInfo, format, Align.Left, null, null, true, null);
+                    //MyColumnManager.AddSimple(           lambda, columnInfo, ii.DisplayFormat, Align.Left, null, null, ii.Visible, null);
                 }
                 catch
                 {
@@ -849,16 +852,24 @@ namespace Cruddy.Components
 
         public InputInfo GetInputInfo(PropertyInfo prop, TEntity? item, CrudOperation operation)
         {
-            return new InputInfo
+            var ii =  new InputInfo
             {
                 DisplayName = PropertyHelper.GetDisplayName(prop),
-                Value = prop.GetValue(item),
-                FormattedValue = PropertyHelper.GetFormattedValue(prop, item),
+                DisplayFormat = GetDisplayFormat(prop),
                 Type = PropertyHelper.GetUnderlyingType(prop.PropertyType),
                 Disabled = !IncludeColumn(operation, prop.Name),
                 Required = !PropertyHelper.IsNullable(prop),
+                HideKeyColumn = HideKeyColumn,
                 IsKeyColumn = string.Equals(prop.Name, KeyColumn, StringComparison.OrdinalIgnoreCase) 
             };
+
+            if (!object.Equals(item, default(TEntity)))
+            {
+                ii.Value = prop.GetValue(item);
+                ii.FormattedValue = PropertyHelper.GetFormattedValue(prop, item);
+            }
+
+            return ii;
         }
         private async Task ShowErrorMessage(int showDuration = 8000)
         {
