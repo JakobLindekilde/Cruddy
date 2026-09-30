@@ -843,6 +843,18 @@ namespace Cruddy.Components
 
         #region Misc methods
 
+        public InputInfo GetInputInfo(PropertyInfo prop, TEntity? item, CrudOperation operation)
+        {
+            return new InputInfo
+            {
+                DisplayName = PropertyHelper.GetDisplayName(prop),
+                Value = prop.GetValue(item),
+                Type = PropertyHelper.GetUnderlyingType(prop.PropertyType),
+                Disabled = !IncludeColumn(operation, prop.Name),
+                Required = !PropertyHelper.IsNullable(prop),
+            };
+        }
+
         private async Task ShowErrorMessage(int showDuration = 8000)
         {
             await InvokeAsync(StateHasChanged);
