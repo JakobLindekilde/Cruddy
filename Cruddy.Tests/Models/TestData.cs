@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Cruddy.Tests
+namespace Cruddy.Tests.Models
 {
     public class ClassWithKey
     {

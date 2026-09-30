@@ -1,6 +1,7 @@
 ﻿using Cruddy.Helpers;
+using Cruddy.Tests.Models;
 
-namespace Cruddy.Tests
+namespace Cruddy.Tests.Helpers
 {
     public class PropertyHelperTests
     {

@@ -1,7 +1,7 @@
 ﻿using Xunit;
 using Cruddy.Components;
 
-namespace Cruddy.Tests
+namespace Cruddy.Tests.Components
 {
 	public class CruddyRazorTests
 	{
