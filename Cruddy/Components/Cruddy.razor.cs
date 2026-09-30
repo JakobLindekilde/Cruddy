@@ -117,6 +117,10 @@ namespace Cruddy.Components
         [Parameter]
         public string? NameUx { get; set; }
 
+        [Parameter]
+        public bool HideKeyColumn { get; set; } = false;
+
+
         #endregion
 
         #region Properties
@@ -849,12 +853,13 @@ namespace Cruddy.Components
             {
                 DisplayName = PropertyHelper.GetDisplayName(prop),
                 Value = prop.GetValue(item),
+                FormattedValue = PropertyHelper.GetFormattedValue(prop, item),
                 Type = PropertyHelper.GetUnderlyingType(prop.PropertyType),
                 Disabled = !IncludeColumn(operation, prop.Name),
                 Required = !PropertyHelper.IsNullable(prop),
+                IsKeyColumn = string.Equals(prop.Name, KeyColumn, StringComparison.OrdinalIgnoreCase) 
             };
         }
-
         private async Task ShowErrorMessage(int showDuration = 8000)
         {
             await InvokeAsync(StateHasChanged);

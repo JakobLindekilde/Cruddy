@@ -135,11 +135,11 @@ else
                             <tbody>
                                 @foreach (var prop in GetPropertiesForTableColumns(DetailsItem, CrudOperation.Read, DetailsColumns))
                                 {
-                                    var displayName = PropertyHelper.GetDisplayName(prop);
-                                    var formattedValue = PropertyHelper.GetFormattedValue(prop, DetailsItem);
+                                    var ii = GetInputInfo(prop, DetailsItem, CrudOperation.Read);
+                                    if (HideKeyColumn && ii.IsKeyColumn) continue;
                                     <tr>
-                                        <th>@displayName</th>
-                                        <td>@formattedValue</td>
+                                        <th>@ii.DisplayName</th>
+                                        <td>@ii.FormattedValue</td>
                                     </tr>
                                 }
                             </tbody>
