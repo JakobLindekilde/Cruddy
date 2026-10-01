@@ -78,10 +78,13 @@ else
                                                     {
                                                         <input type="checkbox" class="form-check-input" checked="@(ii.Value is bool b && b)" disabled="@ii.Disabled" @onchange="(e) => OnCreateFieldChanged(prop, e.Value)" />
                                                     }
+                                                    else if (ii.Type == typeof(DateTime) && ii.DataType == System.ComponentModel.DataAnnotations.DataType.Date)
+                                                    {
+                                                        <input type="date" class="form-control" value="@ii.InputDateTimeValue()" disabled="@ii.Disabled" required="@ii.Required" @onchange="(e) => OnCreateFieldChanged(prop, e.Value)" />
+                                                    }
                                                     else if (ii.Type == typeof(DateTime))
                                                     {
-                                                        var dateVal = ii.Value is DateTime dt ? dt.ToString("yyyy-MM-ddThh:mm") : string.Empty;
-                                                        <input type="datetime-local" class="form-control" value="@dateVal" disabled="@ii.Disabled" required="@ii.Required" @onchange="(e) => OnCreateFieldChanged(prop, e.Value)" />
+                                                        <input type="datetime-local" class="form-control" value="@ii.InputDateTimeValue()" disabled="@ii.Disabled" required="@ii.Required" @onchange="(e) => OnCreateFieldChanged(prop, e.Value)" />
                                                     }
                                                     else if (ii.Type == typeof(TimeSpan) || ii.Type == typeof(TimeOnly))
                                                     {
@@ -198,10 +201,13 @@ else
                                                     {
                                                         <input type="checkbox" class="form-check-input" checked="@(ii.Value is bool b && b)" disabled="@ii.Disabled" @onchange="(e) => OnFieldChanged(prop, e.Value)" />
                                                     }
+                                                    else if (ii.Type == typeof(DateTime) && ii.DataType == System.ComponentModel.DataAnnotations.DataType.Date)
+                                                    {
+                                                        <input type="date" class="form-control" value="@ii.InputDateTimeValue()" disabled="@ii.Disabled" required="@ii.Required" @onchange="(e) => OnFieldChanged(prop, e.Value)" />
+                                                    }
                                                     else if (ii.Type == typeof(DateTime))
                                                     {
-                                                        var dateVal = ii.Value is DateTime dt ? dt.ToString("yyyy-MM-ddThh:mm") : string.Empty;
-                                                        <input type="datetime-local" class="form-control" value="@dateVal" disabled="@ii.Disabled" required="@ii.Required" @onchange="(e) => OnFieldChanged(prop, e.Value)" />
+                                                        <input type="datetime-local" class="form-control" value="@ii.InputDateTimeValue()" disabled="@ii.Disabled" required="@ii.Required" @onchange="(e) => OnFieldChanged(prop, e.Value)" />
                                                     }
                                                     else if (ii.Type == typeof(TimeSpan) || ii.Type == typeof(TimeOnly))
                                                     {

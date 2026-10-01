@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using System.ComponentModel.DataAnnotations;
 
 namespace Cruddy.Components
 {
@@ -13,6 +14,7 @@ namespace Cruddy.Components
         public required bool Required { get; init; }
         public required bool HideKeyColumn { get; init; }
         public required bool IsKeyColumn { get; init; }
+        public DataType? DataType { get; init; }
 
         public bool Visible 
         { 
@@ -23,6 +25,27 @@ namespace Cruddy.Components
                 }
                 return true;
             }
+        }
+
+        /// <summary>
+        /// Returns the appropriate HTML input type="data" and input type="datetime-local" format (i.e. not in localized format).
+        /// </summary>
+        /// <returns></returns>
+        public string InputDateTimeValue()
+        {
+            if (Value is DateTime dt)
+            {
+                if (DataType == System.ComponentModel.DataAnnotations.DataType.Date)
+                {
+                    return dt.ToString("yyyy-MM-dd");
+                }
+                else if (DataType == System.ComponentModel.DataAnnotations.DataType.Time)
+                {
+                    return dt.ToString("HH:mm:ss");
+                }
+                return dt.ToString("yyyy-MM-ddTHH:mm:ss");
+            }
+            return string.Empty;
         }
     }
 }

@@ -1,4 +1,5 @@
 using Cruddy.Helpers;
+using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Components.QuickGrid;
@@ -860,7 +861,8 @@ namespace Cruddy.Components
                 Disabled = !IncludeColumn(operation, prop.Name),
                 Required = !PropertyHelper.IsNullable(prop),
                 HideKeyColumn = HideKeyColumn,
-                IsKeyColumn = string.Equals(prop.Name, KeyColumn, StringComparison.OrdinalIgnoreCase) 
+                IsKeyColumn = string.Equals(prop.Name, KeyColumn, StringComparison.OrdinalIgnoreCase),
+                DataType = prop.GetCustomAttribute<DataTypeAttribute>()?.DataType,
             };
 
             if (!object.Equals(item, default(TEntity)))
