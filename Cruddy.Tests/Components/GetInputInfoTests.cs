@@ -3,6 +3,9 @@ using Cruddy.Tests.Models;
 using System.ComponentModel.DataAnnotations;
 using System.Reflection;
 
+#pragma warning disable BL0005 // Component parameter should not be set outside of its component.
+#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
+
 namespace Cruddy.Tests.Components
 {
     public class GetInputInfoTests
@@ -118,9 +121,9 @@ namespace Cruddy.Tests.Components
             var value = new InputInfoType
             {
                 Id = 42,
-                Date = new DateTime(2025, 6, 7, 8, 9, 10),
+                Date = new DateTime(2025, 6, 7, 8, 9, 10, DateTimeKind.Unspecified),
                 Name = "Alice",
-                FormattedDate = new DateTime(2025, 6, 7)
+                FormattedDate = new DateTime(2025, 6, 7, 0, 0, 0, DateTimeKind.Unspecified)
             };
             var dut = new Cruddy<InputInfoType>
             {
