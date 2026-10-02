@@ -23,7 +23,7 @@ else
     @if (ShowColumnSelector)
     {
         <div>
-            <ColumnSelector ColumnManager="MyColumnManager" SelectionChanged="SelectionChangedAsync" />
+            <ColumnSelector ColumnManager="MyColumnManager" SelectionChanged="ColumnSelectionChangedAsync" />
         </div>
     }
 
@@ -34,7 +34,7 @@ else
         </div>
     }
 
-    <QuickGrid @ref="MyGrid" id="CruddyGrid" Items="@Rows.AsQueryable()" Class="table table-sm table-index table-striped small table-fit table-thead-sticky mb-0" Theme="twentyAI">
+    <QuickGrid @ref="MyGrid" id="CruddyGrid" Items="@Rows.AsQueryable()" Class="@CruddyGridClass" Theme="@CruddyGridTheme">
         @QuickGridColumns.Columns(MyColumnManager)
     </QuickGrid>
 
@@ -56,7 +56,7 @@ else
                             <DataAnnotationsValidator />
                             <ValidationSummary />
 
-                            <table class="table table-sm table-striped">
+                            <table class="@ModalTableClass">
                                 <tbody>
                                     @foreach (var prop in GetPropertiesForTableColumns(CreateItem, CrudOperation.Create))
                                     {
@@ -139,7 +139,7 @@ else
                         <button type="button" class="btn-close" aria-label="Close" @onclick="CloseDetails"></button>
                     </div>
                     <div class="modal-body">
-                        <table class="table table-sm table-striped">
+                        <table class="@ModalTableClass">
                             <tbody>
                                 @foreach (var prop in GetPropertiesForTableColumns(DetailsItem, CrudOperation.Read, DetailsColumns))
                                 {
@@ -179,7 +179,7 @@ else
                             <DataAnnotationsValidator />
                             <ValidationSummary />
 
-                            <table class="table table-sm table-striped">
+                            <table class="@ModalTableClass">
                                 <tbody>
                                     @foreach (var prop in GetPropertiesForTableColumns(EditItem, CrudOperation.Update))
                                     {
@@ -283,7 +283,7 @@ else
     [Parameter]
     public bool ShowColumnSelector { get; set; } = false;
 
-    private async Task SelectionChangedAsync()
+    private async Task ColumnSelectionChangedAsync()
     {
         if (MyGrid is null) return;
         await MyGrid.RefreshDataAsync();

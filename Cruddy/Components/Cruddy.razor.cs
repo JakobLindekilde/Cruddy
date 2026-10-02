@@ -13,6 +13,10 @@ using System.Reflection;
 // TODO: Display all column headers in bold (not just the Actions column)
 // TODO: Make unittests for the Cruddy component: AddColumnsToGrid(). GetDisplayFormat() etc.
 
+// Known issues:
+// TODO: Editing a TimeOnly property does not work. Is a known issue in Blazor?
+
+
 namespace Cruddy.Components
 {
     /// <summary>
@@ -121,6 +125,23 @@ namespace Cruddy.Components
         [Parameter]
         public bool HideKeyColumn { get; set; } = false;
 
+        /// <summary>
+        /// Theme applied to the QuickGrid. Default is "twentyAI".
+        /// </summary>
+        [Parameter]
+        public string CruddyGridTheme { get; set; } = "twentyAI";
+
+        /// <summary>
+        /// CSS class applied to the QuickGrid.
+        /// </summary>
+        [Parameter]
+        public string CruddyGridClass { get; set; } = "table table-sm table-index table-striped small table-fit table-thead-sticky mb-0";
+
+        /// <summary>
+        /// CSS class applied to the modal dialog table.
+        /// </summary>
+        [Parameter]
+        public string ModalTableClass { get; set; } = "table table-sm table-striped";
 
         #endregion
 
