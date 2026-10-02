@@ -41,7 +41,7 @@ namespace Cruddy.Helpers
 
         /// <summary>
         /// Returns true if the specified type is supported by Cruddy, which includes string, 
-        /// number types, decimal types, bool, enum, DateTime, DateTimeOffset, TimeSpan, and Guid.
+        /// number types, decimal types, bool, enum, DateTime, TimeSpan, TimeOnly and Guid.
         /// </summary>
         /// <param name="type">The type to check for support.</param>
         /// <returns>True if the type is supported; otherwise, false.</returns>
@@ -55,7 +55,8 @@ namespace Cruddy.Helpers
                 IsDecimal(t) ||
                 t == typeof(bool) ||
                 t == typeof(DateTime) ||
-                t == typeof(DateTimeOffset) ||
+                //t == typeof(DateTimeOffset) ||  //TODO: Support for DateTimeOffset and DateOnly missing
+                //t == typeof(DateOnly) ||  
                 t == typeof(TimeSpan) ||
                 t == typeof(TimeOnly) ||
                 t == typeof(Guid))

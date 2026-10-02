@@ -65,10 +65,10 @@ namespace Cruddy.Tests.Helpers
         [InlineData(typeof(float), true)]
         [InlineData(typeof(bool), true)]
         [InlineData(typeof(DateTime), true)]
-        [InlineData(typeof(DateTimeOffset), true)]
+        [InlineData(typeof(DateTimeOffset), false)]
+        [InlineData(typeof(DateOnly), false)]
         [InlineData(typeof(TimeSpan), true)]
         [InlineData(typeof(TimeOnly), true)]
-        [InlineData(typeof(DateOnly), false)]
         [InlineData(typeof(Guid), true)]
         public void IsSupported_ReturnsTrueForSupportedTypes(Type type, bool expected)
         {
@@ -115,8 +115,6 @@ namespace Cruddy.Tests.Helpers
 
             Assert.False(PropertyHelper.IsNullable(t.GetProperty(nameof(all.DateTimeNotNull))!));
             Assert.True(PropertyHelper.IsNullable(t.GetProperty(nameof(all.DateTimeNullable))!));
-            Assert.False(PropertyHelper.IsNullable(t.GetProperty(nameof(all.DateTimeOffsetNotNull))!));
-            Assert.True(PropertyHelper.IsNullable(t.GetProperty(nameof(all.DateTimeOffsetNullable))!));
             Assert.False(PropertyHelper.IsNullable(t.GetProperty(nameof(all.TimeSpanNotNull))!));
             Assert.True(PropertyHelper.IsNullable(t.GetProperty(nameof(all.TimeSpanNullable))!));
             Assert.False(PropertyHelper.IsNullable(t.GetProperty(nameof(all.TimeOnlyNotNull))!));

@@ -317,9 +317,9 @@ namespace Cruddy.Components
                     else if (targetType == typeof(bool)) converted = bool.TryParse(value.ToString(), out var b) ? b : (bool?)null;
                     else if (targetType == typeof(DateTime)) converted = DateTime.TryParse(value.ToString(), out var dt) ? dt : (DateTime?)null;
                     else if (targetType == typeof(DateTimeOffset)) converted = DateTimeOffset.TryParse(value.ToString(), out var dto) ? dto : (DateTimeOffset?)null;
+                    else if (targetType == typeof(DateOnly)) converted = DateOnly.TryParse(value.ToString(), out var d0) ? d0 : (DateOnly?)null;
                     else if (targetType == typeof(TimeSpan)) converted = TimeSpan.TryParse(value.ToString(), out var ts) ? ts : (TimeSpan?)null;
                     else if (targetType == typeof(TimeOnly)) converted = TimeOnly.TryParse(value.ToString(), out var to) ? to : (TimeOnly?)null;
-                    else if (targetType == typeof(DateOnly)) converted = DateOnly.TryParse(value.ToString(), out var d0) ? d0 : (DateOnly?)null;
                     else if (targetType == typeof(Guid)) converted = Guid.TryParse(value.ToString(), out var g) ? g : (Guid?)null;
                     else converted = value;
                 }
@@ -501,8 +501,10 @@ namespace Cruddy.Components
                     else if (targetType == typeof(float)) converted = float.TryParse(value.ToString(), out var f) ? f : (float?)null;
                     else if (targetType == typeof(bool)) converted = bool.TryParse(value.ToString(), out var b) ? b : (bool?)null;
                     else if (targetType == typeof(DateTime)) converted = DateTime.TryParse(value.ToString(), out var dt) ? dt : (DateTime?)null;
-                    else if (targetType == typeof(TimeSpan)) converted = TimeSpan.TryParse(value.ToString(), out var ts) ? ts : (TimeSpan?)null;
                     else if (targetType == typeof(DateTimeOffset)) converted = DateTimeOffset.TryParse(value.ToString(), out var dto) ? dto : (DateTimeOffset?)null;
+                    else if (targetType == typeof(DateOnly)) converted = DateOnly.TryParse(value.ToString(), out var dO) ? dO : (DateOnly?)null;
+                    else if (targetType == typeof(TimeSpan)) converted = TimeSpan.TryParse(value.ToString(), out var ts) ? ts : (TimeSpan?)null;
+                    else if (targetType == typeof(TimeOnly)) converted = TimeOnly.TryParse(value.ToString(), out var to) ? to : (TimeOnly?)null;
                     else if (targetType == typeof(Guid)) converted = Guid.TryParse(value.ToString(), out var g) ? g : (Guid?)null;
                     else converted = value;
                 }

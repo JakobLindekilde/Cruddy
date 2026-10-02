@@ -51,8 +51,6 @@ CREATE TABLE [dbo].[DateTimeTypes](
 	[Id] [int] IDENTITY(1,1) NOT NULL,
 	[DateTimeNotNull] [datetime] NOT NULL,
 	[DateTimeNullable] [datetime] NULL,
-	[DateTimeOffsetNotNull] [datetimeoffset](7) NOT NULL,
-	[DateTimeOffsetNullable] [datetimeoffset](7) NULL,
 	[TimeSpanNotNull] [time](7) NOT NULL,
 	[TimeSpanNullable] [time](7) NULL,
 	[TimeOnlyNotNull] [time](7) NOT NULL,
@@ -222,9 +220,9 @@ SET IDENTITY_INSERT [dbo].[Customers] OFF
 GO
 SET IDENTITY_INSERT [dbo].[DateTimeTypes] ON 
 GO
-INSERT [dbo].[DateTimeTypes] ([Id], [DateTimeNotNull], [DateTimeNullable], [DateTimeOffsetNotNull], [DateTimeOffsetNullable], [TimeSpanNotNull], [TimeSpanNullable], [TimeOnlyNotNull], [TimeOnlyNullable]) VALUES (1, CAST(N'2020-11-11T00:00:00.000' AS DateTime), NULL, CAST(N'2020-11-11T00:00:00.0000000+04:00' AS DateTimeOffset), NULL, CAST(N'18:18:00' AS Time), NULL, CAST(N'10:11:12' AS Time), NULL)
+INSERT [dbo].[DateTimeTypes] ([Id], [DateTimeNotNull], [DateTimeNullable], [TimeSpanNotNull], [TimeSpanNullable], [TimeOnlyNotNull], [TimeOnlyNullable]) VALUES (1, CAST(N'2020-11-11T00:00:00.000' AS DateTime), NULL, CAST(N'18:18:00' AS Time), NULL, CAST(N'10:11:12' AS Time), NULL)
 GO
-INSERT [dbo].[DateTimeTypes] ([Id], [DateTimeNotNull], [DateTimeNullable], [DateTimeOffsetNotNull], [DateTimeOffsetNullable], [TimeSpanNotNull], [TimeSpanNullable], [TimeOnlyNotNull], [TimeOnlyNullable]) VALUES (2, CAST(N'2026-09-28T12:00:00.000' AS DateTime), NULL, CAST(N'2020-01-01T00:00:00.0000000+00:00' AS DateTimeOffset), NULL, CAST(N'01:04:00' AS Time), NULL, CAST(N'00:00:00' AS Time), NULL)
+INSERT [dbo].[DateTimeTypes] ([Id], [DateTimeNotNull], [DateTimeNullable], [TimeSpanNotNull], [TimeSpanNullable], [TimeOnlyNotNull], [TimeOnlyNullable]) VALUES (2, CAST(N'2026-09-28T12:00:00.000' AS DateTime), NULL, CAST(N'01:04:00' AS Time), NULL, CAST(N'00:00:00' AS Time), NULL)
 GO
 SET IDENTITY_INSERT [dbo].[DateTimeTypes] OFF
 GO
