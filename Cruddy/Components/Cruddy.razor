@@ -72,7 +72,7 @@ else
                                                 @{
                                                     if (PropertyHelper.IsNumber(ii.Type))
                                                     {
-                                                        <input type="number" class="form-control" value="@(ii.Value?.ToString() ?? string.Empty)" disabled="@ii.Disabled" required="@ii.Required" @onchange="(e) => OnCreateFieldChanged(prop, e.Value)" />
+                                                        <input type="number" class="form-control" value="@(ii.Value?.ToString() ?? string.Empty)" disabled="@ii.Disabled" required="@ii.Required" @onchange="(e) => OnCreateFieldChanged(prop, e.Value)" min="@ii.Min" max="@ii.Max" />
                                                     }
                                                     else if (ii.Type == typeof(bool))
                                                     {
@@ -195,7 +195,7 @@ else
                                                 @{
                                                     if (PropertyHelper.IsNumber(ii.Type))
                                                     {
-                                                        <input type="number" class="form-control" value="@(ii.Value?.ToString() ?? string.Empty)" disabled="@ii.Disabled" required="@ii.Required" @onchange="(e) => OnFieldChanged(prop, e.Value)" />
+                                                        <input type="number" class="form-control" value="@(ii.Value?.ToString() ?? string.Empty)" disabled="@ii.Disabled" required="@ii.Required" @onchange="(e) => OnFieldChanged(prop, e.Value)" min="@ii.Min" max="@ii.Max" />
                                                     }
                                                     else if (ii.Type == typeof(bool))
                                                     {
