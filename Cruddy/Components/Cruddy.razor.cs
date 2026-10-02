@@ -293,37 +293,8 @@ namespace Cruddy.Components
 
             try
             {
-                object? converted = null;
-                if (value == null)
-                {
-                    converted = null;
-                }
-                else
-                {
-                    var targetType = PropertyHelper.GetUnderlyingType(prop.PropertyType);
-                    if (targetType == typeof(string)) converted = value.ToString();
-                    else if (targetType.IsEnum) converted = Enum.Parse(targetType, value.ToString()!);
-                    else if (targetType == typeof(int)) converted = int.TryParse(value.ToString(), out var i) ? i : (int?)null;
-                    else if (targetType == typeof(long)) converted = long.TryParse(value.ToString(), out var l) ? l : (long?)null;
-                    else if (targetType == typeof(short)) converted = short.TryParse(value.ToString(), out var s) ? s : (short?)null;
-                    else if (targetType == typeof(uint)) converted = uint.TryParse(value.ToString(), out var ui) ? ui : (uint?)null;
-                    else if (targetType == typeof(ulong)) converted = ulong.TryParse(value.ToString(), out var ul) ? ul : (ulong?)null;
-                    else if (targetType == typeof(ushort)) converted = ushort.TryParse(value.ToString(), out var us) ? us : (ushort?)null;
-                    else if (targetType == typeof(byte)) converted = byte.TryParse(value.ToString(), out var by) ? by : (byte?)null;
-                    else if (targetType == typeof(sbyte)) converted = sbyte.TryParse(value.ToString(), out var sby) ? sby : (sbyte?)null;
-                    else if (targetType == typeof(decimal)) converted = decimal.TryParse(value.ToString(), out var d) ? d : (decimal?)null;
-                    else if (targetType == typeof(double)) converted = double.TryParse(value.ToString(), out var dd) ? dd : (double?)null;
-                    else if (targetType == typeof(float)) converted = float.TryParse(value.ToString(), out var f) ? f : (float?)null;
-                    else if (targetType == typeof(bool)) converted = bool.TryParse(value.ToString(), out var b) ? b : (bool?)null;
-                    else if (targetType == typeof(DateTime)) converted = DateTime.TryParse(value.ToString(), out var dt) ? dt : (DateTime?)null;
-                    else if (targetType == typeof(DateTimeOffset)) converted = DateTimeOffset.TryParse(value.ToString(), out var dto) ? dto : (DateTimeOffset?)null;
-                    else if (targetType == typeof(DateOnly)) converted = DateOnly.TryParse(value.ToString(), out var d0) ? d0 : (DateOnly?)null;
-                    else if (targetType == typeof(TimeSpan)) converted = TimeSpan.TryParse(value.ToString(), out var ts) ? ts : (TimeSpan?)null;
-                    else if (targetType == typeof(TimeOnly)) converted = TimeOnly.TryParse(value.ToString(), out var to) ? to : (TimeOnly?)null;
-                    else if (targetType == typeof(Guid)) converted = Guid.TryParse(value.ToString(), out var g) ? g : (Guid?)null;
-                    else converted = value;
-                }
-
+                var targetType = PropertyHelper.GetUnderlyingType(prop.PropertyType);
+                object? converted = PropertyHelper.TryParseValue(value, targetType);
                 prop.SetValue(CreateItem, converted);
 
                 if (CreateCtx != null)
@@ -478,37 +449,8 @@ namespace Cruddy.Components
 
             try
             {
-                object? converted = null;
-                if (value == null)
-                {
-                    converted = null;
-                }
-                else
-                {
-                    var targetType = PropertyHelper.GetUnderlyingType(prop.PropertyType);
-                    if (targetType == typeof(string)) converted = value.ToString();
-                    else if (targetType.IsEnum) converted = Enum.Parse(targetType, value.ToString()!);
-                    else if (targetType == typeof(int)) converted = int.TryParse(value.ToString(), out var i) ? i : (int?)null;
-                    else if (targetType == typeof(long)) converted = long.TryParse(value.ToString(), out var l) ? l : (long?)null;
-                    else if (targetType == typeof(short)) converted = short.TryParse(value.ToString(), out var s) ? s : (short?)null;
-                    else if (targetType == typeof(uint)) converted = uint.TryParse(value.ToString(), out var ui) ? ui : (uint?)null;
-                    else if (targetType == typeof(ulong)) converted = ulong.TryParse(value.ToString(), out var ul) ? ul : (ulong?)null;
-                    else if (targetType == typeof(ushort)) converted = ushort.TryParse(value.ToString(), out var us) ? us : (ushort?)null;
-                    else if (targetType == typeof(byte)) converted = byte.TryParse(value.ToString(), out var by) ? by : (byte?)null;
-                    else if (targetType == typeof(sbyte)) converted = sbyte.TryParse(value.ToString(), out var sby) ? sby : (sbyte?)null;
-                    else if (targetType == typeof(decimal)) converted = decimal.TryParse(value.ToString(), out var d) ? d : (decimal?)null;
-                    else if (targetType == typeof(double)) converted = double.TryParse(value.ToString(), out var dd) ? dd : (double?)null;
-                    else if (targetType == typeof(float)) converted = float.TryParse(value.ToString(), out var f) ? f : (float?)null;
-                    else if (targetType == typeof(bool)) converted = bool.TryParse(value.ToString(), out var b) ? b : (bool?)null;
-                    else if (targetType == typeof(DateTime)) converted = DateTime.TryParse(value.ToString(), out var dt) ? dt : (DateTime?)null;
-                    else if (targetType == typeof(DateTimeOffset)) converted = DateTimeOffset.TryParse(value.ToString(), out var dto) ? dto : (DateTimeOffset?)null;
-                    else if (targetType == typeof(DateOnly)) converted = DateOnly.TryParse(value.ToString(), out var dO) ? dO : (DateOnly?)null;
-                    else if (targetType == typeof(TimeSpan)) converted = TimeSpan.TryParse(value.ToString(), out var ts) ? ts : (TimeSpan?)null;
-                    else if (targetType == typeof(TimeOnly)) converted = TimeOnly.TryParse(value.ToString(), out var to) ? to : (TimeOnly?)null;
-                    else if (targetType == typeof(Guid)) converted = Guid.TryParse(value.ToString(), out var g) ? g : (Guid?)null;
-                    else converted = value;
-                }
-
+                var targetType = PropertyHelper.GetUnderlyingType(prop.PropertyType);
+                object? converted = PropertyHelper.TryParseValue(value, targetType);
                 prop.SetValue(EditItem, converted);
 
                 if (EditCtx != null)
