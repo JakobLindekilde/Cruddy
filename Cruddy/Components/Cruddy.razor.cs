@@ -365,9 +365,7 @@ namespace Cruddy.Components
         private Task ShowEdit(TEntity item)
         {
             // Create a deep copy of the item so edits are not applied until saved
-            var options = new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-            var json = System.Text.Json.JsonSerializer.Serialize(item, options);
-            EditItem = System.Text.Json.JsonSerializer.Deserialize<TEntity>(json, options);
+            EditItem = CruddyHelper.DeepCopy(item);
             EditCtx = new EditContext(EditItem!);
             ShowEditModal = true;
             return Task.CompletedTask;
@@ -630,26 +628,7 @@ namespace Cruddy.Components
             }
 
              AddSimpleColumn(prop);
-
-
-            //if (PropertyHelper.IsNumber(prop.PropertyType))
-            //{
-            //    AddNumberColumn(prop);
-            //}
-            //else if (prop.PropertyType.Name == "DateTime")
-            //{
-            //    AddSimpleDateColumn(prop);
-            //}
-            //else
-            //{
-            //    AddSimpleColumn(prop);
-            //}
         }
-
-        //public DynamicColumn<TGridItem> AddNumber(Expression<Func<TGridItem, decimal?>>        expression, string? title = null, string? fullTitle = null, string format = "N0", string? @class = null, Align align = Align.Right, bool visible = true, string? propertyName = null, bool? calculateTotal = null)
-        //public DynamicColumn<TGridItem> AddNumber(Expression<Func<TGridItem, double?>>         expression, string? title = null, string? fullTitle = null, string format = "N0", string? @class = null, Align align = Align.Right, bool visible = true, string? propertyName = null, bool? calculateTotal = null)
-        //public DynamicColumn<TGridItem> AddSimpleDate<TValue>(Expression<Func<TGridItem, TValue?>> expression, string? title = null, string? fullTitle = null, string? format = "dd/MM/yyyy", string? @class = null, Align align = Align.Center, CellStyleMap<TValue>? cellStyle = null, bool visible = true)
-        //public DynamicColumn<TGridItem> AddSimple    <TValue>(Expression<Func<TGridItem, TValue?>> expression, ColumnInfo columnInfo, string? format = null, Align align = Align.Left, CellStyleMap<TValue>? cellStyle = null, GridSort<TGridItem>? sortBy = null,  bool visible = true, string? propertyName = null)
 
         /// <summary>
         /// Adds a Toolkit.AddSimple column to the QuickGrid for the specified property.

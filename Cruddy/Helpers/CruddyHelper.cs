@@ -3,6 +3,9 @@ using System.Reflection;
 
 namespace Cruddy.Helpers
 {
+    /// <summary>
+    /// Misc helper methods for Cruddy.
+    /// </summary>
     static public class CruddyHelper
     {
         /// <summary>
@@ -24,6 +27,18 @@ namespace Cruddy.Helpers
                     m.GetParameters()[6].ParameterType.Name.StartsWith("Bool") &&
                     m.GetParameters()[7].ParameterType.Name.StartsWith("String"));
             return m;
+        }
+
+        /// <summary>
+        /// Creates a deep copy of the specified item using JSON serialization and deserialization.
+        /// </summary>
+        /// <param name="item">The item to deep copy.</param>
+        /// <returns>A deep copy of the specified item.</returns>
+        public static TEntity DeepCopy<TEntity>(TEntity item)
+        {
+            var options = new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            var json = System.Text.Json.JsonSerializer.Serialize(item, options);
+            return System.Text.Json.JsonSerializer.Deserialize<TEntity>(json, options)!;
         }
 
     }

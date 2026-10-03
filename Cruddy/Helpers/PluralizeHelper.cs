@@ -1,5 +1,8 @@
 ﻿namespace Cruddy.Helpers
 {
+    /// <summary>
+    /// Provides helper methods for pluralizing names according to basic English rules.
+    /// </summary>
     static public class PluralizeHelper
     {
         /// <summary>

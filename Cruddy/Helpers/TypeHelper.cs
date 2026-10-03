@@ -5,7 +5,6 @@
     /// </summary>
     static public class TypeHelper
     {
-
         /// <summary>
         /// Returns true if the specified type is supported by Cruddy, which includes string, 
         /// number types, decimal types, bool, enum, DateTime, TimeSpan, TimeOnly and Guid.
