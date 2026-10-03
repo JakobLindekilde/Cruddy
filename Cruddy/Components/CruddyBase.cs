@@ -13,6 +13,10 @@ namespace Cruddy.Components
     /// </summary>
     public partial class CruddyBase<TEntity> : ComponentBase 
     {
+        /// <summary>
+        /// The parameterless constructor initializes the <seealso cref="TableName"/> and <seealso cref="KeyColumn"/> 
+        /// properties based on the type of <typeparamref name="TEntity"/>.
+        /// </summary>
         public CruddyBase()
         {
             if (string.IsNullOrEmpty(TableName))
@@ -100,12 +104,12 @@ namespace Cruddy.Components
         /// <summary>
         /// Sorting order for the rows when using <seealso cref="OrderBy"/>. 
         /// </summary>
-        /// <remarks>Default is <seealso cref="SortOrder.Ascending".</remarks>
+        /// <remarks>Default is <seealso cref="SortOrder.Ascending"/></remarks>
         [Parameter]
         public SortOrder SortOrder { get; set; } = SortOrder.Ascending;
 
         /// <summary>
-        /// Here the complete SQL SELECT statement, including joints, can be specified.
+        /// Here the complete SQL SELECT statement, including joins, can be specified.
         /// If specified, parameters like <seealso cref="Top"/> and <seealso cref="OrderBy"/> are ignored.
         /// </summary>
         [Parameter]
@@ -258,12 +262,26 @@ namespace Cruddy.Components
 
 #pragma warning disable S2077   // SonarQube rule S2077: "SQL queries should not be vulnerable to injection attacks".
 
+        /// <summary>
+        /// Deletes a row from the database table based on the specified key value.
+        /// </summary>
+        /// <param name="DbConnection">The database connection to use for the operation.</param>
+        /// <param name="keyValue">The value of the key column for the row to delete.</param>
+        /// <returns>The result of the delete operation.</returns>
         public object? Delete(DbConnection DbConnection, object keyValue)
         {
             var sql = $"DELETE FROM {DefaultSchema}.{TableName} WHERE {KeyColumn} = @keyValue";
             return DbConnection.ExecuteScalar(sql, param: new { keyValue });
         }
 
+        /// <summary>
+        /// Gets the properties of <typeparamref name="TEntity"/> that correspond to 
+        /// the columns specified in <seealso cref="TableColumns"/>
+        /// </summary>
+        /// <param name="entity">The entity instance from which to get the properties.</param>
+        /// <param name="operation">The CRUD operation being performed.</param>
+        /// <returns>An array of <see cref="PropertyInfo"/> objects representing the properties to include in the operation.</returns>
+        /// <exception cref="ArgumentException">Thrown if the operation is not Create or Update.</exception>
         public PropertyInfo[] GetPropertiesForCreateOrUpdate(TEntity entity, CrudOperation operation)
         {
             if (operation != CrudOperation.Create && operation != CrudOperation.Update)
@@ -283,6 +301,14 @@ namespace Cruddy.Components
             return props;
         }
 
+        /// <summary>
+        /// Updates an existing entity in the database table based on the specified key value.
+        /// </summary>
+        /// <param name="DbConnection">The database connection to use for the operation.</param>
+        /// <param name="entity">The entity to update.</param>
+        /// <param name="keyValue">The value of the key column for the row to update.</param>
+        /// <returns>The number of rows affected.</returns>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="entity"/> is null.</exception>    
         public int Update(DbConnection DbConnection, TEntity entity, object keyValue)
         {
             // Build an UPDATE statement that sets all public writable properties except the key column.
@@ -346,10 +372,10 @@ namespace Cruddy.Components
 
         /// <summary>
         /// Gets rows from the database table in <seealso cref="TableName"/> or <seealso cref="Select"/>
-        /// and maps them to a list of <typeparamref name="T1"/>.
+        /// and maps them to a list of <typeparamref name="T"/>.
         /// </summary>
-        /// <typeparam name="T1"></typeparam>
-        /// <param name="DbConnection">A database connection e.g an SqlConnection (for MS SQL Server)/param>
+        /// <typeparam name="T">The type to map the rows to.</typeparam>
+        /// <param name="DbConnection">A database connection e.g an SqlConnection (for MS SQL Server)</param>
         /// <param name="sql">The SQL query to execute.</param>
         static public List<T> GetTableRows<T>(DbConnection DbConnection, string sql)
         {
@@ -357,6 +383,13 @@ namespace Cruddy.Components
             return [.. Map<T>(dynRows)];
         }
 
+        /// <summary>
+        /// Gets a single row from the database table in <seealso cref="TableName"/> based on the specified key value
+        /// </summary>
+        /// <param name="DbConnection">The database connection to use for the operation.</param>
+        /// <param name="id">The value of the key column for the row to retrieve.</param>
+        /// <param name="columns">The columns to include in the result.</param>
+        /// <returns>The entity corresponding to the specified key value, or null if not found.</returns>
         public TEntity? GetTableRow(DbConnection DbConnection, object id, string columns = "*")
         {
             var sql = $"SELECT {columns} FROM {DefaultSchema}.{TableName} WHERE {KeyColumn} = @Id";

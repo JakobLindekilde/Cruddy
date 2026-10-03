@@ -2,6 +2,10 @@
 
 namespace Cruddy.Components
 {
+    /// <summary>
+    /// Represents information about an input field, including its display name, value, type, and other 
+    /// properties. This class is used to generate input fields in a UI based on the properties of a model.
+    /// </summary>
     public class InputInfo
     {
         /// <summary>

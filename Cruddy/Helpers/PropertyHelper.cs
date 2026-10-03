@@ -9,7 +9,7 @@ namespace Cruddy.Helpers
     {
         /// <summary>
         /// Returns true if the specified property is nullable. This handles both
-        /// nullable value types (Nullable<T>) and C# 8+ nullable reference types
+        /// nullable value types (Nullable T) and C# 8+ nullable reference types
         /// by inspecting NullableAttribute/NullableContextAttribute on the property,
         /// declaring type or assembly.
         /// </summary>
@@ -224,10 +224,16 @@ namespace Cruddy.Helpers
             return null;
         }
 
+        /// <summary>
+        /// Gets the formatted value of a property from an object, applying any display format if specified.
+        /// </summary>
+        /// <param name="prop">The property for which to get the formatted value.</param>
+        /// <param name="item">The object from which to get the property value.</param>
+        /// <returns>The formatted value of the property.</returns>
         static public string GetFormattedValue(PropertyInfo prop, object? item)
         {
             string formattedValue;
-            var format = Cruddy.Helpers.PropertyHelper.GetDisplayFormat(prop);
+            var format = PropertyHelper.GetDisplayFormat(prop);
             var value = prop.GetValue(item);
 
             if (value == null)

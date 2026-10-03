@@ -122,6 +122,9 @@ namespace Cruddy.Components
         [Parameter]
         public string? NameUx { get; set; }
 
+        /// <summary>
+        /// Whether to hide the key column in the UX.
+        /// </summary>
         [Parameter]
         public bool HideKeyColumn { get; set; } = false;
 
@@ -173,8 +176,7 @@ namespace Cruddy.Components
         #region Lifecycle methods
 
         /// <summary>
-        /// During component initialization, this method fills <see cref="ColumnAliasDict"/>, 
-        /// adds columns to the grid and retrieves the rows from the database.
+        /// During component initialization, this method adds columns to the grid.
         /// </summary>
         protected override async Task OnInitializedAsync()
         {
@@ -681,6 +683,14 @@ namespace Cruddy.Components
 
         #region Misc methods
 
+        /// <summary>
+        /// Gets the InputInfo for a given property, item and operation. This is used to 
+        /// generate the columns in the QuickGrid and the input fields in the modals.
+        /// </summary>
+        /// <param name="prop">The property for which to get the InputInfo.</param>
+        /// <param name="item">The item from which to get the property value.</param>
+        /// <param name="operation">The CRUD operation being performed.</param>
+        /// <returns>An InputInfo object containing metadata about the property.</returns>
         public InputInfo GetInputInfo(PropertyInfo prop, TEntity? item, CrudOperation operation)
         {
             var ii =  new InputInfo
