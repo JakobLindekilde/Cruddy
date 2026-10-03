@@ -248,7 +248,7 @@ namespace Cruddy.Components
                 {
                     try
                     {
-                        var converted = Convert.ChangeType(result, PropertyHelper.GetUnderlyingType(keyProp.PropertyType));
+                        var converted = Convert.ChangeType(result, TypeHelper.GetUnderlyingType(keyProp.PropertyType));
                         keyProp.SetValue(CreateItem, converted);
                     }
                     catch
@@ -293,8 +293,8 @@ namespace Cruddy.Components
 
             try
             {
-                var targetType = PropertyHelper.GetUnderlyingType(prop.PropertyType);
-                object? converted = PropertyHelper.TryParseValue(value, targetType);
+                var targetType = TypeHelper.GetUnderlyingType(prop.PropertyType);
+                object? converted = TypeHelper.TryParseValue(value, targetType);
                 prop.SetValue(CreateItem, converted);
 
                 if (CreateCtx != null)
@@ -449,8 +449,8 @@ namespace Cruddy.Components
 
             try
             {
-                var targetType = PropertyHelper.GetUnderlyingType(prop.PropertyType);
-                object? converted = PropertyHelper.TryParseValue(value, targetType);
+                var targetType = TypeHelper.GetUnderlyingType(prop.PropertyType);
+                object? converted = TypeHelper.TryParseValue(value, targetType);
                 prop.SetValue(EditItem, converted);
 
                 if (EditCtx != null)
@@ -624,7 +624,7 @@ namespace Cruddy.Components
         /// </summary>
         protected virtual void AddColumn(PropertyInfo prop)
         {
-            if (!PropertyHelper.IsSupported(prop.PropertyType))
+            if (!TypeHelper.IsSupported(prop.PropertyType))
             {
                 return;
             }
@@ -652,33 +652,12 @@ namespace Cruddy.Components
         //public DynamicColumn<TGridItem> AddSimple    <TValue>(Expression<Func<TGridItem, TValue?>> expression, ColumnInfo columnInfo, string? format = null, Align align = Align.Left, CellStyleMap<TValue>? cellStyle = null, GridSort<TGridItem>? sortBy = null,  bool visible = true, string? propertyName = null)
 
         /// <summary>
-        /// Make sure to get the correct overload of method AddSimple() in ColumnManager in QuickGrid.Toolkit.
-        /// </summary>
-        /// <returns>AddSimple from ColumnManager</returns>
-        public static MethodInfo? GetAddSimpleMethod()
-        {
-            var m = typeof(ColumnManager<TEntity>).GetMethods()
-                .FirstOrDefault(m =>
-                    m.Name == "AddSimple" &&
-                    m.GetParameters().Count() >= 8 &&
-                    m.GetParameters()[0].ParameterType.Name.StartsWith("Expression") &&
-                    m.GetParameters()[1].ParameterType.Name.StartsWith("ColumnInfo") &&
-                    m.GetParameters()[2].ParameterType.Name.StartsWith("String") &&
-                    m.GetParameters()[3].ParameterType.Name.StartsWith("Align") &&
-                    m.GetParameters()[4].ParameterType.Name.StartsWith("CellStyleMap") &&
-                    m.GetParameters()[5].ParameterType.Name.StartsWith("GridSort") &&
-                    m.GetParameters()[6].ParameterType.Name.StartsWith("Bool") &&
-                    m.GetParameters()[7].ParameterType.Name.StartsWith("String"));
-            return m;
-        }
-
-        /// <summary>
         /// Adds a Toolkit.AddSimple column to the QuickGrid for the specified property.
         /// </summary>
         /// <param name="prop">The property to add a column for.</param>
         private void AddSimpleColumn(PropertyInfo prop)
         {
-            var method = GetAddSimpleMethod();
+            var method = CruddyHelper.GetAddSimpleMethod<TEntity>();
 
             if (method != null)
             {
@@ -729,7 +708,7 @@ namespace Cruddy.Components
             {
                 DisplayName = PropertyHelper.GetDisplayName(prop),
                 DisplayFormat = GetDisplayFormat(prop),
-                Type = PropertyHelper.GetUnderlyingType(prop.PropertyType),
+                Type = TypeHelper.GetUnderlyingType(prop.PropertyType),
                 Disabled = !IncludeColumn(operation, prop.Name),
                 Required = !PropertyHelper.IsNullable(prop),
                 HideKeyColumn = HideKeyColumn,
@@ -772,14 +751,14 @@ namespace Cruddy.Components
                 return displayFormat;
             }
 
-            var propertyType = PropertyHelper.GetUnderlyingType(prop.PropertyType);
+            var propertyType = TypeHelper.GetUnderlyingType(prop.PropertyType);
 
-            if (PropertyHelper.IsDecimal(propertyType))
+            if (TypeHelper.IsDecimal(propertyType))
             {
                 return string.IsNullOrEmpty(DefaultDecimalFormat) ? null : DefaultDecimalFormat;
             }
 
-            if (PropertyHelper.IsNumber(propertyType))
+            if (TypeHelper.IsNumber(propertyType))
             {
                 return string.IsNullOrEmpty(DefaultNumberFormat) ? null : DefaultNumberFormat;
             }

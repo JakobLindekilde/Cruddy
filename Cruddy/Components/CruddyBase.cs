@@ -226,7 +226,7 @@ namespace Cruddy.Components
                 : colsToUse.Split(",", StringSplitOptions.TrimEntries).ToList();
 
             var props = PropertyHelper.GetColumnProperties(entity.GetType())
-                .Where(p => PropertyHelper.IsSupported(p.PropertyType) &&
+                .Where(p => TypeHelper.IsSupported(p.PropertyType) &&
                             p.CanRead && p.CanWrite &&
                             (cols.Count == 0 || (cols.Count > 0 && cols.Contains(p.Name))))
                 .ToArray();

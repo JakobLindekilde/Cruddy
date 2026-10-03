@@ -1,5 +1,4 @@
-﻿using Cruddy.Components;
-using Cruddy.Helpers;
+﻿using Cruddy.Helpers;
 
 namespace Cruddy.Tests.Helpers
 {

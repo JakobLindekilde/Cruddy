@@ -5,76 +5,6 @@ namespace Cruddy.Tests.Helpers
 {
     public class PropertyHelperTests
     {
-        [Theory]
-        [InlineData(typeof(int), false)]
-        [InlineData(typeof(long), false)]
-        [InlineData(typeof(short), false)]
-        [InlineData(typeof(uint), false)]
-        [InlineData(typeof(ulong), false)]
-        [InlineData(typeof(ushort), false)]
-        [InlineData(typeof(byte), false)]
-        [InlineData(typeof(sbyte), false)]
-        [InlineData(typeof(decimal), true)]
-        [InlineData(typeof(double), true)]
-        [InlineData(typeof(float), true)]
-        [InlineData(typeof(bool), false)]
-        [InlineData(typeof(DateTime), false)]
-        [InlineData(typeof(DateTimeOffset), false)]
-        [InlineData(typeof(TimeSpan), false)]
-        [InlineData(typeof(TimeOnly), false)]
-        [InlineData(typeof(DateOnly), false)]
-        [InlineData(typeof(Guid), false)]
-        public void IsDecimal_ReturnsTrueForDecimalTypes(Type type, bool expected)
-        {
-            Assert.Equal(expected, PropertyHelper.IsDecimal(type));
-        }
-
-        [Theory]
-        [InlineData(typeof(int), true)]
-        [InlineData(typeof(long), true)]
-        [InlineData(typeof(short), true)]
-        [InlineData(typeof(uint), true)]
-        [InlineData(typeof(ulong), true)]
-        [InlineData(typeof(ushort), true)]
-        [InlineData(typeof(byte), true)]
-        [InlineData(typeof(sbyte), true)]
-        [InlineData(typeof(decimal), false)]
-        [InlineData(typeof(double), false)]
-        [InlineData(typeof(float), false)]
-        [InlineData(typeof(bool), false)]
-        [InlineData(typeof(DateTime), false)]
-        [InlineData(typeof(TimeSpan), false)]
-        [InlineData(typeof(DateTimeOffset), false)]
-        [InlineData(typeof(Guid), false)]
-        public void IsNumber_ReturnsTrueForNumberTypes(Type type, bool expected)
-        {
-            Assert.Equal(expected, PropertyHelper.IsNumber(type));
-        }
-
-        [Theory]
-        [InlineData(typeof(int), true)]
-        [InlineData(typeof(long), true)]
-        [InlineData(typeof(short), true)]
-        [InlineData(typeof(uint), true)]
-        [InlineData(typeof(ulong), true)]
-        [InlineData(typeof(ushort), true)]
-        [InlineData(typeof(byte), true)]
-        [InlineData(typeof(sbyte), true)]
-        [InlineData(typeof(decimal), true)]
-        [InlineData(typeof(double), true)]
-        [InlineData(typeof(float), true)]
-        [InlineData(typeof(bool), true)]
-        [InlineData(typeof(DateTime), true)]
-        [InlineData(typeof(DateTimeOffset), false)]
-        [InlineData(typeof(DateOnly), false)]
-        [InlineData(typeof(TimeSpan), true)]
-        [InlineData(typeof(TimeOnly), true)]
-        [InlineData(typeof(Guid), true)]
-        public void IsSupported_ReturnsTrueForSupportedTypes(Type type, bool expected)
-        {
-            Assert.Equal(expected, PropertyHelper.IsSupported(type));
-        }
-
         [Fact]
         public void IsNullable_ReturnsExpected()
         {
@@ -119,22 +49,6 @@ namespace Cruddy.Tests.Helpers
             Assert.True(PropertyHelper.IsNullable(t.GetProperty(nameof(all.TimeSpanNullable))!));
             Assert.False(PropertyHelper.IsNullable(t.GetProperty(nameof(all.TimeOnlyNotNull))!));
             Assert.True(PropertyHelper.IsNullable(t.GetProperty(nameof(all.TimeOnlyNullable))!));
-        }
-
-        [Theory]
-        [InlineData(typeof(int), typeof(int))]
-        [InlineData(typeof(int?), typeof(int))]
-        [InlineData(typeof(decimal), typeof(decimal))]
-        [InlineData(typeof(decimal?), typeof(decimal))]
-        [InlineData(typeof(bool), typeof(bool))]
-        [InlineData(typeof(bool?), typeof(bool))]
-        [InlineData(typeof(string), typeof(string))]
-        [InlineData(typeof(DateTime), typeof(DateTime))]
-        [InlineData(typeof(DateTime?), typeof(DateTime))]
-        public void GetUnderlyingType_ReturnsNonNullableType(Type input, Type expected)
-        {
-            var actual = PropertyHelper.GetUnderlyingType(input);
-            Assert.Equal(expected, actual);
         }
 
         [Fact]

@@ -64,7 +64,7 @@
                                         <th>@ii.DisplayName</th>
                                         <td>
                                             @{
-                                                if (PropertyHelper.IsNumber(ii.Type))
+                                                if (TypeHelper.IsNumber(ii.Type))
                                                 {
                                                     <input type="number" class="form-control" value="@(ii.Value?.ToString() ?? string.Empty)" disabled="@ii.Disabled" required="@ii.Required" @onchange="(e) => OnCreateFieldChanged(prop, e.Value)" />
                                                 }
@@ -187,7 +187,7 @@
                                         <th>@ii.DisplayName</th>
                                         <td>
                                             @{
-                                                if (PropertyHelper.IsNumber(ii.Type))
+                                                if (TypeHelper.IsNumber(ii.Type))
                                                 {
                                                     <input type="number" class="form-control" value="@(ii.Value?.ToString() ?? string.Empty)" disabled="@ii.Disabled" required="@ii.Required" @onchange="(e) => OnFieldChanged(prop, e.Value)" />
                                                 }
