@@ -41,4 +41,23 @@ static public class CruddyHelper
         return System.Text.Json.JsonSerializer.Deserialize<TEntity>(json, options)!;
     }
 
+    /// <summary>
+    /// Creates a new instance of the specified type TEntity. If the default constructor is not available, 
+    /// it attempts to create an instance by deserializing an empty JSON object.
+    /// </summary>
+    /// <typeparam name="TEntity">The type of the entity to create.</typeparam>
+    /// <returns>A new instance of the specified type TEntity.</returns>
+    public static TEntity NewInstance<TEntity>()
+    {
+        try
+        {
+            return Activator.CreateInstance<TEntity>();
+        }
+        catch
+        {
+            var options = new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            return System.Text.Json.JsonSerializer.Deserialize<TEntity>("{}", options)!;
+        }
+    }
+
 }

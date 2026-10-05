@@ -145,6 +145,17 @@ static public class PropertyHelper
     }
 
     /// <summary>
+    /// Gets the PropertyInfo for a property with the specified name in the given type, ignoring case.
+    /// </summary>
+    /// <param name="type">The type in which to get the property.</param>
+    /// <param name="propName">The name of the property.</param>
+    /// <returns>The PropertyInfo for the specified property, or null if not found.</returns>
+    public static PropertyInfo? GetProperty(Type type, string propName)
+    {
+        return type.GetProperty(propName, BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
+    }
+
+    /// <summary>
     /// Checks if a property with the given name exists in the specified type.
     /// </summary>
     /// <param name="type">The type in which to check for the property.</param>

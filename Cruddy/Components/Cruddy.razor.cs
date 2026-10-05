@@ -8,6 +8,7 @@ using QuickGrid.Toolkit.Columns;
 using System.ComponentModel.DataAnnotations;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Runtime.InteropServices;
 
 // More stuff to do:
 // TODO: Display all column headers in bold (not just the Actions column)
@@ -193,123 +194,6 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> //where TEntity : cla
 
     #endregion
 
-    #region Create
-
-    /// <summary>
-    /// EditContext for create form validation.
-    /// </summary>
-    protected EditContext? CreateCtx { get; set; }
-
-    private Task ShowCreate()
-    {
-        // Try to create a new instance of TEntity. If that fails, try JSON-deserialize an empty object.
-        try
-        {
-            ActionItem = Activator.CreateInstance<TEntity>();
-        }
-        catch
-        {
-            var options = new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-            ActionItem = System.Text.Json.JsonSerializer.Deserialize<TEntity>("{}", options);
-        }
-
-        CreateCtx = new EditContext(ActionItem!);
-        ActionCrud = CrudOperation.Create;
-        return Task.CompletedTask;
-    }
-
-    private void CancelCreate()
-    {
-        ActionCrud = CrudOperation.None;
-        ActionItem = default;
-        CreateCtx = null;
-    }
-
-    private async Task ConfirmCreateAsync()
-    {
-        if (ActionItem == null) return;
-
-        try
-        {
-            // Validate
-            if (CreateCtx != null && !CreateCtx.Validate())
-            {
-                await InvokeAsync(StateHasChanged);
-                return;
-            }
-
-            // Persist via base Create method
-            var result = Create(DbConnection, ActionItem);
-
-            // If a scalar id was returned, attempt to set the key property
-            var keyProp = typeof(TEntity).GetProperty(KeyColumn!, BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
-            if (keyProp != null && result != null)
-            {
-                try
-                {
-                    var converted = Convert.ChangeType(result, TypeHelper.GetUnderlyingType(keyProp.PropertyType));
-                    keyProp.SetValue(ActionItem, converted);
-                }
-                catch
-                {
-                    // ignore conversion errors
-                }
-            }
-
-            if (Rows != null)
-            {
-                Rows.Insert(0, ActionItem);
-            }
-
-            ActionCrud = CrudOperation.None;
-            ActionItem = default;
-            CreateCtx = null;
-            if (ReloadPageAfterChange)
-            {
-                NavigationManager?.NavigateTo(NavigationManager.Uri, forceLoad: true);
-            }
-            else
-            {
-                await InvokeAsync(StateHasChanged);
-            }
-        }
-        catch (Exception ex)
-        {
-            ErrorMessage = $"Create failed: {ex.Message}";
-            await ShowErrorMessage();
-        }
-    }
-
-    /// <summary>
-    /// Called when a single field is changed in the create form.
-    /// Works like OnFieldChanged but targets ActionItem/create-editcontext.
-    /// </summary>
-    /// <param name="prop"></param>
-    /// <param name="value"></param>
-    protected void OnCreateFieldChanged(PropertyInfo prop, object? value)
-    {
-        if (ActionItem == null) return;
-
-        try
-        {
-            var targetType = TypeHelper.GetUnderlyingType(prop.PropertyType);
-            object? converted = TypeHelper.TryParseValue(value, targetType);
-            prop.SetValue(ActionItem, converted);
-
-            if (CreateCtx != null)
-            {
-                var field = new FieldIdentifier(ActionItem, prop.Name);
-                CreateCtx.NotifyFieldChanged(field);
-            }
-        }
-        catch
-        {
-            // ignore conversion errors here; validation will catch invalid values on submit
-        }
-    }
-
-    #endregion
-
     #region Details
 
     /// <summary>
@@ -332,12 +216,6 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> //where TEntity : cla
         ActionCrud = CrudOperation.Read;
     }
 
-    private void CloseDetails()
-    {
-        ActionCrud = CrudOperation.None;
-        ActionItem = default;
-    }
-
     #endregion
 
     #region Edit
@@ -347,23 +225,79 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> //where TEntity : cla
     /// </summary>
     protected EditContext? EditCtx { get; set; }
 
-    private Task ShowEdit(TEntity item)
+    private Task ShowEdit(CrudOperation actionCrud, TEntity item = default!)
     {
-        // Create a deep copy of the item so edits are not applied until saved
-        ActionItem = CruddyHelper.DeepCopy(item);
+        ActionItem = actionCrud == CrudOperation.Create ? 
+                CruddyHelper.NewInstance<TEntity>() :
+                CruddyHelper.DeepCopy(item);
+
         EditCtx = new EditContext(ActionItem!);
-        ActionCrud = CrudOperation.Update;
+        ActionCrud = actionCrud;
         return Task.CompletedTask;
     }
 
-    private void CancelEdit()
+    private void CancelAction()
     {
         ActionCrud = CrudOperation.None;
         ActionItem = default;
-        EditCtx = null;
+
+        if (ActionCrud == CrudOperation.Create || ActionCrud == CrudOperation.Update)
+        {
+            EditCtx = null;
+        }
     }
 
-    private async Task ConfirmEditAsync()
+    private void PersistCreated(TEntity item)
+    {
+        // Persist via base Create method
+        var result = Create(DbConnection, item);
+
+        // If a scalar id was returned, attempt to set the key property
+        var keyProp = PropertyHelper.GetProperty(typeof(TEntity), KeyColumn!);
+        if (keyProp != null && result != null)
+        {
+            try
+            {
+                var converted = Convert.ChangeType(result, TypeHelper.GetUnderlyingType(keyProp.PropertyType));
+                keyProp.SetValue(item, converted);
+            }
+            catch
+            {
+                // ignore conversion errors
+            }
+        }
+
+        if (Rows != null)
+        {
+            Rows.Insert(0, item!);
+        }
+    }
+
+    private void PersistUpdated(TEntity item)
+    {
+        // Get key value from edited item
+        var keyProp = PropertyHelper.GetProperty(typeof(TEntity), KeyColumn!);
+        object? keyValue = null;
+        if (keyProp != null) keyValue = keyProp.GetValue(item);
+
+        // Call base Update method to persist changes
+        var rowsAffected = Update(DbConnection, item, keyValue!);
+
+        // Update in-memory list
+        if (rowsAffected > 0 && Rows != null)
+        {
+            // find original item by key and replace
+            var original = Rows.FirstOrDefault(r => string.Equals(PropertyHelper.GetValue(r!, KeyColumn!),
+                PropertyHelper.GetValue(item!, KeyColumn!), StringComparison.OrdinalIgnoreCase));
+            if (original != null)
+            {
+                var idx = Rows.IndexOf(original);
+                if (idx >= 0) Rows[idx] = item;
+            }
+        }
+    }
+
+    private async Task ConfirmActionAsync()
     {
         if (ActionItem == null)
         {
@@ -372,11 +306,6 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> //where TEntity : cla
 
         try
         {
-            // Get key value from edited item
-            var keyProp = typeof(TEntity).GetProperty(KeyColumn!, BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
-            object? keyValue = null;
-            if (keyProp != null) keyValue = keyProp.GetValue(ActionItem);
-
             // Validate using DataAnnotations
             if (EditCtx != null && !EditCtx.Validate())
             {
@@ -385,20 +314,13 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> //where TEntity : cla
                 return;
             }
 
-            // Call base Update method to persist changes
-            var rowsAffected = Update(DbConnection, ActionItem, keyValue!);
-
-            // Update in-memory list
-            if (rowsAffected > 0 && Rows != null)
+            if (ActionCrud == CrudOperation.Create)
             {
-                // find original item by key and replace
-                var original = Rows.FirstOrDefault(r => string.Equals(PropertyHelper.GetValue(r!, KeyColumn!),
-                    PropertyHelper.GetValue(ActionItem!, KeyColumn!), StringComparison.OrdinalIgnoreCase));
-                if (original != null)
-                {
-                    var idx = Rows.IndexOf(original);
-                    if (idx >= 0) Rows[idx] = ActionItem!;
-                }
+                PersistCreated(ActionItem);
+            }
+            else if (ActionCrud == CrudOperation.Update)
+            {
+                PersistUpdated(ActionItem);
             }
 
             ActionCrud = CrudOperation.None;
@@ -419,6 +341,7 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> //where TEntity : cla
             await ShowErrorMessage();
         }
     }
+
 
     /// <summary>
     /// Called when a single field is changed in the edit form. Updates the EditItem property via reflection
@@ -448,6 +371,7 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> //where TEntity : cla
         }
     }
 
+
     #endregion
 
     #region Delete
@@ -457,12 +381,6 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> //where TEntity : cla
         ActionItem = item;
         ActionCrud = CrudOperation.Delete;
         return Task.CompletedTask;
-    }
-
-    private void CancelDelete()
-    {
-        ActionCrud = CrudOperation.None;
-        ActionItem = default;
     }
 
     private async Task ConfirmDeleteAsync()
@@ -574,7 +492,7 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> //where TEntity : cla
             {
                 builder.OpenElement(0, "button");
                 builder.AddAttribute(1, "class", "btn btn-sm btn-secondary me-1");
-                builder.AddAttribute(2, "onclick", EventCallback.Factory.Create<MouseEventArgs>(this, async () => await ShowEdit(item)));
+                builder.AddAttribute(2, "onclick", EventCallback.Factory.Create<MouseEventArgs>(this, async () => await ShowEdit(CrudOperation.Update, item)));
                 builder.AddContent(3, "Edit");
                 builder.CloseElement();
             }

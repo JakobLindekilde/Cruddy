@@ -24,104 +24,13 @@
 @if (AllowCrud || AllowCreate)
 {
     <div class="mb-2">
-        <button class="btn btn-success" @onclick="ShowCreate">Create</button>
+        <button class="btn btn-success" @onclick="() => ShowEdit(CrudOperation.Create)">Create</button>
     </div>
 }
 
 <QuickGrid @ref="MyGrid" id="CruddyGrid" Items="@Rows.AsQueryable()" Class="@CruddyGridClass" Theme="@CruddyGridTheme">
     @QuickGridColumns.Columns(MyColumnManager)
 </QuickGrid>
-
-@if (ActionCrud == CrudOperation.Create && ActionItem != null)
-{
-    <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Create - @typeof(TEntity).Name</h5>
-                    <button type="button" class="btn-close" aria-label="Close" @onclick="CancelCreate"></button>
-                </div>
-                @if (!string.IsNullOrEmpty(ErrorMessage))
-                {
-                    <div class="alert alert-danger" role="alert">@ErrorMessage</div>
-                }
-                <div class="modal-body">
-                    <EditForm EditContext="@(CreateCtx!)" OnValidSubmit="ConfirmCreateAsync">
-                        <DataAnnotationsValidator />
-                        <ValidationSummary />
-
-                        <table class="@ModalTableClass">
-                            <tbody>
-                                @foreach (var prop in GetPropertiesForTableColumns(ActionItem, ActionCrud))
-                                {
-                                    var ii = GetInputInfo(prop, ActionItem, ActionCrud);
-                                    if (!ii.Visible)
-                                    {
-                                        <input type="hidden" class="form-control" value="@(ii.Value?.ToString() ?? string.Empty)" />
-                                        continue;
-                                    }
-                                    <tr>
-                                        <th>@ii.DisplayName</th>
-                                        <td>
-                                            @{
-                                                if (TypeHelper.IsNumber(ii.Type))
-                                                {
-                                                    <input type="number" class="form-control" value="@(ii.Value?.ToString() ?? string.Empty)" disabled="@ii.Disabled" required="@ii.Required" @onchange="(e) => OnCreateFieldChanged(prop, e.Value)" />
-                                                }
-                                                else if (ii.Type == typeof(bool))
-                                                {
-                                                    <input type="checkbox" class="form-check-input" checked="@(ii.Value is bool b && b)" disabled="@ii.Disabled" @onchange="(e) => OnCreateFieldChanged(prop, e.Value)" />
-                                                }
-                                                else if (ii.Type == typeof(DateTime) && ii.DataType == System.ComponentModel.DataAnnotations.DataType.Date)
-                                                {
-                                                    <input type="date" class="form-control" value="@ii.InputDateTimeValue()" disabled="@ii.Disabled" required="@ii.Required" @onchange="(e) => OnCreateFieldChanged(prop, e.Value)" />
-                                                }
-                                                else if (ii.Type == typeof(DateTime))
-                                                {
-                                                    <input type="datetime-local" class="form-control" value="@ii.InputDateTimeValue()" disabled="@ii.Disabled" required="@ii.Required" @onchange="(e) => OnCreateFieldChanged(prop, e.Value)" />
-                                                }
-                                                else if (ii.Type == typeof(TimeSpan) || ii.Type == typeof(TimeOnly))
-                                                {
-                                                    <input type="time" class="form-control" value="@(ii.Value?.ToString() ?? string.Empty)" disabled="@ii.Disabled" required="@ii.Required" @onchange="(e) => OnCreateFieldChanged(prop, e.Value)" />
-                                                }
-                                                else if (ii.Type.IsEnum)
-                                                {
-                                                    var enumValues = Enum.GetValues(ii.Type);
-                                                    <select class="form-select" disabled="@ii.Disabled" required="@ii.Required" @onchange="(e) => OnCreateFieldChanged(prop, e.Value)">
-                                                        @if (PropertyHelper.IsNullable(prop))
-                                                        {
-                                                            <option value="">--</option>
-                                                        }
-
-                                                        @foreach (var enumVal in enumValues)
-                                                        {
-                                                            var enumName = enumVal?.ToString();
-                                                            var selected = ii.Value != null && ii.Value.ToString() == enumName;
-                                                            <option value="@enumName" selected="@selected">@enumName</option>
-                                                        }
-                                                    </select>
-                                                }
-                                                else
-                                                {
-                                                    <input type="text" class="form-control" value="@(ii.Value?.ToString() ?? string.Empty)" disabled="@ii.Disabled" required="@ii.Required" @onchange="(e) => OnCreateFieldChanged(prop, e.Value)" />
-                                                }
-                                            }
-                                        </td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-
-                        <div class="modal-footer">
-                            <button class="btn btn-secondary" type="button" @onclick="CancelCreate">Cancel</button>
-                            <button class="btn btn-primary" type="submit">Create</button>
-                        </div>
-                    </EditForm>
-                </div>
-            </div>
-        </div>
-    </div>
-}
 
 @if (ActionCrud == CrudOperation.Read && ActionItem != null)
 {
@@ -130,7 +39,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Details - @typeof(TEntity).Name</h5>
-                    <button type="button" class="btn-close" aria-label="Close" @onclick="CloseDetails"></button>
+                    <button type="button" class="btn-close" aria-label="Close" @onclick="CancelAction"></button>
                 </div>
                 <div class="modal-body">
                     <table class="@ModalTableClass">
@@ -148,34 +57,34 @@
                     </table>
                 </div>
                 <div class="modal-footer">
-                    <button class="btn btn-secondary" @onclick="CloseDetails">Close</button>
+                    <button class="btn btn-secondary" @onclick="CancelAction">Close</button>
                 </div>
             </div>
         </div>
     </div>
 }
 
-@if (ActionCrud == CrudOperation.Update && ActionItem != null)
+@if (ActionCrud == CrudOperation.Create || ActionCrud == CrudOperation.Update && ActionItem != null)
 {
     <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Edit - @typeof(TEntity).Name</h5>
-                    <button type="button" class="btn-close" aria-label="Close" @onclick="CancelEdit"></button>
+                    <h5 class="modal-title">@(ActionCrud == CrudOperation.Create ? "Create" : "Edit") - @typeof(TEntity).Name</h5>
+                    <button type="button" class="btn-close" aria-label="Close" @onclick="CancelAction"></button>
                 </div>
                 @if (!string.IsNullOrEmpty(ErrorMessage))
                 {
                     <div class="alert alert-danger" role="alert">@ErrorMessage</div>
                 }
                 <div class="modal-body">
-                    <EditForm EditContext="@(EditCtx!)" OnValidSubmit="ConfirmEditAsync">
+                    <EditForm EditContext="@(EditCtx!)" OnValidSubmit="ConfirmActionAsync">
                         <DataAnnotationsValidator />
                         <ValidationSummary />
 
                         <table class="@ModalTableClass">
                             <tbody>
-                                @foreach (var prop in GetPropertiesForTableColumns(ActionItem, ActionCrud))
+                                @foreach (var prop in GetPropertiesForTableColumns(ActionItem!, ActionCrud))
                                 {
                                     var ii = GetInputInfo(prop, ActionItem, ActionCrud);
                                     if (!ii.Visible)
@@ -236,7 +145,7 @@
                         </table>
 
                         <div class="modal-footer">
-                            <button class="btn btn-secondary" type="button" @onclick="CancelEdit">Cancel</button>
+                            <button class="btn btn-secondary" type="button" @onclick="CancelAction">Cancel</button>
                             <button class="btn btn-primary" type="submit">Save</button>
                         </div>
                     </EditForm>
@@ -253,13 +162,13 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Confirm delete</h5>
-                    <button type="button" class="btn-close" aria-label="Close" @onclick="CancelDelete"></button>
+                    <button type="button" class="btn-close" aria-label="Close" @onclick="CancelAction"></button>
                 </div>
                 <div class="modal-body">
                     <p>@DeleteMessage(ActionItem)</p>
                 </div>
                 <div class="modal-footer">
-                    <button class="btn btn-secondary" @onclick="CancelDelete">Cancel</button>
+                    <button class="btn btn-secondary" @onclick="CancelAction">Cancel</button>
                     <button class="btn btn-danger" @onclick="ConfirmDeleteAsync">Delete</button>
                 </div>
             </div>
