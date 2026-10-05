@@ -9,7 +9,7 @@
     <p>No data found.</p>
 }
 
-@if (!ShowEditModal && !ShowCreateModal && !string.IsNullOrEmpty(ErrorMessage))
+@if (!(ActionCrud == CrudOperation.Update || ActionCrud == CrudOperation.Create) && !string.IsNullOrEmpty(ErrorMessage))
 {
     <div class="alert alert-danger" role="alert">@ErrorMessage</div>
 }
@@ -32,7 +32,7 @@
     @QuickGridColumns.Columns(MyColumnManager)
 </QuickGrid>
 
-@if (ShowCreateModal && CreateItem != null)
+@if (ActionCrud == CrudOperation.Create && ActionItem != null)
 {
     <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
         <div class="modal-dialog modal-lg">
@@ -52,9 +52,9 @@
 
                         <table class="@ModalTableClass">
                             <tbody>
-                                @foreach (var prop in GetPropertiesForTableColumns(CreateItem, CrudOperation.Create))
+                                @foreach (var prop in GetPropertiesForTableColumns(ActionItem, ActionCrud))
                                 {
-                                    var ii = GetInputInfo(prop, CreateItem, CrudOperation.Create);
+                                    var ii = GetInputInfo(prop, ActionItem, ActionCrud);
                                     if (!ii.Visible)
                                     {
                                         <input type="hidden" class="form-control" value="@(ii.Value?.ToString() ?? string.Empty)" />
@@ -123,7 +123,7 @@
     </div>
 }
 
-@if (ShowDetailsModal && DetailsItem != null)
+@if (ActionCrud == CrudOperation.Read && ActionItem != null)
 {
     <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
         <div class="modal-dialog modal-lg">
@@ -135,9 +135,9 @@
                 <div class="modal-body">
                     <table class="@ModalTableClass">
                         <tbody>
-                            @foreach (var prop in GetPropertiesForTableColumns(DetailsItem, CrudOperation.Read, DetailsColumns))
+                            @foreach (var prop in GetPropertiesForTableColumns(ActionItem, ActionCrud, DetailsColumns))
                             {
-                                var ii = GetInputInfo(prop, DetailsItem, CrudOperation.Read);
+                                var ii = GetInputInfo(prop, ActionItem, ActionCrud);
                                 if (!ii.Visible) continue;
                                 <tr>
                                     <th>@ii.DisplayName</th>
@@ -155,7 +155,7 @@
     </div>
 }
 
-@if (ShowEditModal && EditItem != null)
+@if (ActionCrud == CrudOperation.Update && ActionItem != null)
 {
     <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
         <div class="modal-dialog modal-lg">
@@ -175,9 +175,9 @@
 
                         <table class="@ModalTableClass">
                             <tbody>
-                                @foreach (var prop in GetPropertiesForTableColumns(EditItem, CrudOperation.Update))
+                                @foreach (var prop in GetPropertiesForTableColumns(ActionItem, ActionCrud))
                                 {
-                                    var ii = GetInputInfo(prop, EditItem, CrudOperation.Update);
+                                    var ii = GetInputInfo(prop, ActionItem, ActionCrud);
                                     if (!ii.Visible)
                                     {
                                         <input type="hidden" class="form-control" value="@(ii.Value?.ToString() ?? string.Empty)" />
@@ -246,7 +246,7 @@
     </div>
 }
 
-@if (ShowDeleteModal && DeletePendingItem != null)
+@if (ActionCrud == CrudOperation.Delete && ActionItem != null)
 {
     <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
         <div class="modal-dialog">
@@ -256,7 +256,7 @@
                     <button type="button" class="btn-close" aria-label="Close" @onclick="CancelDelete"></button>
                 </div>
                 <div class="modal-body">
-                    <p>@DeleteMessage(DeletePendingItem)</p>
+                    <p>@DeleteMessage(ActionItem)</p>
                 </div>
                 <div class="modal-footer">
                     <button class="btn btn-secondary" @onclick="CancelDelete">Cancel</button>

@@ -13,9 +13,6 @@ using System.Reflection;
 // TODO: Display all column headers in bold (not just the Actions column)
 // TODO: Make unittests for the Cruddy component: AddColumnsToGrid(). GetDisplayFormat() etc.
 
-// Known issues:
-// TODO: Editing a TimeOnly property does not work. Is a known issue in Blazor?
-
 
 namespace Cruddy.Components;
 
@@ -171,6 +168,16 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> //where TEntity : cla
     [Inject]
     protected NavigationManager? NavigationManager { get; set; }
 
+    /// <summary>
+    /// The currently selected item being crud'ed (a copy).
+    /// </summary>
+    protected TEntity? ActionItem { get; set; }
+
+    /// <summary>
+    /// The currently selected item being crud'ed (a copy).
+    /// </summary>
+    protected CrudOperation ActionCrud { get; set; } = CrudOperation.None;
+
     #endregion
 
     #region Lifecycle methods
@@ -189,16 +196,6 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> //where TEntity : cla
     #region Create
 
     /// <summary>
-    /// The item being created in the create modal.
-    /// </summary>
-    protected TEntity? CreateItem { get; set; }
-
-    /// <summary>
-    /// Whether the create modal is visible.
-    /// </summary>
-    protected bool ShowCreateModal { get; set; }
-
-    /// <summary>
     /// EditContext for create form validation.
     /// </summary>
     protected EditContext? CreateCtx { get; set; }
@@ -208,29 +205,29 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> //where TEntity : cla
         // Try to create a new instance of TEntity. If that fails, try JSON-deserialize an empty object.
         try
         {
-            CreateItem = Activator.CreateInstance<TEntity>();
+            ActionItem = Activator.CreateInstance<TEntity>();
         }
         catch
         {
             var options = new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-            CreateItem = System.Text.Json.JsonSerializer.Deserialize<TEntity>("{}", options);
+            ActionItem = System.Text.Json.JsonSerializer.Deserialize<TEntity>("{}", options);
         }
 
-        CreateCtx = new EditContext(CreateItem!);
-        ShowCreateModal = true;
+        CreateCtx = new EditContext(ActionItem!);
+        ActionCrud = CrudOperation.Create;
         return Task.CompletedTask;
     }
 
     private void CancelCreate()
     {
-        ShowCreateModal = false;
-        CreateItem = default;
+        ActionCrud = CrudOperation.None;
+        ActionItem = default;
         CreateCtx = null;
     }
 
     private async Task ConfirmCreateAsync()
     {
-        if (CreateItem == null) return;
+        if (ActionItem == null) return;
 
         try
         {
@@ -242,7 +239,7 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> //where TEntity : cla
             }
 
             // Persist via base Create method
-            var result = Create(DbConnection, CreateItem);
+            var result = Create(DbConnection, ActionItem);
 
             // If a scalar id was returned, attempt to set the key property
             var keyProp = typeof(TEntity).GetProperty(KeyColumn!, BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
@@ -251,7 +248,7 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> //where TEntity : cla
                 try
                 {
                     var converted = Convert.ChangeType(result, TypeHelper.GetUnderlyingType(keyProp.PropertyType));
-                    keyProp.SetValue(CreateItem, converted);
+                    keyProp.SetValue(ActionItem, converted);
                 }
                 catch
                 {
@@ -261,11 +258,11 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> //where TEntity : cla
 
             if (Rows != null)
             {
-                Rows.Insert(0, CreateItem);
+                Rows.Insert(0, ActionItem);
             }
 
-            ShowCreateModal = false;
-            CreateItem = default;
+            ActionCrud = CrudOperation.None;
+            ActionItem = default;
             CreateCtx = null;
             if (ReloadPageAfterChange)
             {
@@ -285,23 +282,23 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> //where TEntity : cla
 
     /// <summary>
     /// Called when a single field is changed in the create form.
-    /// Works like OnFieldChanged but targets CreateItem/create-editcontext.
+    /// Works like OnFieldChanged but targets ActionItem/create-editcontext.
     /// </summary>
     /// <param name="prop"></param>
     /// <param name="value"></param>
     protected void OnCreateFieldChanged(PropertyInfo prop, object? value)
     {
-        if (CreateItem == null) return;
+        if (ActionItem == null) return;
 
         try
         {
             var targetType = TypeHelper.GetUnderlyingType(prop.PropertyType);
             object? converted = TypeHelper.TryParseValue(value, targetType);
-            prop.SetValue(CreateItem, converted);
+            prop.SetValue(ActionItem, converted);
 
             if (CreateCtx != null)
             {
-                var field = new FieldIdentifier(CreateItem, prop.Name);
+                var field = new FieldIdentifier(ActionItem, prop.Name);
                 CreateCtx.NotifyFieldChanged(field);
             }
         }
@@ -316,11 +313,6 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> //where TEntity : cla
     #region Details
 
     /// <summary>
-    /// The currently selected item shown in the details modal.
-    /// </summary>
-    protected TEntity? DetailsItem { get; set; }
-
-    /// <summary>
     /// Whether the details modal is visible.
     /// </summary>
     protected bool ShowDetailsModal { get; set; }
@@ -329,35 +321,26 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> //where TEntity : cla
     {
         if (string.IsNullOrEmpty(DetailsColumns))
         {
-            DetailsItem = item;
+            ActionItem = item;
         }
         else
         {
             var keyValue = PropertyHelper.GetValue(item!, KeyColumn!);
-            DetailsItem = GetTableRow(DbConnection, keyValue, DetailsColumns);
+            ActionItem = GetTableRow(DbConnection, keyValue, DetailsColumns);
         }
-        ShowDetailsModal = true;
+
+        ActionCrud = CrudOperation.Read;
     }
 
     private void CloseDetails()
     {
-        ShowDetailsModal = false;
-        DetailsItem = default;
+        ActionCrud = CrudOperation.None;
+        ActionItem = default;
     }
 
     #endregion
 
     #region Edit
-
-    /// <summary>
-    /// The currently selected item being edited (a copy until saved).
-    /// </summary>
-    protected TEntity? EditItem { get; set; }
-
-    /// <summary>
-    /// Whether the edit modal is visible.
-    /// </summary>
-    protected bool ShowEditModal { get; set; }
 
     /// <summary>
     /// EditContext used for DataAnnotations validation.
@@ -367,22 +350,22 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> //where TEntity : cla
     private Task ShowEdit(TEntity item)
     {
         // Create a deep copy of the item so edits are not applied until saved
-        EditItem = CruddyHelper.DeepCopy(item);
-        EditCtx = new EditContext(EditItem!);
-        ShowEditModal = true;
+        ActionItem = CruddyHelper.DeepCopy(item);
+        EditCtx = new EditContext(ActionItem!);
+        ActionCrud = CrudOperation.Update;
         return Task.CompletedTask;
     }
 
     private void CancelEdit()
     {
-        ShowEditModal = false;
-        EditItem = default;
+        ActionCrud = CrudOperation.None;
+        ActionItem = default;
         EditCtx = null;
     }
 
     private async Task ConfirmEditAsync()
     {
-        if (EditItem == null)
+        if (ActionItem == null)
         {
             return;
         }
@@ -392,7 +375,7 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> //where TEntity : cla
             // Get key value from edited item
             var keyProp = typeof(TEntity).GetProperty(KeyColumn!, BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
             object? keyValue = null;
-            if (keyProp != null) keyValue = keyProp.GetValue(EditItem);
+            if (keyProp != null) keyValue = keyProp.GetValue(ActionItem);
 
             // Validate using DataAnnotations
             if (EditCtx != null && !EditCtx.Validate())
@@ -403,23 +386,23 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> //where TEntity : cla
             }
 
             // Call base Update method to persist changes
-            var rowsAffected = Update(DbConnection, EditItem, keyValue!);
+            var rowsAffected = Update(DbConnection, ActionItem, keyValue!);
 
             // Update in-memory list
             if (rowsAffected > 0 && Rows != null)
             {
                 // find original item by key and replace
                 var original = Rows.FirstOrDefault(r => string.Equals(PropertyHelper.GetValue(r!, KeyColumn!),
-                    PropertyHelper.GetValue(EditItem!, KeyColumn!), StringComparison.OrdinalIgnoreCase));
+                    PropertyHelper.GetValue(ActionItem!, KeyColumn!), StringComparison.OrdinalIgnoreCase));
                 if (original != null)
                 {
                     var idx = Rows.IndexOf(original);
-                    if (idx >= 0) Rows[idx] = EditItem!;
+                    if (idx >= 0) Rows[idx] = ActionItem!;
                 }
             }
 
-            ShowEditModal = false;
-            EditItem = default;
+            ActionCrud = CrudOperation.None;
+            ActionItem = default;
             EditCtx = null;
             if (ReloadPageAfterChange)
             {
@@ -445,17 +428,17 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> //where TEntity : cla
     /// <param name="value">New value (as string) from the input event.</param>
     protected void OnFieldChanged(PropertyInfo prop, object? value)
     {
-        if (EditItem == null) return;
+        if (ActionItem == null) return;
 
         try
         {
             var targetType = TypeHelper.GetUnderlyingType(prop.PropertyType);
             object? converted = TypeHelper.TryParseValue(value, targetType);
-            prop.SetValue(EditItem, converted);
+            prop.SetValue(ActionItem, converted);
 
             if (EditCtx != null)
             {
-                var field = new FieldIdentifier(EditItem, prop.Name);
+                var field = new FieldIdentifier(ActionItem, prop.Name);
                 EditCtx.NotifyFieldChanged(field);
             }
         }
@@ -469,34 +452,24 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> //where TEntity : cla
 
     #region Delete
 
-    /// <summary>
-    /// The currently selected item pending delete confirmation.
-    /// </summary>
-    protected TEntity? DeletePendingItem { get; set; }
-
-    /// <summary>
-    /// Whether the delete confirmation modal is visible.
-    /// </summary>
-    protected bool ShowDeleteModal { get; set; }
-
     private Task ConfirmAndDeleteAsync(TEntity item)
     {
-        DeletePendingItem = item;
-        ShowDeleteModal = true;
+        ActionItem = item;
+        ActionCrud = CrudOperation.Delete;
         return Task.CompletedTask;
     }
 
     private void CancelDelete()
     {
-        ShowDeleteModal = false;
-        DeletePendingItem = default;
+        ActionCrud = CrudOperation.None;
+        ActionItem = default;
     }
 
     private async Task ConfirmDeleteAsync()
     {
-        var item = DeletePendingItem;
-        ShowDeleteModal = false;
-        DeletePendingItem = default;
+        var item = ActionItem;
+        ActionCrud = CrudOperation.None;
+        ActionItem = default;
         //TODO: Can we just delete line "if (item == null) return;"?
 #pragma warning disable S2955   // SonarQube: "null" should not be passed as an argument to a non-nullable parameter
         if (item == null) return;
