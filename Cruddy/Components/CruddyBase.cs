@@ -122,7 +122,7 @@ public partial class CruddyBase<TEntity> : ComponentBase where TEntity : class
     /// <summary>
     /// The rows retrieved from the database.
     /// </summary>
-    protected List<TEntity>? Rows;
+    protected List<TEntity> Rows = new();
 
     /// <summary>
     /// During component initialization, this method fills <see cref="ColumnAliasDict"/>, 
