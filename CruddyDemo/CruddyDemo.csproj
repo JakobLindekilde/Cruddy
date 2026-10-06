@@ -18,7 +18,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Cruddy\Cruddy.csproj" />
-    <ProjectReference Include="..\QuickGrid.Toolkit\QuickGrid.Toolkit.csproj" />
   </ItemGroup>
 
 </Project>

@@ -5,11 +5,7 @@
 - Cruddy requires a model class or record (TEntity)
 - The model class/record properties does not need to match the database table columns
 - Cruddy uses Dapper - not Entity Framework
-- Cruddy uses ColumnManager from QuickGrid.Toolkit
-
-## QuickGrid.Toolkit
-
-**▶ Live demo: <https://vaclavelias.github.io/QuickGrid.Toolkit/>**
+- Cruddy does uses any non-Microsoft NuGet packages (except for Dapper)
 
 ## Examples 
 
@@ -53,7 +49,7 @@ Advanced use example 1:
 
 Advanced use example 2:
 ```razor
-<Cruddy TEntity="Models.OrderCruddy" TableName="Orders" TableColumns="Id, CustomerName, ProductName, Qty, Paid, OrderDate" Select=@sql ShowColumnSelector="true" DbConnection="dbConnection" />
+<Cruddy TEntity="Models.OrderCruddy" TableName="Orders" TableColumns="Id, CustomerName, ProductName, Qty, Paid, OrderDate" Select=@sql DbConnection="dbConnection" />
 
 @code {
     string sql = @"
@@ -105,7 +101,6 @@ Note how attribute Key, DisplayName and DisplayFormat are used in the model clas
 
 - .NET 10
 - Bootstrap 5
-- QuickGrid.Toolkit (is included in the beta)
 
 ## Get Started
 

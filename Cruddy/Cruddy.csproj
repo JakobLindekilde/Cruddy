@@ -14,11 +14,8 @@
 
   <ItemGroup>
     <PackageReference Include="Dapper" Version="2.1.89" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.QuickGrid" Version="10.0.12" />
     <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="10.0.12" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\QuickGrid.Toolkit\QuickGrid.Toolkit.csproj" />
   </ItemGroup>
 
   <ItemGroup>

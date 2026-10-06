@@ -3,8 +3,6 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Components.QuickGrid;
 using Microsoft.AspNetCore.Components.Web;
-using QuickGrid.Toolkit;
-using QuickGrid.Toolkit.Columns;
 using System.ComponentModel.DataAnnotations;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -156,7 +154,7 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> //where TEntity : cla
     /// <summary>
     /// The ColumnManager that manages the columns of the QuickGrid component.
     /// </summary>
-    protected readonly ColumnManager<TEntity> MyColumnManager = new();
+    protected readonly List<RenderFragment> MyColumns = new();
 
     /// <summary>
     /// Holds a user visible error message when e.g. delete fails.
@@ -480,7 +478,7 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> //where TEntity : cla
     /// </summary>
     private void AddActionColumn()
     {
-        RenderFragment deleteTemplate(TEntity item) => (builder) =>
+        RenderFragment<TEntity> actionTemplate = item => builder =>
         {
             if (AllowCrud || AllowDetails)
             {
@@ -493,70 +491,73 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> //where TEntity : cla
 
             if (AllowCrud || AllowEdit)
             {
-                builder.OpenElement(0, "button");
-                builder.AddAttribute(1, "class", "btn btn-sm btn-secondary me-1");
-                builder.AddAttribute(2, "onclick", EventCallback.Factory.Create<MouseEventArgs>(this, async () => await ShowEdit(CrudOperation.Update, item)));
-                builder.AddContent(3, "Edit");
+                builder.OpenElement(4, "button");
+                builder.AddAttribute(5, "class", "btn btn-sm btn-secondary me-1");
+                builder.AddAttribute(6, "onclick", EventCallback.Factory.Create<MouseEventArgs>(this, async () => await ShowEdit(CrudOperation.Update, item)));
+                builder.AddContent(7, "Edit");
                 builder.CloseElement();
             }
 
             if (AllowCrud || AllowDelete)
             {
-                builder.OpenElement(0, "button");
-                builder.AddAttribute(1, "class", "btn btn-sm btn-danger");
-                builder.AddAttribute(2, "onclick", EventCallback.Factory.Create<MouseEventArgs>(this, async () => await ConfirmAndDeleteAsync(item)));
-                builder.AddContent(3, "Delete");
+                builder.OpenElement(8, "button");
+                builder.AddAttribute(9, "class", "btn btn-sm btn-danger");
+                builder.AddAttribute(10, "onclick", EventCallback.Factory.Create<MouseEventArgs>(this, async () => await ConfirmAndDeleteAsync(item)));
+                builder.AddContent(11, "Delete");
                 builder.CloseElement();
             }
         };
 
-        MyColumnManager.AddTemplateColumn(deleteTemplate, title: ActionsTitle, cssClass: "text-center");
+        MyColumns.Add(builder =>
+        {
+            builder.OpenComponent<TemplateColumn<TEntity>>(0);
+            builder.AddAttribute(1, nameof(TemplateColumn<TEntity>.ChildContent), actionTemplate);
+            builder.AddAttribute(2, nameof(TemplateColumn<TEntity>.Title), ActionsTitle);
+            builder.AddAttribute(3, nameof(TemplateColumn<TEntity>.Class), "text-center");
+            builder.CloseComponent();
+        });
     }
         
     /// <summary>
-    /// Adds a Toolkit.AddSimple column to the QuickGrid for the specified property.
+    /// Adds a PropertyColumn to the QuickGrid for the specified property.
     /// </summary>
     /// <param name="prop">The property to add a column for.</param>
     private void AddColumn(PropertyInfo prop)
     {
-        var method = CruddyHelper.GetAddSimpleMethod<TEntity>();
-
-        if (method != null)
+        try
         {
-            // AddSimple is a generic method, so we need to make it generic with the correct type argument. In this case,
-            // we can use object as the type argument, since we don't know the actual type of the property at compile time.
-            var genericMethod = method.MakeGenericMethod(typeof(object));
-
-            try
+            var ii = GetInputInfo(prop, default(TEntity), CrudOperation.Read);
+            if (!ii.Visible)
             {
-                Type entityType = typeof(TEntity);
-                var param = Expression.Parameter(entityType, "p");
-                var access = Expression.PropertyOrField(param, prop.Name);
-
-                var delegateType = typeof(Func<,>).MakeGenericType(entityType, typeof(object));
-                var returnType = delegateType.GetMethod("Invoke")!.ReturnType;
-
-                // convert access to the expected return type if needed
-                Expression body = access;
-                if (access.Type != returnType)
-                {
-                    body = Expression.Convert(access, returnType);
-                }
-
-                // create a strongly-typed lambda matching the overload
-                var lambda = Expression.Lambda(delegateType, body, param);
-
-                var ii = GetInputInfo(prop, default(TEntity), CrudOperation.Read);
-                var columnInfo = new ColumnInfo(ii.DisplayName, ii.DisplayName, null);
-                genericMethod.Invoke(MyColumnManager, [lambda, columnInfo, ii.DisplayFormat, Align.Left, null, null, ii.Visible, null]);
-                // Would be nice if the code below worked, but it doesn't because of the generic type parameter. So we have to use reflection to invoke the method.
-                //MyColumnManager.AddSimple(           lambda, columnInfo, ii.DisplayFormat, Align.Left, null, null, ii.Visible, null);
+                return;
             }
-            catch
+
+            var entityType = typeof(TEntity);
+            var param = Expression.Parameter(entityType, "p");
+            var access = Expression.Property(param, prop);
+            var delegateType = typeof(Func<,>).MakeGenericType(entityType, prop.PropertyType);
+            var lambda = Expression.Lambda(delegateType, access, param);
+
+            var columnType = typeof(PropertyColumn<,>).MakeGenericType(entityType, prop.PropertyType);
+            var format = typeof(IFormattable).IsAssignableFrom(TypeHelper.GetUnderlyingType(prop.PropertyType))
+                ? ii.DisplayFormat
+                : null;
+
+            MyColumns.Add(builder =>
             {
-                // ignore any failures adding a specific column
-                // TODO: What should we do here? Log the error? Show a message in the UI?
-            }
+                builder.OpenComponent(0, columnType);
+                builder.AddAttribute(1, "Property", lambda);
+                builder.AddAttribute(2, "Title", ii.DisplayName);
+                builder.AddAttribute(3, "Format", format);
+                builder.AddAttribute(4, "Align", Align.Left);
+                builder.AddAttribute(5, "Sortable", true);
+                builder.CloseComponent();
+            });
+        }
+        catch
+        {
+            // ignore any failures adding a specific column
+            // TODO: What should we do here? Log the error? Show a message in the UI?
         }
     }
 
