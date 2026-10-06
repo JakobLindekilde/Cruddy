@@ -6,12 +6,6 @@ using Microsoft.AspNetCore.Components.Web;
 using System.ComponentModel.DataAnnotations;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Runtime.InteropServices;
-
-// More stuff to do:
-// TODO: Display all column headers in bold (not just the Actions column)
-// TODO: Make unittests for the Cruddy component: AddColumnsToGrid(). GetDisplayFormat() etc.
-
 
 namespace Cruddy.Components;
 
@@ -19,7 +13,7 @@ namespace Cruddy.Components;
 /// Lists the rows of a database table in a QuickGrid component, 
 /// with columns automatically generated from the public properties of TEntity.
 /// </summary>
-public partial class Cruddy<TEntity> : CruddyBase<TEntity> //where TEntity : class, record, new()
+public partial class Cruddy<TEntity> : CruddyBase<TEntity> where TEntity : class
 {
     #region Parameters
 
@@ -154,7 +148,7 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> //where TEntity : cla
     /// <summary>
     /// The ColumnManager that manages the columns of the QuickGrid component.
     /// </summary>
-    protected readonly List<RenderFragment> MyColumns = new();
+    protected readonly List<RenderFragment> MyColumns = [];
 
     /// <summary>
     /// Holds a user visible error message when e.g. delete fails.
@@ -207,7 +201,7 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> //where TEntity : cla
         }
         else
         {
-            var keyValue = PropertyHelper.GetValue(item!, KeyColumn!);
+            var keyValue = PropertyHelper.GetValue(item, KeyColumn!);
             ActionItem = GetTableRow(keyValue, DetailsColumns);
         }
 
@@ -229,7 +223,7 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> //where TEntity : cla
                 CruddyHelper.NewInstance<TEntity>() :
                 CruddyHelper.DeepCopy(item);
 
-        EditCtx = new EditContext(ActionItem!);
+        EditCtx = new EditContext(ActionItem);
         ActionCrud = actionCrud;
         return Task.CompletedTask;
     }
@@ -265,10 +259,7 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> //where TEntity : cla
             }
         }
 
-        if (Rows != null)
-        {
-            Rows.Insert(0, item!);
-        }
+        Rows?.Insert(0, item);
     }
 
     private void PersistUpdated(TEntity item)
@@ -285,8 +276,8 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> //where TEntity : cla
         if (rowsAffected > 0 && Rows != null)
         {
             // find original item by key and replace
-            var original = Rows.FirstOrDefault(r => string.Equals(PropertyHelper.GetValue(r!, KeyColumn!),
-                PropertyHelper.GetValue(item!, KeyColumn!), StringComparison.OrdinalIgnoreCase));
+            var original = Rows.FirstOrDefault(r => string.Equals(PropertyHelper.GetValue(r, KeyColumn!),
+                PropertyHelper.GetValue(item, KeyColumn!), StringComparison.OrdinalIgnoreCase));
             if (original != null)
             {
                 var idx = Rows.IndexOf(original);
@@ -386,10 +377,8 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> //where TEntity : cla
         var item = ActionItem;
         ActionCrud = CrudOperation.None;
         ActionItem = default;
-        //TODO: Can we just delete line "if (item == null) return;"?
-#pragma warning disable S2955   // SonarQube: "null" should not be passed as an argument to a non-nullable parameter
+
         if (item == null) return;
-#pragma warning restore S2955
 
         try
         {
@@ -418,8 +407,8 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> //where TEntity : cla
     private string DeleteMessage(TEntity item)
     {
         var sureToDelete = "Sure you want to delete " + typeof(TEntity).Name.ToLower() + " ";
-        var keyInfo = HideKeyColumn ? "" : $"({KeyColumn}={PropertyHelper.GetValue(item!, KeyColumn!)})";
-        string nameUxValue = PropertyHelper.GetValue(item!, NameUx!);
+        var keyInfo = HideKeyColumn ? "" : $"({KeyColumn}={PropertyHelper.GetValue(item, KeyColumn!)})";
+        string nameUxValue = PropertyHelper.GetValue(item, NameUx!);
         if (!string.IsNullOrEmpty(nameUxValue))
         {
             nameUxValue += " ";
@@ -445,12 +434,9 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> //where TEntity : cla
 
         if (TableColumns == "*")
         {
-            foreach (var prop in props)
+            foreach (var prop in props.Where(prop => TypeHelper.IsSupported(prop.PropertyType)))
             {
-                if (TypeHelper.IsSupported(prop.PropertyType))
-                {
-                    AddColumn(prop);
-                }
+                AddColumn(prop);
             }
         }
         else
@@ -511,9 +497,9 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> //where TEntity : cla
         MyColumns.Add(builder =>
         {
             builder.OpenComponent<TemplateColumn<TEntity>>(0);
-            builder.AddAttribute(1, nameof(TemplateColumn<TEntity>.ChildContent), actionTemplate);
-            builder.AddAttribute(2, nameof(TemplateColumn<TEntity>.Title), ActionsTitle);
-            builder.AddAttribute(3, nameof(TemplateColumn<TEntity>.Class), "text-left");
+            builder.AddAttribute(1, nameof(TemplateColumn<>.ChildContent), actionTemplate);
+            builder.AddAttribute(2, nameof(TemplateColumn<>.Title), ActionsTitle);
+            builder.AddAttribute(3, nameof(TemplateColumn<>.Class), "text-left");
             builder.CloseComponent();
         });
     }
@@ -526,7 +512,7 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> //where TEntity : cla
     {
         try
         {
-            var ii = GetInputInfo(prop, default(TEntity), CrudOperation.Read);
+            var ii = GetInputInfo(prop, default, CrudOperation.Read);
             if (!ii.Visible)
             {
                 return;
@@ -634,13 +620,13 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> //where TEntity : cla
             return string.IsNullOrEmpty(DefaultNumberFormat) ? null : DefaultNumberFormat;
         }
 
-        switch (propertyType.Name)
+        return propertyType.Name switch
         {
-            case "TimeOnly": return string.IsNullOrEmpty(DefaultTimeFormat) ? null : DefaultTimeFormat;
-            case "DateOnly": return string.IsNullOrEmpty(DefaultDateFormat) ? null : DefaultDateFormat;
-            case "DateTime": return string.IsNullOrEmpty(DefaultDateTimeFormat) ? null : DefaultDateTimeFormat;
-            default: return null;
-        }
+            "TimeOnly" => string.IsNullOrEmpty(DefaultTimeFormat) ? null : DefaultTimeFormat,
+            "DateOnly" => string.IsNullOrEmpty(DefaultDateFormat) ? null : DefaultDateFormat,
+            "DateTime" => string.IsNullOrEmpty(DefaultDateTimeFormat) ? null : DefaultDateTimeFormat,
+            _ => null,
+        };
     }
 
     #endregion

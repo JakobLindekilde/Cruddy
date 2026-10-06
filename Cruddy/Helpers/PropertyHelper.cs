@@ -15,7 +15,9 @@ static public class PropertyHelper
     /// </summary>
     /// <param name="property">The PropertyInfo to check for nullability.</param>
     /// <returns>True if the property is nullable; otherwise, false.</returns>
+#pragma warning disable S3776   // Cognitive Complexity of methods should not be too high
     public static bool IsNullable(PropertyInfo property)
+#pragma warning restore S3776
     {
         if (property == null) return false;
 
@@ -77,9 +79,7 @@ static public class PropertyHelper
     /// <param name="type">The type for which to get the column properties.</param>
     /// <returns>An array of PropertyInfo objects representing the column properties.</returns>
     public static PropertyInfo[] GetColumnProperties(Type type) =>
-        type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
-            .Where(p => !(p.PropertyType.IsClass && p.PropertyType != typeof(string)))
-            .ToArray();
+        [.. type.GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(p => !(p.PropertyType.IsClass && p.PropertyType != typeof(string)))];
 
     /// <summary>
     /// Gets all public instance properties of the specified type that can be read (i.e., have a getter).

@@ -679,7 +679,7 @@ public class CruddyBaseTests
 
     #region OnInitializedAsync
 
-    private sealed class TestableCruddy<T> : CruddyBase<T>
+    private sealed class TestableCruddy<T> : CruddyBase<T> where T : class
     {
         public Task InitializeAsync() => OnInitializedAsync();
         public List<T>? LoadedRows => Rows;

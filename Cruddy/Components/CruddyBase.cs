@@ -9,7 +9,7 @@ namespace Cruddy.Components;
 /// <summary>
 /// Base class for simple CRUD operations in a blazor component.
 /// </summary>
-public partial class CruddyBase<TEntity> : ComponentBase
+public partial class CruddyBase<TEntity> : ComponentBase where TEntity : class
 {
     /// <summary>
     /// The parameterless constructor initializes the <seealso cref="TableName"/> and <seealso cref="KeyColumn"/> 
@@ -144,10 +144,7 @@ public partial class CruddyBase<TEntity> : ComponentBase
     /// A dictionary that maps the column names specified in <seealso cref="TableColumns"/> 
     /// to their corresponding property names in <typeparamref name="TEntity"/>.
     /// </summary>
-    // TODO: Fix the SonarQube warning S3887: 
-#pragma warning disable S3887   // SonarQube rule S3887: "Immutable fields should not be mutable". Use an immutable collection or reduce the accessibility of the non-private readonly field 'ColumnAliasDict'.
     public readonly Dictionary<string, string> ColumnAliasDict = new(StringComparer.OrdinalIgnoreCase);
-#pragma warning restore S3887
 
     /// <summary>
     /// Fills the <seealso cref="ColumnAliasDict"/> dictionary with the column names and their 
@@ -226,12 +223,11 @@ public partial class CruddyBase<TEntity> : ComponentBase
     /// <exception cref="ArgumentNullException"></exception>
     public PropertyInfo[] GetPropertiesForTableColumns(TEntity entity, CrudOperation operation, string columnsAlt = "")
     {
-        if (entity == null) throw new ArgumentNullException(nameof(entity));
+        ArgumentNullException.ThrowIfNull(entity);
 
         var colsToUse = string.IsNullOrEmpty(columnsAlt) ? TableColumns : columnsAlt;
         var cols = colsToUse == "*" || operation == CrudOperation.Create
-            ? new List<string>()
-            : colsToUse.Split(",", StringSplitOptions.TrimEntries).ToList();
+            ? [] : colsToUse.Split(",", StringSplitOptions.TrimEntries).ToList();
 
         var props = PropertyHelper.GetColumnProperties(entity.GetType())
             .Where(p => TypeHelper.IsSupported(p.PropertyType) &&
@@ -264,8 +260,6 @@ public partial class CruddyBase<TEntity> : ComponentBase
         return true;
     }
 
-#pragma warning disable S2077   // SonarQube rule S2077: "SQL queries should not be vulnerable to injection attacks".
-
     /// <summary>
     /// Deletes a row from the database table based on the specified key value.
     /// </summary>
@@ -289,10 +283,9 @@ public partial class CruddyBase<TEntity> : ComponentBase
         }
 
         var cols = TableColumns == "*" || operation == CrudOperation.Create
-            ? new List<string>()
-            : TableColumns.Split(",", StringSplitOptions.TrimEntries).ToList();
+            ? [] : TableColumns.Split(",", StringSplitOptions.TrimEntries).ToList();
 
-        var props = PropertyHelper.GetColumnProperties(entity!.GetType())
+        var props = PropertyHelper.GetColumnProperties(entity.GetType())
             .Where(p => p.CanRead && p.CanWrite &&
                         (cols.Count == 0 || (cols.Count > 0 && cols.Contains(p.Name))) && IncludeColumn(operation, p.Name))
             .ToArray();
@@ -309,7 +302,7 @@ public partial class CruddyBase<TEntity> : ComponentBase
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="entity"/> is null.</exception>    
     public int Update(TEntity entity, object keyValue)
     {
-        if (entity == null) throw new ArgumentNullException(nameof(entity));
+        ArgumentNullException.ThrowIfNull(entity);
 
         var props = GetPropertiesForCreateOrUpdate(entity, CrudOperation.Update);
         return Repository.Update(entity, keyValue, props);
@@ -324,7 +317,7 @@ public partial class CruddyBase<TEntity> : ComponentBase
     /// <returns>Scalar result from the DB (e.g. new id) or rows affected.</returns>
     public object? Create(TEntity entity)
     {
-        if (entity == null) throw new ArgumentNullException(nameof(entity));
+        ArgumentNullException.ThrowIfNull(entity);
 
         var props = GetPropertiesForCreateOrUpdate(entity, CrudOperation.Create);
         return Repository.Add(entity, props);
@@ -336,8 +329,6 @@ public partial class CruddyBase<TEntity> : ComponentBase
     /// <param name="id">The value of the key column for the row to retrieve.</param>    /// <param name="columns">The columns to include in the result.</param>
     /// <returns>The entity corresponding to the specified key value, or null if not found.</returns>
     public TEntity? GetTableRow(object id, string columns = "*") => Repository.GetById(id, columns);
-
-#pragma warning restore S2077
 
     /// <summary>
     /// Maps a collection of dynamics to a list of strongly typed objects of type T.
