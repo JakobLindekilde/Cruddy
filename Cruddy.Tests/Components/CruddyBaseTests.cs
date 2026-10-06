@@ -322,6 +322,398 @@ public class CruddyBaseTests
     }
 
     #endregion
+
+    #region Constructor and defaults
+
+    [Fact]
+    public void Constructor_SetsPluralizedTableNameAndKeyColumn()
+    {
+        var dut = new CruddyBase<Person> { DbConnection = null };
+        Assert.Equal("Persons", dut.TableName);
+        Assert.Equal("Id", dut.KeyColumn);
+    }
+
+    [Fact]
+    public void Constructor_SetsKeyColumnForClassWithoutKeyAttribute()
+    {
+        var dut = new CruddyBase<ClassWithoutKey> { DbConnection = null };
+        Assert.Equal("ClassWithoutKeys", dut.TableName);
+        Assert.Equal("Id", dut.KeyColumn);
+    }
+
+    [Fact]
+    public void Defaults_AreExpected()
+    {
+        var dut = new CruddyBase<Person> { DbConnection = null };
+        Assert.Equal("dbo", dut.DefaultSchema);
+        Assert.True(dut.PluralizeTableName);
+        Assert.Equal("*", dut.TableColumns);
+        Assert.False(dut.AllowKeyColumnEditOnCreate);
+        Assert.Equal(10000, dut.Top);
+        Assert.False(dut.Distinct);
+        Assert.Null(dut.OrderBy);
+        Assert.Null(dut.Where);
+        Assert.Null(dut.Select);
+        Assert.Equal(SortOrder.Ascending, dut.SortOrder);
+    }
+
+    #endregion
+
+    #region IncludeColumn
+
+    [Theory]
+    [InlineData(CrudOperation.Update, "Id", false, false)]
+    [InlineData(CrudOperation.Update, "id", false, false)]
+    [InlineData(CrudOperation.Update, "Id", true, false)]
+    [InlineData(CrudOperation.Create, "Id", false, false)]
+    [InlineData(CrudOperation.Create, "Id", true, true)]
+    [InlineData(CrudOperation.Create, "ID", true, true)]
+    [InlineData(CrudOperation.Create, "Name", false, true)]
+    [InlineData(CrudOperation.Update, "Name", false, true)]
+    public void IncludeColumn_ReturnsExpected(CrudOperation operation, string propName, bool allowKeyOnCreate, bool expected)
+    {
+        var dut = new CruddyBase<Person> { DbConnection = null, AllowKeyColumnEditOnCreate = allowKeyOnCreate };
+        Assert.Equal(expected, dut.IncludeColumn(operation, propName));
+    }
+
+    #endregion
+
+    #region GetPropertiesForTableColumns
+
+    [Fact]
+    public void GetPropertiesForTableColumns_NullEntity_Throws()
+    {
+        var dut = new CruddyBase<Person> { DbConnection = null };
+        Assert.Throws<ArgumentNullException>(() => dut.GetPropertiesForTableColumns(null, CrudOperation.Update));
+    }
+
+    [Fact]
+    public void GetPropertiesForTableColumns_Star_ReturnsAllPublicProperties()
+    {
+        var dut = new CruddyBase<Person> { DbConnection = null };
+        var names = dut.GetPropertiesForTableColumns(new Person { Name = "A" }, CrudOperation.Update)
+            .Select(p => p.Name).ToList();
+        Assert.Contains("Id", names);
+        Assert.Contains("Name", names);
+        Assert.Contains("Description", names);
+        Assert.Contains("Email", names);
+        Assert.DoesNotContain("PrivateProperty", names);
+        Assert.DoesNotContain("ProtectedProperty", names);
+    }
+
+    [Fact]
+    public void GetPropertiesForTableColumns_UsesTableColumns()
+    {
+        var dut = new CruddyBase<Person> { DbConnection = null, TableColumns = "Id, Name" };
+        var names = dut.GetPropertiesForTableColumns(new Person { Name = "A" }, CrudOperation.Update)
+            .Select(p => p.Name).ToList();
+        Assert.Equal(2, names.Count);
+        Assert.Contains("Id", names);
+        Assert.Contains("Name", names);
+    }
+
+    [Fact]
+    public void GetPropertiesForTableColumns_ColumnsAltOverridesTableColumns()
+    {
+        var dut = new CruddyBase<Person> { DbConnection = null, TableColumns = "Id, Name" };
+        var names = dut.GetPropertiesForTableColumns(new Person { Name = "A" }, CrudOperation.Update, "Email")
+            .Select(p => p.Name).ToList();
+        Assert.Equal(["Email"], names);
+    }
+
+    [Fact]
+    public void GetPropertiesForTableColumns_Create_IgnoresTableColumns()
+    {
+        var dut = new CruddyBase<Person> { DbConnection = null, TableColumns = "Id" };
+        var names = dut.GetPropertiesForTableColumns(new Person { Name = "A" }, CrudOperation.Create)
+            .Select(p => p.Name).ToList();
+        Assert.Contains("Name", names);
+        Assert.Contains("Email", names);
+    }
+
+    [Fact]
+    public void GetPropertiesForTableColumns_UnknownColumn_ReturnsEmpty()
+    {
+        var dut = new CruddyBase<Person> { DbConnection = null, TableColumns = "DoesNotExist" };
+        Assert.Empty(dut.GetPropertiesForTableColumns(new Person { Name = "A" }, CrudOperation.Update));
+    }
+
+    #endregion
+
+    #region GetPropertiesForCreateOrUpdate
+
+    [Theory]
+    [InlineData(CrudOperation.None)]
+    [InlineData((CrudOperation)99)]
+    public void GetPropertiesForCreateOrUpdate_InvalidOperation_Throws(CrudOperation operation)
+    {
+        var dut = new CruddyBase<Person> { DbConnection = null };
+        var ex = Assert.Throws<ArgumentException>(() =>
+            dut.GetPropertiesForCreateOrUpdate(new Person { Name = "A" }, operation));
+        Assert.Equal("operation", ex.ParamName);
+    }
+
+    [Fact]
+    public void GetPropertiesForCreateOrUpdate_Create_ExcludesKeyByDefault()
+    {
+        var dut = new CruddyBase<Person> { DbConnection = null };
+        var names = dut.GetPropertiesForCreateOrUpdate(new Person { Name = "A" }, CrudOperation.Create)
+            .Select(p => p.Name).ToList();
+        Assert.DoesNotContain("Id", names);
+        Assert.Contains("Name", names);
+        Assert.Contains("Description", names);
+        Assert.Contains("Email", names);
+    }
+
+    [Fact]
+    public void GetPropertiesForCreateOrUpdate_Create_IncludesKeyWhenAllowed()
+    {
+        var dut = new CruddyBase<Person> { DbConnection = null, AllowKeyColumnEditOnCreate = true };
+        var names = dut.GetPropertiesForCreateOrUpdate(new Person { Name = "A" }, CrudOperation.Create)
+            .Select(p => p.Name).ToList();
+        Assert.Contains("Id", names);
+    }
+
+    [Fact]
+    public void GetPropertiesForCreateOrUpdate_Update_StarExcludesKey()
+    {
+        var dut = new CruddyBase<Person> { DbConnection = null };
+        var names = dut.GetPropertiesForCreateOrUpdate(new Person { Name = "A" }, CrudOperation.Update)
+            .Select(p => p.Name).ToList();
+        Assert.DoesNotContain("Id", names);
+        Assert.Contains("Name", names);
+    }
+
+    [Fact]
+    public void GetPropertiesForCreateOrUpdate_Update_RespectsTableColumns()
+    {
+        var dut = new CruddyBase<Person> { DbConnection = null, TableColumns = "Id, Name" };
+        var names = dut.GetPropertiesForCreateOrUpdate(new Person { Name = "A" }, CrudOperation.Update)
+            .Select(p => p.Name).ToList();
+        Assert.Equal(["Name"], names);
+    }
+
+    [Fact]
+    public void GetPropertiesForCreateOrUpdate_Create_IgnoresTableColumns()
+    {
+        var dut = new CruddyBase<Person> { DbConnection = null, TableColumns = "Name" };
+        var names = dut.GetPropertiesForCreateOrUpdate(new Person { Name = "A" }, CrudOperation.Create)
+            .Select(p => p.Name).ToList();
+        Assert.Contains("Email", names);
+    }
+
+    #endregion
+
+    #region Update
+
+    [Fact]
+    public void Update_NullEntity_Throws()
+    {
+        var dut = new CruddyBase<Person> { DbConnection = new FakeDbConnection() };
+        Assert.Throws<ArgumentNullException>(() => dut.Update(null, 1));
+    }
+
+    [Fact]
+    public void Update_ExecutesUpdateSqlWithParameters()
+    {
+        var db = new FakeDbConnection { NonQueryResult = 1 };
+        var dut = new CruddyBase<Person> { DbConnection = db };
+
+        var result = dut.Update(new Person { Id = 5, Name = "Bob", Description = "D", Email = "b@x.dk" }, 5);
+
+        Assert.Equal(1, result);
+        var cmd = Assert.Single(db.Commands);
+        Assert.Equal("NonQuery", cmd.Kind);
+        Assert.StartsWith("UPDATE dbo.Persons SET ", cmd.Sql);
+        Assert.EndsWith("WHERE Id = @keyValue", cmd.Sql);
+        Assert.Contains("Name = @Name", cmd.Sql);
+        Assert.Contains("Email = @Email", cmd.Sql);
+        Assert.DoesNotContain("Id = @Id", cmd.Sql);
+        Assert.Equal("Bob", cmd.Parameters["Name"]);
+        Assert.Equal("b@x.dk", cmd.Parameters["Email"]);
+        Assert.Equal(5, cmd.Parameters["keyValue"]);
+    }
+
+    [Fact]
+    public void Update_UsesSchemaTableAndTableColumns()
+    {
+        var db = new FakeDbConnection();
+        var dut = new CruddyBase<Person>
+        {
+            DbConnection = db,
+            DefaultSchema = "sales",
+            TableName = "People",
+            TableColumns = "Id, Name"
+        };
+
+        dut.Update(new Person { Id = 2, Name = "Eve" }, 2);
+
+        Assert.Equal("UPDATE sales.People SET Name = @Name WHERE Id = @keyValue", db.Commands[0].Sql);
+    }
+
+    [Fact]
+    public void Update_NoMatchingProperties_ReturnsZeroAndExecutesNothing()
+    {
+        var db = new FakeDbConnection();
+        var dut = new CruddyBase<Person> { DbConnection = db, TableColumns = "Id" };
+
+        var result = dut.Update(new Person { Id = 2, Name = "Eve" }, 2);
+
+        Assert.Equal(0, result);
+        Assert.Empty(db.Commands);
+    }
+
+    #endregion
+
+    #region Create
+
+    [Fact]
+    public void Create_NullEntity_Throws()
+    {
+        var dut = new CruddyBase<Person> { DbConnection = new FakeDbConnection() };
+        Assert.Throws<ArgumentNullException>(() => dut.Create(null));
+    }
+
+    [Fact]
+    public void Create_ReturnsScalarIdentity()
+    {
+        var db = new FakeDbConnection { ScalarResult = 77 };
+        var dut = new CruddyBase<Person> { DbConnection = db };
+
+        var result = dut.Create(new Person { Name = "Bob", Email = "b@x.dk" });
+
+        Assert.Equal(77, result);
+        var cmd = Assert.Single(db.Commands);
+        Assert.Equal("Scalar", cmd.Kind);
+        Assert.StartsWith("INSERT INTO dbo.Persons (", cmd.Sql);
+        Assert.EndsWith("; SELECT SCOPE_IDENTITY();", cmd.Sql);
+        Assert.DoesNotContain("@Id", cmd.Sql);
+        Assert.Equal("Bob", cmd.Parameters["Name"]);
+    }
+
+    [Fact]
+    public void Create_IncludesKeyWhenAllowed()
+    {
+        var db = new FakeDbConnection();
+        var dut = new CruddyBase<Person> { DbConnection = db, AllowKeyColumnEditOnCreate = true };
+
+        dut.Create(new Person { Id = 9, Name = "Bob" });
+
+        Assert.Contains("@Id", db.Commands[0].Sql);
+        Assert.Equal(9, db.Commands[0].Parameters["Id"]);
+    }
+
+    [Fact]
+    public void Create_WhenScalarFails_FallsBackToRowsAffected()
+    {
+        var db = new FakeDbConnection { ThrowOnScalar = true, NonQueryResult = 1 };
+        var dut = new CruddyBase<Person> { DbConnection = db };
+
+        var result = dut.Create(new Person { Name = "Bob" });
+
+        Assert.Equal(1, result);
+        Assert.Equal(["Scalar", "NonQuery"], db.Commands.Select(c => c.Kind));
+        Assert.DoesNotContain("SCOPE_IDENTITY", db.Commands[1].Sql);
+    }
+
+    #endregion
+
+    #region Delete
+
+    [Fact]
+    public void Delete_ExecutesDeleteSql()
+    {
+        var db = new FakeDbConnection { ScalarResult = null };
+        var dut = new CruddyBase<Person> { DbConnection = db };
+
+        var result = dut.Delete(3);
+
+        Assert.Null(result);
+        var cmd = Assert.Single(db.Commands);
+        Assert.Equal("DELETE FROM dbo.Persons WHERE Id = @keyValue", cmd.Sql);
+        Assert.Equal(3, cmd.Parameters["keyValue"]);
+    }
+
+    #endregion
+
+    #region GetTableRow
+
+    [Fact]
+    public void GetTableRow_ReturnsMappedEntity()
+    {
+        var db = new FakeDbConnection();
+        db.Rows.Add(new Dictionary<string, object?> { ["Id"] = 4, ["Name"] = "Ann", ["Description"] = null, ["Email"] = "a@x.dk" });
+        var dut = new CruddyBase<Person> { DbConnection = db };
+
+        var row = dut.GetTableRow(4);
+
+        Assert.NotNull(row);
+        Assert.Equal(4, row.Id);
+        Assert.Equal("Ann", row.Name);
+        Assert.Null(row.Description);
+        Assert.Equal("a@x.dk", row.Email);
+        var cmd = Assert.Single(db.Commands);
+        Assert.Equal("SELECT * FROM dbo.Persons WHERE Id = @Id", cmd.Sql);
+        Assert.Equal(4, cmd.Parameters["Id"]);
+    }
+
+    [Fact]
+    public void GetTableRow_UsesColumnsParameter()
+    {
+        var db = new FakeDbConnection();
+        var dut = new CruddyBase<Person> { DbConnection = db };
+
+        dut.GetTableRow(1, "Id, Name");
+
+        Assert.Equal("SELECT Id, Name FROM dbo.Persons WHERE Id = @Id", db.Commands[0].Sql);
+    }
+
+    [Fact]
+    public void GetTableRow_NotFound_ReturnsNull()
+    {
+        var dut = new CruddyBase<Person> { DbConnection = new FakeDbConnection() };
+        Assert.Null(dut.GetTableRow(123));
+    }
+
+    #endregion
+
+    #region OnInitializedAsync
+
+    private sealed class TestableCruddy<T> : CruddyBase<T>
+    {
+        public Task InitializeAsync() => OnInitializedAsync();
+        public List<T>? LoadedRows => Rows;
+    }
+
+    [Fact]
+    public async Task OnInitializedAsync_LoadsRowsAndFillsAliasDict()
+    {
+        var db = new FakeDbConnection();
+        db.Rows.Add(new Dictionary<string, object?> { ["Id"] = 1, ["Name"] = "A" });
+        db.Rows.Add(new Dictionary<string, object?> { ["Id"] = 2, ["Name"] = "B" });
+        var dut = new TestableCruddy<Person> { DbConnection = db, TableColumns = "Id, Name", Top = 5 };
+
+        await dut.InitializeAsync();
+
+        Assert.NotNull(dut.LoadedRows);
+        Assert.Equal(["A", "B"], dut.LoadedRows.Select(r => r.Name));
+        Assert.Equal(2, dut.ColumnAliasDict.Count);
+        var cmd = Assert.Single(db.Commands);
+        Assert.Equal("SELECT TOP 5  Id, Name FROM dbo.Persons", cmd.Sql);
+    }
+
+    [Fact]
+    public async Task OnInitializedAsync_NoRows_LoadsEmptyList()
+    {
+        var dut = new TestableCruddy<Person> { DbConnection = new FakeDbConnection() };
+
+        await dut.InitializeAsync();
+
+        Assert.NotNull(dut.LoadedRows);
+        Assert.Empty(dut.LoadedRows);
+    }
+
+    #endregion
 }
-#pragma warning restore BL0005 // Component parameter should not be set outside of its component.
+#pragma warning restore BL0005
 #pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
