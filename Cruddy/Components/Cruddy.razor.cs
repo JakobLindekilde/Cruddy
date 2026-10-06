@@ -439,7 +439,7 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> //where TEntity : cla
     #region AddColumns 
 
     /// <summary>
-    /// Add a simple column, using AddSimple(), for each public readable property on TEntity.
+    /// Add a simple column for each public readable property on TEntity.
     /// </summary>
     protected virtual void AddColumnsToGrid()
     {
@@ -449,7 +449,10 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> //where TEntity : cla
         {
             foreach (var prop in props)
             {
-                AddColumn(prop);
+                if (TypeHelper.IsSupported(prop.PropertyType))
+                {
+                    AddColumn(prop);
+                }
             }
         }
         else
@@ -457,7 +460,7 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> //where TEntity : cla
             foreach (var col in ColumnAliasDict)
             {
                 var prop = props.FirstOrDefault(p => p.Name.Equals(col.Value, StringComparison.OrdinalIgnoreCase));
-                if (prop != null)
+                if (prop != null && TypeHelper.IsSupported(prop.PropertyType))
                 {
                     AddColumn(prop);
                 }
@@ -509,25 +512,12 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> //where TEntity : cla
 
         MyColumnManager.AddTemplateColumn(deleteTemplate, title: ActionsTitle, cssClass: "text-center");
     }
-
-    /// <summary>
-    /// Adds a column to the QuicGrid for the specified property
-    /// </summary>
-    protected virtual void AddColumn(PropertyInfo prop)
-    {
-        if (!TypeHelper.IsSupported(prop.PropertyType))
-        {
-            return;
-        }
-
-        AddSimpleColumn(prop);
-    }
-
+        
     /// <summary>
     /// Adds a Toolkit.AddSimple column to the QuickGrid for the specified property.
     /// </summary>
     /// <param name="prop">The property to add a column for.</param>
-    private void AddSimpleColumn(PropertyInfo prop)
+    private void AddColumn(PropertyInfo prop)
     {
         var method = CruddyHelper.GetAddSimpleMethod<TEntity>();
 
