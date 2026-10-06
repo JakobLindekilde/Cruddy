@@ -253,7 +253,9 @@ static public class PropertyHelper
         }
         else if (!string.IsNullOrEmpty(format) && value is System.IFormattable f)
         {
-            formattedValue = f.ToString(format, System.Globalization.CultureInfo.CurrentCulture);
+            formattedValue = format.Contains('{')
+                ? string.Format(System.Globalization.CultureInfo.CurrentCulture, format, value)
+                : f.ToString(format, System.Globalization.CultureInfo.CurrentCulture);
         }
         else
         {
