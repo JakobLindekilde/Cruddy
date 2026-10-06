@@ -1,7 +1,7 @@
 # Cruddy
 
 Why Cruddy? -I needed a simple and easy-to-use CRUD component that could do CRUD operations on any database table.
-I wanted to be able to use it with any class or record. I also wanted to use Dapper instead of Entity Framework. 
+I wanted to be able to use it with any class or record. I also wanted to use Dapper and not Entity Framework. 
 
 ## Overview
 
