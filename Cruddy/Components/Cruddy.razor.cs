@@ -417,8 +417,8 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> //where TEntity : cla
 
     private string DeleteMessage(TEntity item)
     {
-        var sureToDelete = "Sure you want to delete " + typeof(TEntity).Name.ToLower();
-        var keyInfo = HideKeyColumn ? "" : $" ({KeyColumn}={PropertyHelper.GetValue(item!, KeyColumn!)})";
+        var sureToDelete = "Sure you want to delete " + typeof(TEntity).Name.ToLower() + " ";
+        var keyInfo = HideKeyColumn ? "" : $"({KeyColumn}={PropertyHelper.GetValue(item!, KeyColumn!)})";
         string nameUxValue = PropertyHelper.GetValue(item!, NameUx!);
         if (!string.IsNullOrEmpty(nameUxValue))
         {
@@ -513,7 +513,7 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> //where TEntity : cla
             builder.OpenComponent<TemplateColumn<TEntity>>(0);
             builder.AddAttribute(1, nameof(TemplateColumn<TEntity>.ChildContent), actionTemplate);
             builder.AddAttribute(2, nameof(TemplateColumn<TEntity>.Title), ActionsTitle);
-            builder.AddAttribute(3, nameof(TemplateColumn<TEntity>.Class), "text-center");
+            builder.AddAttribute(3, nameof(TemplateColumn<TEntity>.Class), "text-left");
             builder.CloseComponent();
         });
     }
