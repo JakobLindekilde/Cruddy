@@ -1,10 +1,8 @@
 using Cruddy.Helpers;
-using Dapper;
+using Cruddy.Repositories;
 using Microsoft.AspNetCore.Components;
 using System.Data.Common;
 using System.Reflection;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace Cruddy.Components;
 
@@ -133,8 +131,14 @@ public partial class CruddyBase<TEntity> : ComponentBase
     protected override async Task OnInitializedAsync()
     {
         FillColumnAliasDict();
-        Rows = GetTableRows<TEntity>(DbConnection, BuildSql());
+        Rows = Repository.GetAll(BuildSql());
     }
+
+    /// <summary>
+    /// The repository used for all database operations.
+    /// </summary>
+    protected IRepository<TEntity> Repository =>
+        new DapperRepository<TEntity>(DbConnection, DefaultSchema, TableName, KeyColumn);
 
     /// <summary>
     /// A dictionary that maps the column names specified in <seealso cref="TableColumns"/> 
@@ -265,14 +269,9 @@ public partial class CruddyBase<TEntity> : ComponentBase
     /// <summary>
     /// Deletes a row from the database table based on the specified key value.
     /// </summary>
-    /// <param name="DbConnection">The database connection to use for the operation.</param>
     /// <param name="keyValue">The value of the key column for the row to delete.</param>
     /// <returns>The result of the delete operation.</returns>
-    public object? Delete(DbConnection DbConnection, object keyValue)
-    {
-        var sql = $"DELETE FROM {DefaultSchema}.{TableName} WHERE {KeyColumn} = @keyValue";
-        return DbConnection.ExecuteScalar(sql, param: new { keyValue });
-    }
+    public object? Delete(object keyValue) => Repository.Delete(keyValue);
 
     /// <summary>
     /// Gets the properties of <typeparamref name="TEntity"/> that correspond to 
@@ -304,31 +303,16 @@ public partial class CruddyBase<TEntity> : ComponentBase
     /// <summary>
     /// Updates an existing entity in the database table based on the specified key value.
     /// </summary>
-    /// <param name="DbConnection">The database connection to use for the operation.</param>
     /// <param name="entity">The entity to update.</param>
     /// <param name="keyValue">The value of the key column for the row to update.</param>
     /// <returns>The number of rows affected.</returns>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="entity"/> is null.</exception>    
-    public int Update(DbConnection DbConnection, TEntity entity, object keyValue)
+    public int Update(TEntity entity, object keyValue)
     {
-        // Build an UPDATE statement that sets all public writable properties except the key column.
         if (entity == null) throw new ArgumentNullException(nameof(entity));
 
         var props = GetPropertiesForCreateOrUpdate(entity, CrudOperation.Update);
-        if (props.Length == 0) return 0;
-
-        var setClauses = props.Select(p => $"{p.Name} = @{p.Name}");
-        var sql = $"UPDATE {DefaultSchema}.{TableName} SET {string.Join(", ", setClauses)} WHERE {KeyColumn} = @keyValue";
-
-        var dp = new Dapper.DynamicParameters();
-        foreach (var prop in props)
-        {
-            var val = prop.GetValue(entity);
-            dp.Add(prop.Name, val);
-        }
-        dp.Add("keyValue", keyValue);
-
-        return DbConnection.Execute(sql, dp);
+        return Repository.Update(entity, keyValue, props);
     }
 
     /// <summary>
@@ -336,67 +320,22 @@ public partial class CruddyBase<TEntity> : ComponentBase
     /// (useful when the key is an identity column). Returns the database scalar result if available
     /// (for example SCOPE_IDENTITY()), otherwise returns the number of rows affected.
     /// </summary>
-    /// <param name="DbConnection">Database connection to use.</param>
     /// <param name="entity">The entity to insert.</param>
     /// <returns>Scalar result from the DB (e.g. new id) or rows affected.</returns>
-    public object? Create(DbConnection DbConnection, TEntity entity)
+    public object? Create(TEntity entity)
     {
         if (entity == null) throw new ArgumentNullException(nameof(entity));
 
         var props = GetPropertiesForCreateOrUpdate(entity, CrudOperation.Create);
-        if (props.Length == 0) return 0;
-
-        var colNames = props.Select(p => p.Name).ToArray();
-        var paramNames = props.Select(p => "@" + p.Name).ToArray();
-
-        var sql = $"INSERT INTO {DefaultSchema}.{TableName} ({string.Join(", ", colNames)}) VALUES ({string.Join(", ", paramNames)})";
-
-        var dp = new Dapper.DynamicParameters();
-        foreach (var prop in props)
-        {
-            var val = prop.GetValue(entity);
-            dp.Add(prop.Name, val);
-        }
-
-        // Try to return an identity value for SQL Server. If that fails, fall back to Execute (rows affected).
-        try
-        {
-            var identitySql = sql + "; SELECT SCOPE_IDENTITY();";
-            return DbConnection.ExecuteScalar(identitySql, dp);
-        }
-        catch
-        {
-            return DbConnection.Execute(sql, dp);
-        }
-    }
-
-    /// <summary>
-    /// Gets rows from the database table in <seealso cref="TableName"/> or <seealso cref="Select"/>
-    /// and maps them to a list of <typeparamref name="T"/>.
-    /// </summary>
-    /// <typeparam name="T">The type to map the rows to.</typeparam>
-    /// <param name="DbConnection">A database connection e.g an SqlConnection (for MS SQL Server)</param>
-    /// <param name="sql">The SQL query to execute.</param>
-    static public List<T> GetTableRows<T>(DbConnection DbConnection, string sql)
-    {
-        IEnumerable<dynamic> dynRows = DbConnection.Query(sql);
-        return [.. Map<T>(dynRows)];
+        return Repository.Add(entity, props);
     }
 
     /// <summary>
     /// Gets a single row from the database table in <seealso cref="TableName"/> based on the specified key value
     /// </summary>
-    /// <param name="DbConnection">The database connection to use for the operation.</param>
-    /// <param name="id">The value of the key column for the row to retrieve.</param>
-    /// <param name="columns">The columns to include in the result.</param>
+    /// <param name="id">The value of the key column for the row to retrieve.</param>    /// <param name="columns">The columns to include in the result.</param>
     /// <returns>The entity corresponding to the specified key value, or null if not found.</returns>
-    public TEntity? GetTableRow(DbConnection DbConnection, object id, string columns = "*")
-    {
-        var sql = $"SELECT {columns} FROM {DefaultSchema}.{TableName} WHERE {KeyColumn} = @Id";
-
-        IEnumerable<dynamic> dynRows = DbConnection.Query(sql, new { Id = id });
-        return Map<TEntity>(dynRows).FirstOrDefault();
-    }
+    public TEntity? GetTableRow(object id, string columns = "*") => Repository.GetById(id, columns);
 
 #pragma warning restore S2077
 
@@ -408,19 +347,6 @@ public partial class CruddyBase<TEntity> : ComponentBase
     /// <returns>A list of strongly typed objects of type T.</returns>
     public static List<T> Map<T>(IEnumerable<dynamic> dynItems)
     {
-        if (dynItems == null) return [];
-
-        // Use System.Text.Json to map dynamic objects to strongly-typed objects.
-        // Serialize the dynamic collection and deserialize to List<T> with case-insensitive property matching.
-        var options = new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true,
-            // Preserve numbers and handle common enum/string conversions
-            Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase, allowIntegerValues: true) }
-        };
-
-        var json = JsonSerializer.Serialize(dynItems, options);
-        var deserialized = JsonSerializer.Deserialize<List<T>>(json, options);
-        return deserialized ?? [];
+        return DapperRepository<TEntity>.Map<T>(dynItems);
     }
 }

@@ -208,7 +208,7 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> //where TEntity : cla
         else
         {
             var keyValue = PropertyHelper.GetValue(item!, KeyColumn!);
-            ActionItem = GetTableRow(DbConnection, keyValue, DetailsColumns);
+            ActionItem = GetTableRow(keyValue, DetailsColumns);
         }
 
         ActionCrud = CrudOperation.Read;
@@ -248,7 +248,7 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> //where TEntity : cla
     private void PersistCreated(TEntity item)
     {
         // Persist via base Create method
-        var result = Create(DbConnection, item);
+        var result = Create(item);
 
         // If a scalar id was returned, attempt to set the key property
         var keyProp = PropertyHelper.GetProperty(typeof(TEntity), KeyColumn!);
@@ -279,7 +279,7 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> //where TEntity : cla
         if (keyProp != null) keyValue = keyProp.GetValue(item);
 
         // Call base Update method to persist changes
-        var rowsAffected = Update(DbConnection, item, keyValue!);
+        var rowsAffected = Update(item, keyValue!);
 
         // Update in-memory list
         if (rowsAffected > 0 && Rows != null)
@@ -394,7 +394,7 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> //where TEntity : cla
         try
         {
             var keyValue = PropertyHelper.GetValue(item, KeyColumn!);
-            Delete(DbConnection, keyValue);
+            Delete(keyValue);
 
             // Remove the item from the in-memory rows and refresh UI
             Rows?.Remove(item);
