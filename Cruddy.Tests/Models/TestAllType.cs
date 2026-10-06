@@ -6,7 +6,6 @@ public class TestAllType
 {
     [Key]
     public int Id { get; set; }                        // int IDENTITY, PK
-    public Guid IdGuid { get; set; }                   // uniqueidentifier NOT NULL
 
     public int Int32NotNull { get; set; }              // int NOT NULL
     public int? Int32Nullable { get; set; }            // int NULL

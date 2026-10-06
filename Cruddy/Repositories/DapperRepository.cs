@@ -14,12 +14,23 @@ public class DapperRepository<TEntity>(DbConnection dbConnection, string schema,
 {
 #pragma warning disable S2077   // SonarQube rule S2077: "SQL queries should not be vulnerable to injection attacks".
 
+    /// <summary>
+    /// Gets all records from the database using the provided SQL query and maps them to a list of <typeparamref name="TEntity"/>.
+    /// </summary>
+    /// <param name="sql">The SQL query to execute.</param>
+    /// <returns>A list of <typeparamref name="TEntity"/> objects.</returns>
     public List<TEntity> GetAll(string sql)
     {
         IEnumerable<dynamic> dynRows = dbConnection.Query(sql);
         return Map<TEntity>(dynRows);
     }
 
+    /// <summary>
+    /// Gets a record by its ID from the database and maps it to an instance of <typeparamref name="TEntity"/>.
+    /// </summary>
+    /// <param name="id">The ID of the record to retrieve.</param>
+    /// <param name="columns">The columns to select.</param>
+    /// <returns>An instance of <typeparamref name="TEntity"/> if found; otherwise, null.</returns>
     public TEntity? GetById(object id, string columns = "*")
     {
         var sql = $"SELECT {columns} FROM {schema}.{tableName} WHERE {keyColumn} = @Id";
@@ -28,6 +39,13 @@ public class DapperRepository<TEntity>(DbConnection dbConnection, string schema,
         return Map<TEntity>(dynRows).FirstOrDefault();
     }
 
+    /// <summary>
+    /// Adds a new record to the database using the provided entity and properties, 
+    /// and returns the identity value or number of rows affected.
+    /// </summary>
+    /// <param name="entity">The entity to add to the database.</param>
+    /// <param name="properties">The properties of the entity to include in the insert statement.</param>
+    /// <returns>The identity value of the newly inserted record or the number of rows affected.</returns>
     public object? Add(TEntity entity, PropertyInfo[] properties)
     {
         ArgumentNullException.ThrowIfNull(entity);
@@ -50,6 +68,13 @@ public class DapperRepository<TEntity>(DbConnection dbConnection, string schema,
         }
     }
 
+    /// <summary>
+    /// Updates an existing record in the database using the provided entity, key value, and properties.
+    /// </summary>
+    /// <param name="entity">The entity to update in the database.</param>
+    /// <param name="keyValue">The value of the primary key for the record to update.</param>
+    /// <param name="properties">The properties of the entity to include in the update statement.</param>
+    /// <returns>The number of rows affected.</returns>
     public int Update(TEntity entity, object keyValue, PropertyInfo[] properties)
     {
         ArgumentNullException.ThrowIfNull(entity);
@@ -64,6 +89,11 @@ public class DapperRepository<TEntity>(DbConnection dbConnection, string schema,
         return dbConnection.Execute(sql, dp);
     }
 
+    /// <summary>
+    /// Deletes a record from the database using the provided key value.
+    /// </summary>
+    /// <param name="keyValue">The value of the primary key for the record to delete.</param>
+    /// <returns>The identity value of the deleted record or the number of rows affected.</returns>
     public object? Delete(object keyValue)
     {
         var sql = $"DELETE FROM {schema}.{tableName} WHERE {keyColumn} = @keyValue";

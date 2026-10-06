@@ -88,7 +88,6 @@ public class CruddyHelperTests
         var original = new TestAllType
         {
             Id = 1,
-            IdGuid = Guid.NewGuid(),
             Int32NotNull = int.MaxValue,
             Int32Nullable = 5,
             Int64NotNull = long.MaxValue,
@@ -115,7 +114,6 @@ public class CruddyHelperTests
 
         Assert.NotSame(original, copy);
         Assert.Equal(original.Id, copy.Id);
-        Assert.Equal(original.IdGuid, copy.IdGuid);
         Assert.Equal(int.MaxValue, copy.Int32NotNull);
         Assert.Equal(5, copy.Int32Nullable);
         Assert.Equal(long.MaxValue, copy.Int64NotNull);
@@ -144,7 +142,7 @@ public class CruddyHelperTests
         var original = new DateTimeType
         {
             Id = 2,
-            DateTimeNotNull = new DateTime(2024, 5, 6, 7, 8, 9),
+            DateTimeNotNull = new DateTime(2024, 5, 6, 7, 8, 9, DateTimeKind.Unspecified),
             DateTimeNullable = null,
             TimeSpanNotNull = TimeSpan.FromMinutes(90),
             TimeSpanNullable = TimeSpan.FromSeconds(5),
