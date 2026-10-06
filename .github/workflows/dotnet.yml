@@ -25,5 +25,5 @@ jobs:
     - name: Build
       run: dotnet build --no-restore
     - name: Test
-      dotnet test --no-build --verbosity normal --filter "FullyQualifiedName!~DatabaseTests"
+      run: dotnet test --no-build --verbosity normal --filter "FullyQualifiedName!~DatabaseTests"
      
