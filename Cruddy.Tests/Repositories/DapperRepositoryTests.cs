@@ -5,7 +5,7 @@ using Cruddy.Tests.Models;
 using Dapper;
 using Microsoft.Data.SqlClient;
 
-namespace Cruddy.Tests.Repositories;
+namespace Cruddy.Tests.Repositories.DatabaseTests;
 
 /// <summary>
 /// Integration tests for <see cref="DapperRepository{TEntity}"/> against the CruddyDB database.
