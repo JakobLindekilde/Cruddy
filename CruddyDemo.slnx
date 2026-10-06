@@ -1,5 +1,6 @@
 <Solution>
   <Folder Name="/Solution Items/">
+    <File Path="LICENSE.txt" />
     <File Path="README.md" />
   </Folder>
   <Project Path="Cruddy.Tests/Cruddy.Tests.csproj" Id="a1b15fb4-f022-4fb1-9f5c-d53f19b5716e" />
