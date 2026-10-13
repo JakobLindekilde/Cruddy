@@ -7,13 +7,15 @@ public partial class Order
 {
     public int Id { get; set; }
 
+    [DisplayName("Customer")]
     public int? Cid { get; set; }
 
+    [DisplayName("Product")]
     public int? Pid { get; set; }
 
+    [DisplayName("Employee")]
     public int? Eid { get; set; }
 
-    [DisplayName("Employee")]
     public int? Qty { get; set; }
 
     public int? Paid { get; set; }

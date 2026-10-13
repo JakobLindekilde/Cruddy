@@ -530,6 +530,11 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> where TEntity : class
                 return;
             }
 
+            if (HandleFKey(prop, ii.DisplayName))
+            {
+                return;
+            }
+
             var entityType = typeof(TEntity);
             var param = Expression.Parameter(entityType, "p");
             var access = Expression.Property(param, prop);
@@ -557,6 +562,44 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> where TEntity : class
             // ignore any failures adding a specific column
             // TODO: What should we do here? Log the error? Show a message in the UI?
         }
+    }
+
+    /// <summary>
+    /// Handles the rendering of a (possible) foreign key column in the QuickGrid. If the property is 
+    /// a foreign key, it retrieves the options for the foreign key and creates a template column 
+    /// that displays the corresponding display value instead of the raw foreign key value.
+    /// </summary>
+    /// <param name="prop">The property that might be a foreign key.</param>
+    /// <param name="columnTitle">The title of the column to be displayed in the QuickGrid.</param>
+    /// <returns>True if the property is a foreign key and the column was added; otherwise, false.</returns>
+    protected bool HandleFKey(PropertyInfo prop, string columnTitle)
+    {
+        LoadFKeyOptions();
+        var fkOptions = GetFKeyOptions(prop);
+        if (fkOptions is not null)
+        {
+            RenderFragment<TEntity> fkTemplate = item => builder =>
+            {
+                var value = prop.GetValue(item);
+                var option = value is null
+                    ? null
+                    : fkOptions.FirstOrDefault(o => Equals(o.Id, value) || o.Id?.ToString() == value.ToString());
+                builder.AddContent(0, option is not null ? option.Display : value);
+            };
+
+            MyColumns.Add(builder =>
+            {
+                builder.OpenComponent<TemplateColumn<TEntity>>(0);
+                builder.AddAttribute(1, nameof(TemplateColumn<>.ChildContent), fkTemplate);
+                builder.AddAttribute(2, nameof(TemplateColumn<>.Title), columnTitle);
+                builder.AddAttribute(3, nameof(TemplateColumn<>.Align), Align.Left);
+                builder.AddAttribute(4, nameof(TemplateColumn<>.Sortable), true);
+                builder.CloseComponent();
+            });
+            return true;
+        }
+
+        return false;
     }
 
     #endregion

@@ -1,6 +1,12 @@
 ﻿@page "/Orders"
 @inject Microsoft.Data.SqlClient.SqlConnection dbConnection
 
+
+<h3>Table Orders - using record as POCO</h3>
+
+<Cruddy TEntity="Models.Order" TableName="Orders" DbConnection="dbConnection" FKeys="CId: Customers, Id, Name; PId: Products, Id, Name; EId: Employees, Id, Name" />
+
+
 <h3>Table Orders - handcrafted SQL</h3>
 
 <Cruddy TEntity="Models.OrderCruddy" TableName="Orders" TableColumns="Id, CustomerName, ProductName, Qty, Paid, OrderDate" Select=@sql AllowDetails="true" DbConnection="dbConnection" />
