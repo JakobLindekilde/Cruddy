@@ -121,15 +121,16 @@ public partial class CruddyBase<TEntity> : ComponentBase where TEntity : class
 
 
     /// <summary>
-    /// Foreign key info in format "FKey: PrimaryTable, PrimaryId, PrimaryDisplay"
+    /// Foreign key info in format 
+    /// "FKey1: PrimaryTable1, PrimaryId1, PrimaryDisplay1; FKey2: PrimaryTable2, PrimaryId2, PrimaryDisplay2; ..."
     /// </summary>
     [Parameter]
-    public string? FKey { get; set; }
+    public string? FKeys { get; set; }
 
     /// <summary>
-    /// Foreign key info object that is initialized from the <seealso cref="FKey"/> parameter.
+    /// Foreign key info object that is initialized from the <seealso cref="FKeys"/> parameter.
     /// </summary>
-    protected FKeyInfo? FKeyInfo { get; set; }
+    protected List<FKeyInfo> FKeyInfoList = []; 
 
 
     /// <summary>
@@ -143,34 +144,41 @@ public partial class CruddyBase<TEntity> : ComponentBase where TEntity : class
     /// </summary>
     protected override async Task OnInitializedAsync()
     {
-        FKeyInfo = FillFKeyInfo(FKey);
+        FKeyInfoList = FillFKeyInfoList(FKeys);
         FillColumnAliasDict();
         Rows = Repository.GetAll(BuildSql());
     }
 
     /// <summary>
-    /// Fills the <seealso cref="FKeyInfo"/> object from the <seealso cref="FKey"/> parameter.
+    /// Fills the <seealso cref="FKeyInfoList"/> object from the <seealso cref="FKeys"/> parameter.
     /// </summary>
-    public static FKeyInfo? FillFKeyInfo(string? fKey)
+    public static List<FKeyInfo> FillFKeyInfoList(string? fKeys)
     {
-        if (string.IsNullOrEmpty(fKey))
+        var result = new List<FKeyInfo>();
+        if (string.IsNullOrEmpty(fKeys))
         {
-            return null;
+            return result;
         }
 
-        var parts = fKey.Split(':', 2);
-        if (parts.Length != 2)
+        var fKeyArray = fKeys.Split(';');
+        foreach (var fKey in fKeyArray)
         {
-            return null;
+            var parts = fKey.Split(':', 2);
+            if (parts.Length != 2)
+            {
+                continue;
+            }
+
+            var values = parts[1].Split(',').Select(v => v.Trim()).ToArray();
+            if (values.Length != 3)
+            {
+                continue;
+            }
+
+            result.Add(new FKeyInfo(parts[0].Trim(), values[0], values[1], values[2]));
         }
 
-        var values = parts[1].Split(',').Select(v => v.Trim()).ToArray();
-        if (values.Length != 3)
-        {
-            return null;
-        }
-
-        return new FKeyInfo(parts[0].Trim(), values[0], values[1], values[2]);
+        return result;
     }
 
     /// <summary>

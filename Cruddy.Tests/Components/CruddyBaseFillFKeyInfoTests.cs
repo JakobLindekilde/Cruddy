@@ -8,56 +8,68 @@ public class CruddyBaseFillFKeyInfoTests
     [Theory]
     [InlineData(null)]
     [InlineData("")]
-    public void FillFKeyInfo_NullOrEmpty_ReturnsNull(string? fKey)
+    public void FillFKeyInfo_NullOrEmpty_ReturnsEmptyList(string? fKey)
     {
-        Assert.Null(CruddyBase<object>.FillFKeyInfo(fKey));
+        var result = CruddyBase<object>.FillFKeyInfoList(fKey);
+        Assert.NotNull(result);
+        Assert.Empty(result);
     }
 
     [Fact]
-    public void FillFKeyInfo_NoColon_ReturnsNull()
+    public void FillFKeyInfo_NoColon_ReturnsEmptyList()
     {
-        Assert.Null(CruddyBase<object>.FillFKeyInfo("CategoryId"));
+        var result = CruddyBase<object>.FillFKeyInfoList("CategoryId");
+        Assert.NotNull(result);
+        Assert.Empty(result);
     }
 
     [Theory]
     [InlineData("CategoryId: Categories, Id")]
     [InlineData("CategoryId: Categories, Id, Name, Extra")]
     [InlineData("CategoryId:")]
-    public void FillFKeyInfo_WrongNumberOfValues_ReturnsNull(string fKey)
+    public void FillFKeyInfo_WrongNumberOfValues_ReturnsEmptyList(string fKey)
     {
-        Assert.Null(CruddyBase<object>.FillFKeyInfo(fKey));
+        var result = CruddyBase<object>.FillFKeyInfoList(fKey);
+        Assert.NotNull(result);
+        Assert.Empty(result);
     }
 
     [Fact]
     public void FillFKeyInfo_ValidInput_ReturnsPopulatedInfo()
     {
-        var result = CruddyBase<object>.FillFKeyInfo("CategoryId: Categories, Id, Name");
+        var result = CruddyBase<object>.FillFKeyInfoList("CategoryId1: Categories1, Id1, Name1; CategoryId2: Categories2, Id2, Name2");
 
         Assert.NotNull(result);
-        Assert.Equal("CategoryId", result.FKey);
-        Assert.Equal("Categories", result.PrimaryTable);
-        Assert.Equal("Id", result.PrimaryId);
-        Assert.Equal("Name", result.PrimaryDisplay);
+        
+        Assert.Equal("CategoryId1", result[0].FKey);
+        Assert.Equal("Categories1", result[0].PrimaryTable);
+        Assert.Equal("Id1", result[0].PrimaryId);
+        Assert.Equal("Name1", result[0].PrimaryDisplay);
+
+        Assert.Equal("CategoryId2", result[1].FKey);
+        Assert.Equal("Categories2", result[1].PrimaryTable);
+        Assert.Equal("Id2", result[1].PrimaryId);
+        Assert.Equal("Name2", result[1].PrimaryDisplay);
     }
 
     [Fact]
     public void FillFKeyInfo_ExtraWhitespace_TrimsValues()
     {
-        var result = CruddyBase<object>.FillFKeyInfo("  CategoryId  :  Categories ,  Id  ,  Name  ");
+        var result = CruddyBase<object>.FillFKeyInfoList("  CategoryId  :  Categories ,  Id  ,  Name  ");
 
         Assert.NotNull(result);
-        Assert.Equal("CategoryId", result.FKey);
-        Assert.Equal("Categories", result.PrimaryTable);
-        Assert.Equal("Id", result.PrimaryId);
-        Assert.Equal("Name", result.PrimaryDisplay);
+        Assert.Equal("CategoryId", result[0].FKey);
+        Assert.Equal("Categories", result[0].PrimaryTable);
+        Assert.Equal("Id", result[0].PrimaryId);
+        Assert.Equal("Name", result[0].PrimaryDisplay);
     }
 
     [Fact]
     public void FillFKeyInfo_NoSpaces_ParsesCorrectly()
     {
-        var result = CruddyBase<object>.FillFKeyInfo("CategoryId:Categories,Id,Name");
+        var result = CruddyBase<object>.FillFKeyInfoList("CategoryId:Categories,Id,Name");
 
         Assert.NotNull(result);
-        Assert.Equal("Categories", result.PrimaryTable);
+        Assert.Equal("Categories", result[0].PrimaryTable);
     }
 }
