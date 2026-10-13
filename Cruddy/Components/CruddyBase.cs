@@ -150,8 +150,7 @@ public partial class CruddyBase<TEntity> : ComponentBase where TEntity : class
 
         foreach (var info in FKeyInfoList)
         {
-            var sql = $"SELECT {info.PrimaryId} AS Id, {info.PrimaryDisplay} AS Display FROM {info.PrimaryTable} ORDER BY {info.PrimaryDisplay}";
-            FKeyOptions[info.FKey] = Dapper.SqlMapper.Query<FKeyOption>(DbConnection, sql).ToList();
+            FKeyOptions[info.FKey] = Repository.GetFKeyOptions(info);
         }
     }
 

@@ -1,3 +1,4 @@
+using Cruddy.Components;
 using Dapper;
 using System.Data.Common;
 using System.Reflection;
@@ -98,6 +99,17 @@ public class DapperRepository<TEntity>(DbConnection dbConnection, string schema,
     {
         var sql = $"DELETE FROM {schema}.{tableName} WHERE {keyColumn} = @keyValue";
         return dbConnection.ExecuteScalar(sql, param: new { keyValue });
+    }
+
+    /// <summary>
+    /// Gets the dropdown options for a foreign key from the primary table.
+    /// </summary>
+    /// <param name="info">The foreign key info.</param>
+    /// <returns>A list of options ordered by display value.</returns>
+    public List<FKeyOption> GetFKeyOptions(FKeyInfo info)
+    {
+        var sql = $"SELECT {info.PrimaryId} AS Id, {info.PrimaryDisplay} AS Display FROM {info.PrimaryTable} ORDER BY {info.PrimaryDisplay}";
+        return dbConnection.Query<FKeyOption>(sql).ToList();
     }
 
 #pragma warning restore S2077

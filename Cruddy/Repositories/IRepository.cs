@@ -1,3 +1,4 @@
+using Cruddy.Components;
 using System.Reflection;
 
 namespace Cruddy.Repositories;
@@ -46,4 +47,11 @@ public interface IRepository<TEntity>
     /// <param name="keyValue">The value of the primary key for the record to delete.</param>
     /// <returns>The identity value of the deleted record or the number of rows affected.</returns>
     object? Delete(object keyValue);
+
+    /// <summary>
+    /// Gets the dropdown options for a foreign key from the primary table.
+    /// </summary>
+    /// <param name="info">The foreign key info.</param>
+    /// <returns>A list of options ordered by display value.</returns>
+    List<FKeyOption> GetFKeyOptions(FKeyInfo info);
 }
