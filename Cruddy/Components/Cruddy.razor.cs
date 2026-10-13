@@ -156,6 +156,11 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> where TEntity : class
     protected string? ErrorMessage { get; set; }
 
     /// <summary>
+    /// Holds a user visible error message when e.g. Edit or Create fails.
+    /// </summary>
+    protected string? EditErrorMessage { get; set; }
+
+    /// <summary>
     /// Navigation manager used to reload the page when ReloadPageAfterChange is true.
     /// </summary>
     [Inject]
@@ -326,7 +331,14 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> where TEntity : class
         }
         catch (Exception ex)
         {
-            ErrorMessage = $"Update failed: {ex.Message}";
+            if (ActionCrud == CrudOperation.Create || ActionCrud == CrudOperation.Update)
+            {
+                EditErrorMessage = $"Update failed: {ex.Message}";
+            }
+            else
+            {
+                ErrorMessage = $"Action failed: {ex.Message}";
+            }
             await ShowErrorMessage();
         }
     }
@@ -590,6 +602,7 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> where TEntity : class
         {
             await Task.Delay(showDuration);
             ErrorMessage = null;
+            EditErrorMessage = null;
             await InvokeAsync(StateHasChanged);
         });
     }

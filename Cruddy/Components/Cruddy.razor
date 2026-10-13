@@ -8,7 +8,7 @@
     <p>No data found.</p>
 }
 
-@if (!(ActionCrud == CrudOperation.Update || ActionCrud == CrudOperation.Create) && !string.IsNullOrEmpty(ErrorMessage))
+@if (!string.IsNullOrEmpty(ErrorMessage))
 {
     <div class="alert alert-danger" role="alert">@ErrorMessage</div>
 }
@@ -68,9 +68,9 @@
                     <h5 class="modal-title">@(ActionCrud == CrudOperation.Create ? "Create" : "Edit") - @typeof(TEntity).Name</h5>
                     <button type="button" class="btn-close" aria-label="Close" @onclick="CancelAction"></button>
                 </div>
-                @if (!string.IsNullOrEmpty(ErrorMessage))
+                @if (!string.IsNullOrEmpty(EditErrorMessage))
                 {
-                    <div class="alert alert-danger" role="alert">@ErrorMessage</div>
+                    <div class="alert alert-danger" role="alert">@EditErrorMessage</div>
                 }
                 <div class="modal-body">
                     <EditForm EditContext="@(EditCtx!)" OnValidSubmit="ConfirmActionAsync">
