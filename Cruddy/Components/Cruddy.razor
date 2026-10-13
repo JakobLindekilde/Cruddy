@@ -43,9 +43,12 @@
                             {
                                 var ii = GetInputInfo(prop, ActionItem, ActionCrud);
                                 if (!ii.Visible) continue;
+                                var detailFkOptions = GetFKeyOptions(prop);
+                                var detailFkOption = ii.Value is null ? null : 
+                                    detailFkOptions?.FirstOrDefault(o => Equals(o.Id, ii.Value) || o.Id?.ToString() == ii.Value.ToString());
                                 <tr>
                                     <th>@ii.DisplayName</th>
-                                    <td>@ii.FormattedValue</td>
+                                    <td>@(detailFkOption is not null ? detailFkOption.Display : ii.FormattedValue)</td>
                                 </tr>
                             }
                         </tbody>

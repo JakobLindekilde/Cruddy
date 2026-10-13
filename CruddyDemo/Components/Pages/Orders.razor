@@ -4,9 +4,9 @@
 
 <h3>Table Orders - using record as POCO</h3>
 
-<Cruddy TEntity="Models.Order" TableName="Orders" DbConnection="dbConnection" FKeys="CId: Customers, Id, Name; PId: Products, Id, Name; EId: Employees, Id, Name" />
+<Cruddy TEntity="Models.Order" TableName="Orders" DbConnection="dbConnection" FKeys="CId: Customers, Id, Name; PId: Products, Id, Name; EId: Employees, Id, Name" AllowCrud="true" />
 
-
+<br />
 <h3>Table Orders - handcrafted SQL</h3>
 
 <Cruddy TEntity="Models.OrderCruddy" TableName="Orders" TableColumns="Id, CustomerName, ProductName, Qty, Paid, OrderDate" Select=@sql AllowDetails="true" DbConnection="dbConnection" />

@@ -200,6 +200,8 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> where TEntity : class
 
     private void ShowDetails(TEntity item)
     {
+        LoadFKeyOptions();
+
         if (string.IsNullOrEmpty(DetailsColumns))
         {
             ActionItem = item;
