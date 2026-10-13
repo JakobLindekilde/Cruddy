@@ -119,19 +119,58 @@ public partial class CruddyBase<TEntity> : ComponentBase where TEntity : class
     [Parameter]
     public required DbConnection DbConnection { get; set; }
 
+
+    /// <summary>
+    /// Foreign key info in format "FKey: PrimaryTable, PrimaryId, PrimaryDisplay"
+    /// </summary>
+    [Parameter]
+    public string? FKey { get; set; }
+
+    /// <summary>
+    /// Foreign key info object that is initialized from the <seealso cref="FKey"/> parameter.
+    /// </summary>
+    protected FKeyInfo? FKeyInfo { get; set; }
+
+
     /// <summary>
     /// The rows retrieved from the database.
     /// </summary>
-    protected List<TEntity> Rows = new();
+    protected List<TEntity> Rows = [];
 
     /// <summary>
-    /// During component initialization, this method fills <see cref="ColumnAliasDict"/>, 
+    /// During component initialization, this method fills <see cref="FKeyInfo"/> and <see cref="ColumnAliasDict"/>, 
     /// adds columns to the grid and retrieves the rows from the database.
     /// </summary>
     protected override async Task OnInitializedAsync()
     {
+        FKeyInfo = FillFKeyInfo(FKey);
         FillColumnAliasDict();
         Rows = Repository.GetAll(BuildSql());
+    }
+
+    /// <summary>
+    /// Fills the <seealso cref="FKeyInfo"/> object from the <seealso cref="FKey"/> parameter.
+    /// </summary>
+    public static FKeyInfo? FillFKeyInfo(string? fKey)
+    {
+        if (string.IsNullOrEmpty(fKey))
+        {
+            return null;
+        }
+
+        var parts = fKey.Split(':', 2);
+        if (parts.Length != 2)
+        {
+            return null;
+        }
+
+        var values = parts[1].Split(',').Select(v => v.Trim()).ToArray();
+        if (values.Length != 3)
+        {
+            return null;
+        }
+
+        return new FKeyInfo(parts[0].Trim(), values[0], values[1], values[2]);
     }
 
     /// <summary>
