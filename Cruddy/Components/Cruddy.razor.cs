@@ -186,29 +186,8 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> where TEntity : class
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
-        LoadFKeyOptions();
         AddColumnsToGrid();
     }
-
-    /// <summary>
-    /// Dropdown options (id and display text) per foreign key column, loaded from FKeyInfoList.
-    /// </summary>
-    protected Dictionary<string, List<FKeyOption>> FKeyOptions { get; } = new(StringComparer.OrdinalIgnoreCase);
-
-    private void LoadFKeyOptions()
-    {
-        foreach (var info in FKeyInfoList)
-        {
-            var sql = $"SELECT {info.PrimaryId} AS Id, {info.PrimaryDisplay} AS Display FROM {DefaultSchema}.{info.PrimaryTable} ORDER BY {info.PrimaryDisplay}";
-            FKeyOptions[info.FKey] = Dapper.SqlMapper.Query<FKeyOption>(DbConnection, sql).ToList();
-        }
-    }
-
-    /// <summary>
-    /// Gets the dropdown options for a property if it is a foreign key, otherwise null.
-    /// </summary>
-    protected List<FKeyOption>? GetFKeyOptions(PropertyInfo prop) =>
-        FKeyOptions.TryGetValue(prop.Name, out var options) ? options : null;
 
     #endregion
 
@@ -245,6 +224,8 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> where TEntity : class
 
     private Task ShowEdit(CrudOperation actionCrud, TEntity item = default!)
     {
+        LoadFKeyOptions();
+
         ActionItem = actionCrud == CrudOperation.Create ? 
                 CruddyHelper.NewInstance<TEntity>() :
                 CruddyHelper.DeepCopy(item);
@@ -364,7 +345,6 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> where TEntity : class
         }
     }
 
-
     /// <summary>
     /// Called when a single field is changed in the edit form. Updates the EditItem property via reflection
     /// and notifies the EditContext for validation.
@@ -392,7 +372,6 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> where TEntity : class
             // ignore conversion errors here; validation will catch invalid values on submit
         }
     }
-
 
     #endregion
 

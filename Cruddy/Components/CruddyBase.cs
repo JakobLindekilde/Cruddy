@@ -130,7 +130,36 @@ public partial class CruddyBase<TEntity> : ComponentBase where TEntity : class
     /// <summary>
     /// Foreign key info object that is initialized from the <seealso cref="FKeys"/> parameter.
     /// </summary>
-    protected List<FKeyInfo> FKeyInfoList = []; 
+    protected List<FKeyInfo> FKeyInfoList = [];
+
+    /// <summary>
+    /// Dropdown options (id and display text) per foreign key column, loaded from FKeyInfoList.
+    /// </summary>
+    protected Dictionary<string, List<FKeyOption>> FKeyOptions { get; } = new(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// Loads the foreign key options for each foreign key column defined in FKeyInfoList.
+    /// </summary>
+    protected void LoadFKeyOptions()
+    {
+        if (FKeyOptions.Count > 0)
+        {
+            // Already loaded, no need to load again    
+            return;
+        }
+
+        foreach (var info in FKeyInfoList)
+        {
+            var sql = $"SELECT {info.PrimaryId} AS Id, {info.PrimaryDisplay} AS Display FROM {info.PrimaryTable} ORDER BY {info.PrimaryDisplay}";
+            FKeyOptions[info.FKey] = Dapper.SqlMapper.Query<FKeyOption>(DbConnection, sql).ToList();
+        }
+    }
+
+    /// <summary>
+    /// Gets the dropdown options for a property if it is a foreign key, otherwise null.
+    /// </summary>
+    protected List<FKeyOption>? GetFKeyOptions(PropertyInfo prop) =>
+        FKeyOptions.TryGetValue(prop.Name, out var options) ? options : null;
 
 
     /// <summary>
@@ -144,7 +173,7 @@ public partial class CruddyBase<TEntity> : ComponentBase where TEntity : class
     /// </summary>
     protected override async Task OnInitializedAsync()
     {
-        FKeyInfoList = FillFKeyInfoList(FKeys);
+        FKeyInfoList = FillFKeyInfoList(FKeys, DefaultSchema);
         FillColumnAliasDict();
         Rows = Repository.GetAll(BuildSql());
     }
@@ -152,7 +181,7 @@ public partial class CruddyBase<TEntity> : ComponentBase where TEntity : class
     /// <summary>
     /// Fills the <seealso cref="FKeyInfoList"/> object from the <seealso cref="FKeys"/> parameter.
     /// </summary>
-    public static List<FKeyInfo> FillFKeyInfoList(string? fKeys)
+    public static List<FKeyInfo> FillFKeyInfoList(string? fKeys, string defaultSchema)
     {
         var result = new List<FKeyInfo>();
         if (string.IsNullOrEmpty(fKeys))
@@ -175,7 +204,13 @@ public partial class CruddyBase<TEntity> : ComponentBase where TEntity : class
                 continue;
             }
 
-            result.Add(new FKeyInfo(parts[0].Trim(), values[0], values[1], values[2]));
+            var primaryTable = values[0];
+            if (!primaryTable.Contains('.'))
+            {
+                primaryTable = defaultSchema + "." + primaryTable;
+            }
+
+            result.Add(new FKeyInfo(parts[0].Trim(), primaryTable, values[1], values[2]));
         }
 
         return result;
