@@ -91,7 +91,22 @@
                                         <th>@ii.DisplayName</th>
                                         <td>
                                             @{
-                                                if (TypeHelper.IsNumber(ii.Type))
+                                                var fkOptions = GetFKeyOptions(prop);
+                                                if (fkOptions != null)
+                                                {
+                                                    <select class="form-select" disabled="@ii.Disabled" required="@ii.Required" @onchange="(e) => OnFieldChanged(prop, e.Value)">
+                                                        @if (PropertyHelper.IsNullable(prop) || ActionCrud == CrudOperation.Create)
+                                                        {
+                                                            <option value="">--</option>
+                                                        }
+                                                        @foreach (var opt in fkOptions)
+                                                        {
+                                                            var optId = opt.Id?.ToString();
+                                                            <option value="@optId" selected="@(ii.Value != null && ii.Value.ToString() == optId)">@opt.Display</option>
+                                                        }
+                                                    </select>
+                                                }
+                                                else if (TypeHelper.IsNumber(ii.Type))
                                                 {
                                                     <input type="number" class="form-control" value="@(ii.Value?.ToString() ?? string.Empty)" disabled="@ii.Disabled" required="@ii.Required" @onchange="(e) => OnFieldChanged(prop, e.Value)" />
                                                 }
