@@ -66,4 +66,54 @@ public class PluralizeHelperTests
         var plural = PluralizeHelper.Pluralize(singular);
         Assert.Equal(expectedPlural, plural);
     }
+
+
+    [Theory]
+    // y preceded by consonant -> ies
+    [InlineData("Categories", true)]
+    [InlineData("Cities", true)]
+    [InlineData("Babies", true)]
+    [InlineData("Bies", true)]
+
+    // y preceded by vowel -> just add s
+    [InlineData("Keys", true)]
+    [InlineData("Days", true)]
+
+    // endings that add es
+    [InlineData("Buses", true)]
+    [InlineData("Boxes", true)]
+    [InlineData("Buzzes", true)]
+    [InlineData("Churches", true)]
+    [InlineData("Dishes", true)]
+
+    // regular plurals
+    [InlineData("Cats", true)]
+    [InlineData("Dogs", true)]
+
+    // case preservation tests
+    [InlineData("BUSES", true)]
+    [InlineData("CHurChes", true)]
+
+    [InlineData("Category", false)]
+    [InlineData("city", false)]
+    [InlineData("baby", false)]
+    [InlineData("by", false)]
+    [InlineData("key", false)]
+    [InlineData("day", false)]
+    [InlineData("bus", false)]
+    [InlineData("box", false)]
+    [InlineData("buzz", false)]
+    [InlineData("church", false)]
+    [InlineData("dish", false)]
+    [InlineData("cat", false)]
+    [InlineData("dog", false)]
+    [InlineData("BUS", false)]
+    [InlineData("CHurCh", false)]
+    [InlineData("", false)]
+    public void IsPluralized_Returns_Expected(string plural, bool expected)
+    {
+        var result = PluralizeHelper.IsPluralized(plural);
+        Assert.Equal(expected, result);
+    }
+
 }

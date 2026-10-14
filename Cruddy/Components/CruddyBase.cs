@@ -172,7 +172,7 @@ public partial class CruddyBase<TEntity> : ComponentBase where TEntity : class
     /// </summary>
     protected override async Task OnInitializedAsync()
     {
-        FKeyInfoList = FillFKeyInfoList(FKeys, DefaultSchema);
+        FKeyInfoList = FillFKeyInfoList(FKeys, DefaultSchema, PluralizeTableName);
         FillColumnAliasDict();
         Rows = Repository.GetAll(BuildSql());
     }
@@ -180,7 +180,7 @@ public partial class CruddyBase<TEntity> : ComponentBase where TEntity : class
     /// <summary>
     /// Fills the <seealso cref="FKeyInfoList"/> object from the <seealso cref="FKeys"/> parameter.
     /// </summary>
-    public static List<FKeyInfo> FillFKeyInfoList(string? fKeys, string defaultSchema)
+    public static List<FKeyInfo> FillFKeyInfoList(string? fKeys, string defaultSchema, bool pluralizeTableName)
     {
         var result = new List<FKeyInfo>();
         if (string.IsNullOrEmpty(fKeys))
@@ -192,8 +192,14 @@ public partial class CruddyBase<TEntity> : ComponentBase where TEntity : class
         foreach (var fKey in fKeyArray)
         {
             var parts = fKey.Split(':', 2);
-            if (parts.Length != 2)
+
+            if (parts.Length == 1)
             {
+                var guessed = GuessFKeyInfo(fKey, defaultSchema, pluralizeTableName);
+                if (guessed != null)
+                {
+                    result.AddRange(guessed);
+                }
                 continue;
             }
 
@@ -213,6 +219,35 @@ public partial class CruddyBase<TEntity> : ComponentBase where TEntity : class
         }
 
         return result;
+    }
+
+    /// <summary>
+    /// Guesses the foreign key info based on the foreign key column name.
+    /// We expect that the foreign key column name is in the format "{Tablename}{Id}".
+    /// </summary>
+    /// <param name="fKey">The foreign key column name.</param>
+    /// <param name="defaultSchema">The default schema to use if the primary table does not specify one.</param>
+    /// <param name="pluralizeTableName">Indicates whether to pluralize the table name if it is not already pluralized.</param>
+    /// <returns>The guessed <see cref="FKeyInfo"/> object, or null if it cannot be guessed.</returns>
+    public static FKeyInfo GuessFKeyInfo(string fKey, string defaultSchema, bool pluralizeTableName)
+    {
+        var primaryId = fKey.EndsWith("Id", StringComparison.OrdinalIgnoreCase) ? "Id" : string.Empty;
+        if (string.IsNullOrEmpty(primaryId))
+        {
+            return null!;
+        }
+
+        var primaryTable = fKey[..^2];
+        if (pluralizeTableName && !PluralizeHelper.IsPluralized(primaryTable))
+        {
+            primaryTable = PluralizeHelper.Pluralize(primaryTable);
+        }
+        if (!primaryTable.Contains('.'))
+        {
+            primaryTable = defaultSchema + "." + primaryTable;
+        }
+        
+        return new FKeyInfo(fKey, primaryTable, primaryId, "Name");
     }
 
     /// <summary>

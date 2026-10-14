@@ -6,6 +6,43 @@
 static public class PluralizeHelper
 {
     /// <summary>
+    /// Determines if a given name is pluralized based on its ending. 
+    /// It checks for common plural suffixes such as 'ies', 'es', and 's'.
+    /// </summary>
+    /// <param name="name">The name to check.</param>
+    /// <returns>True if the name is pluralized; otherwise, false.</returns>
+    static public bool IsPluralized(string name)
+    {
+        if (string.IsNullOrEmpty(name))
+        {
+            return false;
+        }   
+
+        if (name.EndsWith("ies", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+        else if (name.EndsWith("es", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+        else if (name.EndsWith("ss", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;   // E.g. "class"
+        }
+        else if (name.EndsWith("us", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;   // E.g. "cactus", "bus"
+        }
+        else if (name.EndsWith("s", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
     /// Pluralizes a given name according to basic English rules. If the name ends with 'y' and is preceded
     /// by a consonant, it replaces 'y' with 'ies'. If the name ends with 's', 'x', 'z', 'ch', or 'sh', 
     /// it adds 'es'. Otherwise, it simply adds 's'.
