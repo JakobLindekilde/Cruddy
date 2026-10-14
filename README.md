@@ -1,7 +1,7 @@
 # Cruddy
 
-Why Cruddy? -I needed a simple and easy-to-use CRUD component that could do CRUD operations on any database table.
-I wanted to be able to use it with any class or record. I also wanted to use Dapper and not Entity Framework. 
+Why Cruddy? -I needed a simple component that could do CRUD operations on any database table.
+I wanted to be able to use it with any class or record. It had to use Dapper for database operations. 
 
 ## Overview
 
@@ -9,17 +9,18 @@ I wanted to be able to use it with any class or record. I also wanted to use Dap
 - Cruddy is based on the Microsoft QuickGrid component
 - Cruddy requires a model class or record
 - When editing or creating validation is done based on the class properties and attributes (DataAnnotations) 
-- The model class/record properties does not need to match the database table columns
+- The model class/record properties do not need to match the database table columns
 - Cruddy uses Dapper - not Entity Framework
 - Cruddy will generate the appropriate CRUD SQL statements
 - Cruddy does not use any non-Microsoft NuGet packages (except for Dapper)
+- Foreign keys are handled by Cruddy - See the FKeys parameter in the table below
 
 ## How to contribute
 
 You can contribute to Cruddy by creating a pull request on GitHub.
 Please follow normal/typical coding standards and include tests for changes and new features.
 
-Please run the tests locally: Setup local database with the provided SQL script. 
+Please run the tests locally: You need to set up a local database with the provided SQL script. 
 Else the database tests will not be run. I have not set up a test database in GitHub Actions yet.
 
 ## Roadmap for version 1
@@ -27,9 +28,10 @@ Else the database tests will not be run. I have not set up a test database in Gi
 - Date for version 1: Before end of 2026
 - Get stable and usable for production
 - Make it a NuGet package
-- Add some kind of support for foreign keys and related tables (not sure how to do that yet)
 
 ## Examples 
+
+Note: There are more examples in the CruddyDemo project.
 
 Most simple use (no CRUD):
 ```razor
@@ -100,7 +102,8 @@ Note how attribute Key, DisplayName and DisplayFormat are used in the model clas
 | Where | SQL WHERE clause (without the "WHERE" keyword) to filter results. |
 | SortOrder | Sorting order for OrderBy (Ascending / Descending). |
 | Select | If provided, this full SQL SELECT statement will be used instead of the generated one. |
-| DbConnection | A required ADO.NET DbConnection (e.g. SqlConnection) used by Dapper to query and modify the database. |
+| DbConnection | An ADO.NET DbConnection (e.g. SqlConnection) used by Dapper to query and modify the database. |
+| FKeys | Foreign key info in format "FKey: PrimaryTable, PrimaryId, PrimaryDisplay; FKey2: ...". Or just the foreign key column name(s) and Cruddy will try to guess the rest. |
 
 ## UI and formatting related parameters - Cruddy.razor.cs:
 
@@ -134,12 +137,10 @@ Note how attribute Key, DisplayName and DisplayFormat are used in the model clas
 
 - Create database CruddyDB
 - Run script CruddyDB test database.sql
-- Compile and run
+- Compile and run CruddyDemo project
 
 ## Known issues
 - It's a beta! Needs beautification...
 - Only tested with MS SQL Server - but should work with any database that Dapper supports
 - Method DapperRepository.Add() will need more work for other databases than MS SQL Server
 - Cruddy does not support composite primary keys (no plans for that in version 1)
-- Class as property in a model class not supported (no plans for that in version 1)
-- List and collection properties in a model class not supported (no plans for that in version 1)
