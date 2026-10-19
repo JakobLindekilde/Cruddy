@@ -33,6 +33,60 @@ Else the database tests will not be run. I have not set up a test database in Gi
 
 Note: There are more examples in the CruddyDemo project.
 
+Typical use:
+
+```razor
+@page "/Customers"
+@inject Microsoft.Data.SqlClient.SqlConnection dbConnection
+
+<h3>Table Customers</h3>
+
+<h4>TableColumns="*"</h4>
+<Cruddy TEntity="Models.Customer" AllowCrud="true" DbConnection="dbConnection" HideKeyColumn="true" />
+
+@code {
+}
+```
+
+The razor above will result in this QuickGrid:
+<img src="docs/screenshots/TableCustomersCruddy.png" alt="Cruddy example" width="800" />
+
+Models.Customer:
+```csharp   
+public class Customer
+{
+    public Customer() { }
+
+    [Key]
+    public int Id { get; set; }
+
+    [DisplayName("Customer Name")]
+    public required string Name { get; set; }
+
+    [MaxLength(30, ErrorMessage = "Email cannot exceed 30 digits.")]    
+    public required string Email { get; set; }
+
+    public bool Vip { get; set; }
+
+    public int Phone { get; set; }
+
+    [DisplayName("Birth Date")]
+    public DateTime Birthdate { get; set; }
+}
+```
+If the model class has a property with the attribute [Key], Cruddy will use that property as the primary key column. 
+If no property has the [Key] attribute, Cruddy will try to find a property named "Id" or "{ClassName}Id" and use that as the primary key column.
+Or use the KeyColumn parameter to specify the primary key column name.
+
+Table Customers:
+<img src="docs/screenshots/TableCustomers.png" alt="Cruddy example" width="400" />
+
+Details, Edit, Create and Delete modals:
+<img src="docs/screenshots/Details.png" alt="Cruddy Details" width="800" />
+<img src="docs/screenshots/Edit.png" alt="Cruddy Edit" width="800" />
+<img src="docs/screenshots/Create.png" alt="Cruddy Create" width="800" />
+<img src="docs/screenshots/Delete.png" alt="Cruddy Delete" width="800" />
+
 Most simple use (no CRUD):
 ```razor
 @page "/Products"
@@ -42,18 +96,6 @@ Most simple use (no CRUD):
 
 <h4>Simple as possible</h4>
 <Cruddy TEntity="Models.Product" DbConnection="dbConnection" />
-
-@code {}
-```
-
-Typical use (with CRUD):
-```razor
-@page "/Customers"
-@inject Microsoft.Data.SqlClient.SqlConnection dbConnection
-
-<h3>Table Customers</h3>
-
-<Cruddy TEntity="Models.Customer" TableName="Customers" AllowCrud="true" DbConnection="dbConnection" />
 
 @code {}
 ```

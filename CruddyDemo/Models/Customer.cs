@@ -31,5 +31,4 @@ public class Customer
     [DisplayFormat(DataFormatString = "dd-MM-yyyy", ApplyFormatInEditMode = true)]
     [DataType(DataType.Date)]
     public DateTime Birthdate { get; set; }
-
 }
