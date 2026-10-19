@@ -6,10 +6,13 @@
     <File Path=".github/copilot-instructions.md" />
     <File Path=".github/workflows/dotnet.yml" />
   </Folder>
-  <Folder Name="/Docs/" />
-  <Folder Name="/Docs/screenshots/">
-    <File Path="Docs/screenshots/TableCustomers.png" />
-    <File Path="Docs/screenshots/TableCustomersCruddy.png" />
+  <Folder Name="/Docs/">
+    <File Path="Docs/Create.png" />
+    <File Path="Docs/Delete.png" />
+    <File Path="Docs/Details.png" />
+    <File Path="Docs/Edit.png" />
+    <File Path="Docs/TableCustomers.png" />
+    <File Path="Docs/TableCustomersCruddy.png" />
   </Folder>
   <Folder Name="/Solution Items/">
     <File Path="LICENSE.txt" />

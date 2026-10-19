@@ -49,7 +49,7 @@ Typical use:
 ```
 
 The razor above will result in this QuickGrid:
-<img src="docs/screenshots/TableCustomersCruddy.png" alt="Cruddy example" width="800" />
+<img src="Docs/TableCustomersCruddy.png" alt="Cruddy example" width="800" />
 
 Models.Customer:
 ```csharp   
@@ -79,13 +79,13 @@ If no property has the [Key] attribute, Cruddy will try to find a property named
 Or use the KeyColumn parameter to specify the primary key column name.
 
 Table Customers:
-<img src="docs/screenshots/TableCustomers.png" alt="Cruddy example" width="400" />
+<img src="Docs/TableCustomers.png" alt="Cruddy example" width="400" />
 
 Details, Edit, Create and Delete modals:
-<img src="docs/screenshots/Details.png" alt="Cruddy Details" width="800" />
-<img src="docs/screenshots/Edit.png" alt="Cruddy Edit" width="800" />
-<img src="docs/screenshots/Create.png" alt="Cruddy Create" width="800" />
-<img src="docs/screenshots/Delete.png" alt="Cruddy Delete" width="800" />
+<img src="Docs/Details.png" alt="Cruddy Details" width="800" />
+<img src="Docs/Edit.png" alt="Cruddy Edit" width="800" />
+<img src="Docs/Create.png" alt="Cruddy Create" width="800" />
+<img src="Docs/Delete.png" alt="Cruddy Delete" width="800" />
 
 Most simple use (no CRUD):
 ```razor
