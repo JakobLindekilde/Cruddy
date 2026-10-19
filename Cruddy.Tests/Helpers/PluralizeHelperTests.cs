@@ -10,6 +10,7 @@ public class PluralizeHelperTests
     [InlineData('i', true)]
     [InlineData('o', true)]
     [InlineData('u', true)]
+    [InlineData('k', true)]
     [InlineData('A', true)]
     [InlineData('E', true)]
     [InlineData('I', true)]
