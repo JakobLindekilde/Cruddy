@@ -74,14 +74,11 @@ public class Customer
     public DateTime Birthdate { get; set; }
 }
 ```
-If the model class has a property with the attribute [Key], Cruddy will use that property as the primary key column. 
+**Key**: If the model class has a property with the attribute [Key], Cruddy will use that property as the primary key column. 
 If no property has the [Key] attribute, Cruddy will try to find a property named "Id" or "{ClassName}Id" and use that as the primary key column.
 Or use the KeyColumn parameter to specify the primary key column name.
 
-Table Customers:
 <img src="Docs/TableCustomers.png" alt="Cruddy example" width="400" />
-
-Details, Edit, Create and Delete modals:
 <img src="Docs/Details.png" alt="Cruddy Details" width="800" />
 <img src="Docs/Edit.png" alt="Cruddy Edit" width="800" />
 <img src="Docs/Create.png" alt="Cruddy Create" width="800" />
