@@ -33,7 +33,7 @@ Else the database tests will not be run. I have not set up a test database in Gi
 
 Note: There are more examples in the CruddyDemo project.
 
-Typical use:
+Typical use - file Customers.razor:
 
 ```razor
 @page "/Customers"
@@ -48,7 +48,7 @@ Typical use:
 }
 ```
 
-The razor above will result in this QuickGrid:
+The razor file above will result in this QuickGrid:
 <img src="Docs/TableCustomersCruddy.png" alt="Cruddy example" width="800" />
 
 Models.Customer:
