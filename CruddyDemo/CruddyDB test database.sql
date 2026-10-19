@@ -172,143 +172,141 @@ END
 GO
 SET IDENTITY_INSERT [dbo].[Addresses] ON 
 GO
-INSERT [dbo].[Addresses] ([Id], [CustomerId], [Town], [Street], [StreetNo], [ZipCode], [AddressType]) VALUES (4, 1, N'1', N'1', 1, N'2', 2)
+INSERT [dbo].[Addresses] ([Id], [CustomerId], [Town], [Street], [StreetNo], [ZipCode], [AddressType]) VALUES (4, 1, N'Bothel', N'Napa Ct.', 1970, N'98011', 2)
 GO
-INSERT [dbo].[Addresses] ([Id], [CustomerId], [Town], [Street], [StreetNo], [ZipCode], [AddressType]) VALUES (5, 1, N'27777', N'2', 2, N'2', 2)
+INSERT [dbo].[Addresses] ([Id], [CustomerId], [Town], [Street], [StreetNo], [ZipCode], [AddressType]) VALUES (5, 1, N'Bothel', N'Mt. Dias Blv.', 9833, N'98011', 1)
 GO
-INSERT [dbo].[Addresses] ([Id], [CustomerId], [Town], [Street], [StreetNo], [ZipCode], [AddressType]) VALUES (6, 4, N'3', N'3', 3, N'3', 1)
+INSERT [dbo].[Addresses] ([Id], [CustomerId], [Town], [Street], [StreetNo], [ZipCode], [AddressType]) VALUES (7, 4, N'Dallas', N'Jumping St.', 9178, N'75201', 2)
 GO
-INSERT [dbo].[Addresses] ([Id], [CustomerId], [Town], [Street], [StreetNo], [ZipCode], [AddressType]) VALUES (7, 4, N'k', N'k', 4444, N'5555', 2)
+INSERT [dbo].[Addresses] ([Id], [CustomerId], [Town], [Street], [StreetNo], [ZipCode], [AddressType]) VALUES (8, 4, N'Navada', N'Riverside Drive', 2487, N'84407', 1)
 GO
-INSERT [dbo].[Addresses] ([Id], [CustomerId], [Town], [Street], [StreetNo], [ZipCode], [AddressType]) VALUES (8, 4, N'5555', N'5555', 5555, N'5555', 2)
+INSERT [dbo].[Addresses] ([Id], [CustomerId], [Town], [Street], [StreetNo], [ZipCode], [AddressType]) VALUES (16, 2, N'Cambridge', N'Via De Luna', 3997, N'02139', 2)
 GO
-INSERT [dbo].[Addresses] ([Id], [CustomerId], [Town], [Street], [StreetNo], [ZipCode], [AddressType]) VALUES (9, 1, N'Herlev ', N'Hovedgaden', 123, N'3301', 1)
+INSERT [dbo].[Addresses] ([Id], [CustomerId], [Town], [Street], [StreetNo], [ZipCode], [AddressType]) VALUES (22, 5, N'Racine', N'S. Greenbay Rd.', 99433, N'53182', 1)
 GO
-INSERT [dbo].[Addresses] ([Id], [CustomerId], [Town], [Street], [StreetNo], [ZipCode], [AddressType]) VALUES (10, 4, N'Kbh', N'5555', 123, N'123', 1)
+INSERT [dbo].[Addresses] ([Id], [CustomerId], [Town], [Street], [StreetNo], [ZipCode], [AddressType]) VALUES (23, 6, N'Denby', N'W. Empire', 44025, N'57716', 2)
 GO
-INSERT [dbo].[Addresses] ([Id], [CustomerId], [Town], [Street], [StreetNo], [ZipCode], [AddressType]) VALUES (14, 1, N'Helsi', N'sadfasd', 5556666, N'555', 2)
+INSERT [dbo].[Addresses] ([Id], [CustomerId], [Town], [Street], [StreetNo], [ZipCode], [AddressType]) VALUES (24, 13, N'Hamburg', N'Am Karlshof', 8200, N'22001', 1)
 GO
-INSERT [dbo].[Addresses] ([Id], [CustomerId], [Town], [Street], [StreetNo], [ZipCode], [AddressType]) VALUES (15, 13, N'sdfef', N'sdf', 3, N'3', 2)
+INSERT [dbo].[Addresses] ([Id], [CustomerId], [Town], [Street], [StreetNo], [ZipCode], [AddressType]) VALUES (25, 39, N'Paris', N'rue Lamarck', 3383, N'75007', 1)
 GO
 SET IDENTITY_INSERT [dbo].[Addresses] OFF
 GO
 SET IDENTITY_INSERT [dbo].[Customers] ON 
 GO
-INSERT [dbo].[Customers] ([Id], [Name], [Email], [Vip], [Phone], [Birthdate]) VALUES (1, N'OleOleo', N'Ole@val.dk', 1, 1111111366, CAST(N'1995-10-10T00:00:00.000' AS DateTime))
+INSERT [dbo].[Customers] ([Id], [Name], [Email], [Vip], [Phone], [Birthdate]) VALUES (1, N'Ken Sánchez', N'kensanchez@gmail.com', 0, 1234567890, CAST(N'1966-10-11T00:00:00.000' AS DateTime))
 GO
-INSERT [dbo].[Customers] ([Id], [Name], [Email], [Vip], [Phone], [Birthdate]) VALUES (2, N'UUU', N'Ove@valby.dk', 1, 5, CAST(N'1992-12-29T12:00:00.000' AS DateTime))
+INSERT [dbo].[Customers] ([Id], [Name], [Email], [Vip], [Phone], [Birthdate]) VALUES (2, N'Lee Duffy', N'Lee@tomtom.com', 1, 1122334455, CAST(N'1992-12-25T00:00:00.000' AS DateTime))
 GO
-INSERT [dbo].[Customers] ([Id], [Name], [Email], [Vip], [Phone], [Birthdate]) VALUES (4, N'Kurtd', N'krt@valby.dk', 1, 11151111, CAST(N'2000-02-10T00:00:00.000' AS DateTime))
+INSERT [dbo].[Customers] ([Id], [Name], [Email], [Vip], [Phone], [Birthdate]) VALUES (4, N'Dylan Miller', N'dylanmiller@gmail.com', 1, 88887777, CAST(N'2000-02-10T00:00:00.000' AS DateTime))
 GO
-INSERT [dbo].[Customers] ([Id], [Name], [Email], [Vip], [Phone], [Birthdate]) VALUES (5, N'Mia', N'mia@valby.dk', 1, 11171112, CAST(N'1975-10-20T00:00:00.000' AS DateTime))
+INSERT [dbo].[Customers] ([Id], [Name], [Email], [Vip], [Phone], [Birthdate]) VALUES (5, N'Diane Margheim', N'dianamargheim@valby.dk', 1, 111711125, CAST(N'1975-10-20T00:00:00.000' AS DateTime))
 GO
-INSERT [dbo].[Customers] ([Id], [Name], [Email], [Vip], [Phone], [Birthdate]) VALUES (6, N'looiu', N'pia@valby.dk', 0, 11161111, CAST(N'1983-04-04T00:00:00.000' AS DateTime))
+INSERT [dbo].[Customers] ([Id], [Name], [Email], [Vip], [Phone], [Birthdate]) VALUES (6, N'Gigi Matthew', N'gigi@gmail.com', 0, 111611117, CAST(N'1983-04-04T00:00:00.000' AS DateTime))
 GO
-INSERT [dbo].[Customers] ([Id], [Name], [Email], [Vip], [Phone], [Birthdate]) VALUES (13, N'asdasd', N'jj@mail.dk', 1, 1133, CAST(N'2026-09-23T00:00:00.000' AS DateTime))
+INSERT [dbo].[Customers] ([Id], [Name], [Email], [Vip], [Phone], [Birthdate]) VALUES (13, N'Kim Brown', N'kimbrown@mail.com', 1, 123123123, CAST(N'2001-09-23T00:00:00.000' AS DateTime))
 GO
-INSERT [dbo].[Customers] ([Id], [Name], [Email], [Vip], [Phone], [Birthdate]) VALUES (38, N'Jakob Lindekilde', N'asd ', 1, 3234, CAST(N'2026-09-25T12:00:00.000' AS DateTime))
+INSERT [dbo].[Customers] ([Id], [Name], [Email], [Vip], [Phone], [Birthdate]) VALUES (39, N'Johnny Hansen', N'johnny@hansen.com', 0, 34567123, CAST(N'1993-09-25T00:00:00.000' AS DateTime))
 GO
-INSERT [dbo].[Customers] ([Id], [Name], [Email], [Vip], [Phone], [Birthdate]) VALUES (39, N'Jens Hansen', N'sdf', 0, 345, CAST(N'2026-09-25T12:00:00.000' AS DateTime))
+INSERT [dbo].[Customers] ([Id], [Name], [Email], [Vip], [Phone], [Birthdate]) VALUES (64, N'Janice Galvin', N'jgalvin@gmail.com', 1, 1111122222, CAST(N'1999-10-05T00:00:00.000' AS DateTime))
 GO
-INSERT [dbo].[Customers] ([Id], [Name], [Email], [Vip], [Phone], [Birthdate]) VALUES (46, N'Peter', N'sdf', 1, 3355, CAST(N'2026-09-27T12:00:00.000' AS DateTime))
-GO
-INSERT [dbo].[Customers] ([Id], [Name], [Email], [Vip], [Phone], [Birthdate]) VALUES (48, N'IIIIIIIIII', N'sdfsdf', 1, 23, CAST(N'2026-09-28T12:00:00.000' AS DateTime))
-GO
-INSERT [dbo].[Customers] ([Id], [Name], [Email], [Vip], [Phone], [Birthdate]) VALUES (49, N'1234', N'df', 0, 34, CAST(N'2026-09-28T12:00:00.000' AS DateTime))
+INSERT [dbo].[Customers] ([Id], [Name], [Email], [Vip], [Phone], [Birthdate]) VALUES (74, N'Liza Sullivan', N'lizasullivan@gmail.com', 1, 1213235234, CAST(N'1992-10-19T00:00:00.000' AS DateTime))
 GO
 SET IDENTITY_INSERT [dbo].[Customers] OFF
 GO
 SET IDENTITY_INSERT [dbo].[DateTimeTypes] ON 
 GO
-INSERT [dbo].[DateTimeTypes] ([Id], [DateTimeNotNull], [DateTimeNullable], [TimeSpanNotNull], [TimeSpanNullable], [TimeOnlyNotNull], [TimeOnlyNullable]) VALUES (1, CAST(N'2020-11-11T00:00:00.000' AS DateTime), NULL, CAST(N'18:18:00' AS Time), NULL, CAST(N'10:11:12' AS Time), NULL)
+INSERT [dbo].[DateTimeTypes] ([Id], [DateTimeNotNull], [DateTimeNullable], [TimeSpanNotNull], [TimeSpanNullable], [TimeOnlyNotNull], [TimeOnlyNullable]) VALUES (1, CAST(N'2011-11-11T11:11:00.000' AS DateTime), NULL, CAST(N'11:11:00' AS Time), NULL, CAST(N'11:11:00' AS Time), NULL)
 GO
-INSERT [dbo].[DateTimeTypes] ([Id], [DateTimeNotNull], [DateTimeNullable], [TimeSpanNotNull], [TimeSpanNullable], [TimeOnlyNotNull], [TimeOnlyNullable]) VALUES (2, CAST(N'2026-09-28T12:00:00.000' AS DateTime), NULL, CAST(N'01:04:00' AS Time), NULL, CAST(N'00:00:00' AS Time), NULL)
+INSERT [dbo].[DateTimeTypes] ([Id], [DateTimeNotNull], [DateTimeNullable], [TimeSpanNotNull], [TimeSpanNullable], [TimeOnlyNotNull], [TimeOnlyNullable]) VALUES (2, CAST(N'2012-12-12T12:00:00.000' AS DateTime), NULL, CAST(N'12:00:00' AS Time), CAST(N'12:01:00' AS Time), CAST(N'12:02:00' AS Time), CAST(N'12:03:00' AS Time))
+GO
+INSERT [dbo].[DateTimeTypes] ([Id], [DateTimeNotNull], [DateTimeNullable], [TimeSpanNotNull], [TimeSpanNullable], [TimeOnlyNotNull], [TimeOnlyNullable]) VALUES (4, CAST(N'1800-01-01T00:00:00.000' AS DateTime), NULL, CAST(N'00:00:00' AS Time), NULL, CAST(N'00:00:00' AS Time), NULL)
+GO
+INSERT [dbo].[DateTimeTypes] ([Id], [DateTimeNotNull], [DateTimeNullable], [TimeSpanNotNull], [TimeSpanNullable], [TimeOnlyNotNull], [TimeOnlyNullable]) VALUES (5, CAST(N'1999-12-31T23:59:00.000' AS DateTime), CAST(N'1999-12-31T05:59:00.000' AS DateTime), CAST(N'23:59:00' AS Time), CAST(N'23:59:00' AS Time), CAST(N'23:59:00' AS Time), CAST(N'23:59:00' AS Time))
+GO
+INSERT [dbo].[DateTimeTypes] ([Id], [DateTimeNotNull], [DateTimeNullable], [TimeSpanNotNull], [TimeSpanNullable], [TimeOnlyNotNull], [TimeOnlyNullable]) VALUES (6, CAST(N'1753-01-01T12:00:00.000' AS DateTime), CAST(N'9999-12-31T23:59:00.000' AS DateTime), CAST(N'12:00:00' AS Time), CAST(N'12:00:00' AS Time), CAST(N'12:00:00' AS Time), CAST(N'12:00:00' AS Time))
 GO
 SET IDENTITY_INSERT [dbo].[DateTimeTypes] OFF
 GO
 SET IDENTITY_INSERT [dbo].[Employees] ON 
 GO
-INSERT [dbo].[Employees] ([Id], [Name], [Salary]) VALUES (1, N'Jonas', 40400.0000)
+INSERT [dbo].[Employees] ([Id], [Name], [Salary]) VALUES (1, N'Mark', 40400.0000)
 GO
-INSERT [dbo].[Employees] ([Id], [Name], [Salary]) VALUES (2, N'Jones', 41200.0000)
+INSERT [dbo].[Employees] ([Id], [Name], [Salary]) VALUES (2, N'Terry', 41200.0000)
 GO
-INSERT [dbo].[Employees] ([Id], [Name], [Salary]) VALUES (3, N'Jens', 52000.0000)
+INSERT [dbo].[Employees] ([Id], [Name], [Salary]) VALUES (3, N'Mary', 52000.0000)
 GO
-INSERT [dbo].[Employees] ([Id], [Name], [Salary]) VALUES (4, N'Johan', 46700.0000)
+INSERT [dbo].[Employees] ([Id], [Name], [Salary]) VALUES (4, N'Sariya', 46700.0000)
 GO
-INSERT [dbo].[Employees] ([Id], [Name], [Salary]) VALUES (5, N'Jani', 50000.0000)
+INSERT [dbo].[Employees] ([Id], [Name], [Salary]) VALUES (5, N'Bo', 50000.0000)
 GO
-INSERT [dbo].[Employees] ([Id], [Name], [Salary]) VALUES (6, N'Johnny', 40000.0000)
+INSERT [dbo].[Employees] ([Id], [Name], [Salary]) VALUES (6, N'James', 40000.0000)
 GO
 SET IDENTITY_INSERT [dbo].[Employees] OFF
 GO
-INSERT [dbo].[KeyColumnIsGuid] ([Id], [Name], [Description], [Active]) VALUES (N'f0000000-0000-0000-0000-000000000000', N'frt', N'frt', 0)
+INSERT [dbo].[KeyColumnIsGuid] ([Id], [Name], [Description], [Active]) VALUES (N'f0000000-0000-0000-0000-000000000000', N'Frog', N'Kiss it!', 0)
 GO
-INSERT [dbo].[KeyColumnIsGuid] ([Id], [Name], [Description], [Active]) VALUES (N'00000000-0000-0000-00ff-000000000000', N'ff', N'ff', 0)
+INSERT [dbo].[KeyColumnIsGuid] ([Id], [Name], [Description], [Active]) VALUES (N'00000000-0000-0000-00ff-000000000000', N'Fish', N'Slimy thingy', 0)
 GO
-INSERT [dbo].[KeyColumnIsGuid] ([Id], [Name], [Description], [Active]) VALUES (N'00000000-0000-0000-0000-000000000034', N'zxc', N'zxcgg', 0)
+INSERT [dbo].[KeyColumnIsGuid] ([Id], [Name], [Description], [Active]) VALUES (N'00000000-0000-0000-0000-000000000099', N'Bee', N'Will sting you!', 1)
 GO
-INSERT [dbo].[KeyColumnIsGuid] ([Id], [Name], [Description], [Active]) VALUES (N'00000000-0000-0000-0000-000000000099', N'hhhhhggf', N'hhhhhgg', 1)
+INSERT [dbo].[KeyColumnIsGuid] ([Id], [Name], [Description], [Active]) VALUES (N'00000000-0000-0000-0000-000000000555', N'Snake', N'Will bite you!', 1)
 GO
-INSERT [dbo].[KeyColumnIsGuid] ([Id], [Name], [Description], [Active]) VALUES (N'00000000-0000-0000-0000-000000000555', N'Jakob3 gggg', N'qw', 1)
+INSERT [dbo].[KeyColumnIsGuid] ([Id], [Name], [Description], [Active]) VALUES (N'00000000-0000-0000-0000-00000000ff44', N'Whale', N'Big swimming creature', 0)
 GO
-INSERT [dbo].[KeyColumnIsGuid] ([Id], [Name], [Description], [Active]) VALUES (N'f0644cbf-be20-47a9-a4c8-0cfc948fba89', N'hhhhhhhhhhhhhhhhhhhhhhhhhhhhh', N'sdaf dfgdfgdfg', 1)
+INSERT [dbo].[KeyColumnIsGuid] ([Id], [Name], [Description], [Active]) VALUES (N'de484d78-32f2-4481-bf31-1df61a4d8a4e', N'Dolphin', N'Says thanks for all the fish', 1)
 GO
-INSERT [dbo].[KeyColumnIsGuid] ([Id], [Name], [Description], [Active]) VALUES (N'6f2f64bb-6f6c-489b-a211-1cf4eac80e5d', N'nyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy', N'dfg', 1)
-GO
-INSERT [dbo].[KeyColumnIsGuid] ([Id], [Name], [Description], [Active]) VALUES (N'de484d78-32f2-4481-bf31-1df61a4d8a4e', N'nnnnnnnnnnnnnnnnnnnn', N'dfg', 1)
-GO
-INSERT [dbo].[KeyColumnIsGuid] ([Id], [Name], [Description], [Active]) VALUES (N'387e650d-e418-4fa0-820c-31f8e799d796', N'dgfg', N'jj', 1)
-GO
-INSERT [dbo].[KeyColumnIsGuid] ([Id], [Name], [Description], [Active]) VALUES (N'08cae3c0-9d38-43e3-9e43-cac7ffb85779', N'qwert dd', N'dfdf', 1)
+INSERT [dbo].[KeyColumnIsGuid] ([Id], [Name], [Description], [Active]) VALUES (N'ab1769f4-6f7f-48a8-a2f1-68cfa459945c', N'Dog', N'Will bite you!', 1)
 GO
 SET IDENTITY_INSERT [dbo].[Orders] ON 
 GO
-INSERT [dbo].[Orders] ([Id], [CId], [PId], [EId], [Qty], [Paid], [OrderDate]) VALUES (7, 4, 5, 2, 23, 1, CAST(N'2026-08-21T00:00:00.000' AS DateTime))
+INSERT [dbo].[Orders] ([Id], [CId], [PId], [EId], [Qty], [Paid], [OrderDate]) VALUES (7, 4, 5, 4, 10, 1, CAST(N'2026-08-21T00:00:00.000' AS DateTime))
 GO
-INSERT [dbo].[Orders] ([Id], [CId], [PId], [EId], [Qty], [Paid], [OrderDate]) VALUES (8, 1, 1, 2, 1234567, 2, CAST(N'2026-08-21T00:00:00.000' AS DateTime))
+INSERT [dbo].[Orders] ([Id], [CId], [PId], [EId], [Qty], [Paid], [OrderDate]) VALUES (8, 1, 1, 2, 1, 2, CAST(N'2026-08-21T00:00:00.000' AS DateTime))
 GO
-INSERT [dbo].[Orders] ([Id], [CId], [PId], [EId], [Qty], [Paid], [OrderDate]) VALUES (9, 1, 5, 4, 1, 2, CAST(N'2026-08-21T09:52:22.520' AS DateTime))
+INSERT [dbo].[Orders] ([Id], [CId], [PId], [EId], [Qty], [Paid], [OrderDate]) VALUES (9, 1, 5, 4, 2, 2, CAST(N'2026-08-21T09:52:22.520' AS DateTime))
 GO
-INSERT [dbo].[Orders] ([Id], [CId], [PId], [EId], [Qty], [Paid], [OrderDate]) VALUES (10, 5, 3, 5, 66, 0, CAST(N'2026-08-21T00:00:00.000' AS DateTime))
+INSERT [dbo].[Orders] ([Id], [CId], [PId], [EId], [Qty], [Paid], [OrderDate]) VALUES (10, 5, 3, 5, 3, 0, CAST(N'2026-08-21T00:00:00.000' AS DateTime))
 GO
-INSERT [dbo].[Orders] ([Id], [CId], [PId], [EId], [Qty], [Paid], [OrderDate]) VALUES (11, 1, 3, 2, 1, 1, CAST(N'2026-08-21T09:52:22.520' AS DateTime))
+INSERT [dbo].[Orders] ([Id], [CId], [PId], [EId], [Qty], [Paid], [OrderDate]) VALUES (11, 1, 3, 2, 2, 1, CAST(N'2026-08-21T09:52:22.520' AS DateTime))
 GO
 INSERT [dbo].[Orders] ([Id], [CId], [PId], [EId], [Qty], [Paid], [OrderDate]) VALUES (12, 6, 6, 5, 1, 1, CAST(N'2026-08-21T09:52:22.520' AS DateTime))
 GO
-INSERT [dbo].[Orders] ([Id], [CId], [PId], [EId], [Qty], [Paid], [OrderDate]) VALUES (14, 6, 2, 5, 2, 1, CAST(N'2026-08-30T00:00:00.000' AS DateTime))
+INSERT [dbo].[Orders] ([Id], [CId], [PId], [EId], [Qty], [Paid], [OrderDate]) VALUES (14, 39, 3, 4, 12, 1, CAST(N'2026-08-30T00:00:00.000' AS DateTime))
+GO
+INSERT [dbo].[Orders] ([Id], [CId], [PId], [EId], [Qty], [Paid], [OrderDate]) VALUES (15, 74, 5, 5, 5, 1, CAST(N'2026-10-19T00:00:00.000' AS DateTime))
 GO
 SET IDENTITY_INSERT [dbo].[Orders] OFF
 GO
 SET IDENTITY_INSERT [dbo].[Products] ON 
 GO
-INSERT [dbo].[Products] ([Id], [Name], [Price]) VALUES (1, N'TV', 7654555)
+INSERT [dbo].[Products] ([Id], [Name], [Price]) VALUES (1, N'TV', 2000)
 GO
-INSERT [dbo].[Products] ([Id], [Name], [Price]) VALUES (2, N'PC', 7254)
+INSERT [dbo].[Products] ([Id], [Name], [Price]) VALUES (2, N'PC', 3500)
 GO
-INSERT [dbo].[Products] ([Id], [Name], [Price]) VALUES (3, N'Laptop', 8154)
+INSERT [dbo].[Products] ([Id], [Name], [Price]) VALUES (3, N'Laptop', 2200)
 GO
-INSERT [dbo].[Products] ([Id], [Name], [Price]) VALUES (4, N'Mobile', 17654)
+INSERT [dbo].[Products] ([Id], [Name], [Price]) VALUES (4, N'Mobile', 900)
 GO
-INSERT [dbo].[Products] ([Id], [Name], [Price]) VALUES (5, N'Bord', 1654)
+INSERT [dbo].[Products] ([Id], [Name], [Price]) VALUES (5, N'Table', 123)
 GO
-INSERT [dbo].[Products] ([Id], [Name], [Price]) VALUES (6, N'Stol', 1354)
+INSERT [dbo].[Products] ([Id], [Name], [Price]) VALUES (6, N'Chair', 100)
 GO
-INSERT [dbo].[Products] ([Id], [Name], [Price]) VALUES (9, N'Stol', 3)
+INSERT [dbo].[Products] ([Id], [Name], [Price]) VALUES (9, N'Bed', 234)
 GO
-INSERT [dbo].[Products] ([Id], [Name], [Price]) VALUES (10, N'PC', 23)
+INSERT [dbo].[Products] ([Id], [Name], [Price]) VALUES (10, N'Bed', 667)
 GO
 SET IDENTITY_INSERT [dbo].[Products] OFF
 GO
 SET IDENTITY_INSERT [dbo].[TestAllTypes] ON 
 GO
-INSERT [dbo].[TestAllTypes] ([Id], [Int32NotNull], [Int32Nullable], [Int64NotNull], [Int64Nullable], [Int16NotNull], [Int16Nullable], [ByteNotNull], [ByteNullable], [DecimalNotNull], [DecimalNullable], [DoubleNotNull], [DoubleNullable], [SingleNotNull], [SingleNullable], [BoolNotNull], [BoolNullable], [StringNotNull], [StringNullable], [GuidNotNull], [GuidNullable]) VALUES (2, 1, NULL, 2, NULL, 3, NULL, 4, NULL, CAST(223.5544 AS Decimal(18, 4)), NULL, 33, NULL, 0, NULL, 0, NULL, N'adasdf', N'', N'00000000-0000-0000-0000-000000000002', NULL)
+INSERT [dbo].[TestAllTypes] ([Id], [Int32NotNull], [Int32Nullable], [Int64NotNull], [Int64Nullable], [Int16NotNull], [Int16Nullable], [ByteNotNull], [ByteNullable], [DecimalNotNull], [DecimalNullable], [DoubleNotNull], [DoubleNullable], [SingleNotNull], [SingleNullable], [BoolNotNull], [BoolNullable], [StringNotNull], [StringNullable], [GuidNotNull], [GuidNullable]) VALUES (2, 2, NULL, 2, NULL, 2, NULL, 2, NULL, CAST(2.0000 AS Decimal(18, 4)), NULL, 2, NULL, 2, NULL, 0, NULL, N'2', N'', N'00000000-0000-0000-0000-000000000002', NULL)
 GO
-INSERT [dbo].[TestAllTypes] ([Id], [Int32NotNull], [Int32Nullable], [Int64NotNull], [Int64Nullable], [Int16NotNull], [Int16Nullable], [ByteNotNull], [ByteNullable], [DecimalNotNull], [DecimalNullable], [DoubleNotNull], [DoubleNullable], [SingleNotNull], [SingleNullable], [BoolNotNull], [BoolNullable], [StringNotNull], [StringNullable], [GuidNotNull], [GuidNullable]) VALUES (4, 11, NULL, 22, NULL, 33, NULL, 44, NULL, CAST(5.1234 AS Decimal(18, 4)), NULL, 6.1234, NULL, 7.1234, NULL, 1, NULL, N'ÆØÅ æøå', N'fghgfh', N'11111111-1111-1111-1111-111111111111', NULL)
+INSERT [dbo].[TestAllTypes] ([Id], [Int32NotNull], [Int32Nullable], [Int64NotNull], [Int64Nullable], [Int16NotNull], [Int16Nullable], [ByteNotNull], [ByteNullable], [DecimalNotNull], [DecimalNullable], [DoubleNotNull], [DoubleNullable], [SingleNotNull], [SingleNullable], [BoolNotNull], [BoolNullable], [StringNotNull], [StringNullable], [GuidNotNull], [GuidNullable]) VALUES (4, 11, NULL, 11, NULL, 11, NULL, 11, NULL, CAST(11.1234 AS Decimal(18, 4)), NULL, 11.1234, NULL, 11.1234, NULL, 1, NULL, N'11', N'', N'11111111-1111-1111-1111-111111111111', NULL)
 GO
-INSERT [dbo].[TestAllTypes] ([Id], [Int32NotNull], [Int32Nullable], [Int64NotNull], [Int64Nullable], [Int16NotNull], [Int16Nullable], [ByteNotNull], [ByteNullable], [DecimalNotNull], [DecimalNullable], [DoubleNotNull], [DoubleNullable], [SingleNotNull], [SingleNullable], [BoolNotNull], [BoolNullable], [StringNotNull], [StringNullable], [GuidNotNull], [GuidNullable]) VALUES (5, 12, NULL, 12, NULL, 12, NULL, 12, NULL, CAST(12.0000 AS Decimal(18, 4)), NULL, 12, NULL, 12, NULL, 0, NULL, N'12', NULL, N'00000000-0000-0000-0000-000000000000', NULL)
+INSERT [dbo].[TestAllTypes] ([Id], [Int32NotNull], [Int32Nullable], [Int64NotNull], [Int64Nullable], [Int16NotNull], [Int16Nullable], [ByteNotNull], [ByteNullable], [DecimalNotNull], [DecimalNullable], [DoubleNotNull], [DoubleNullable], [SingleNotNull], [SingleNullable], [BoolNotNull], [BoolNullable], [StringNotNull], [StringNullable], [GuidNotNull], [GuidNullable]) VALUES (5, 12, 12, 12, 12, 12, 12, 12, 12, CAST(12.4999 AS Decimal(18, 4)), CAST(12.4999 AS Decimal(18, 4)), 12.4999, 12.4999, 12.4999, 12.4999, 0, NULL, N'12,4999', N'12,4999', N'00000000-0000-0000-0000-000000000012', N'00000000-0000-0000-0000-000000000012')
 GO
-INSERT [dbo].[TestAllTypes] ([Id], [Int32NotNull], [Int32Nullable], [Int64NotNull], [Int64Nullable], [Int16NotNull], [Int16Nullable], [ByteNotNull], [ByteNullable], [DecimalNotNull], [DecimalNullable], [DoubleNotNull], [DoubleNullable], [SingleNotNull], [SingleNullable], [BoolNotNull], [BoolNullable], [StringNotNull], [StringNullable], [GuidNotNull], [GuidNullable]) VALUES (6, 9, NULL, 9, NULL, 9, NULL, 9, NULL, CAST(9.0000 AS Decimal(18, 4)), NULL, 9, NULL, 9, NULL, 1, NULL, N'9', NULL, N'00000000-0000-0000-0000-000000000009', NULL)
+INSERT [dbo].[TestAllTypes] ([Id], [Int32NotNull], [Int32Nullable], [Int64NotNull], [Int64Nullable], [Int16NotNull], [Int16Nullable], [ByteNotNull], [ByteNullable], [DecimalNotNull], [DecimalNullable], [DoubleNotNull], [DoubleNullable], [SingleNotNull], [SingleNullable], [BoolNotNull], [BoolNullable], [StringNotNull], [StringNullable], [GuidNotNull], [GuidNullable]) VALUES (6, 9, 9, 9, 9, 9, 9, 9, 9, CAST(9.9999 AS Decimal(18, 4)), CAST(9.9999 AS Decimal(18, 4)), 9.9999, 9.9999, 9.9999, 9.9999, 1, NULL, N'9,9999', N'9,9999', N'00000000-0000-0000-0000-000000000009', NULL)
 GO
 SET IDENTITY_INSERT [dbo].[TestAllTypes] OFF
 GO
