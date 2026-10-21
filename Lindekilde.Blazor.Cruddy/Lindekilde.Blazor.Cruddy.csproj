@@ -5,6 +5,14 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <Title>Cruddy</Title>
+    <Authors>JakobLindekilde</Authors>
+    <Description>Simple ASP.NET Blazor component that does database table CRUD</Description>
+    <RepositoryUrl>https://github.com/JakobLindekilde/Cruddy</RepositoryUrl>
+    <PackageTags>Blazor; QuickGrid; ASP.NET; ASP.NET Core; Crud; Crud-generator; dapper; database; sql</PackageTags>
+    <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+    <Version>0.9.0-alpha</Version>
   </PropertyGroup>
 
 
@@ -20,6 +28,13 @@
 
   <ItemGroup>
     <Folder Include="wwwroot\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\LICENSE.txt">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
   </ItemGroup>
 
 </Project>
