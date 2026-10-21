@@ -8,8 +8,8 @@ These repository instructions guide GitHub Copilot (and other AI assistants) whe
 
 The solution (`CruddyDemo.slnx`) contains three projects:
 
-- `CruddyDemo` — The Cruddy component library.
-- `CruddyDemo.Tests` — A unit test project for the component library, using xunit.v3 and `Microsoft.Testing.Platform` runner.
+- `Lindekilde.Blazor.Cruddy` — The Cruddy component library.
+- `Lindekilde.Blazor.Cruddy.Tests` — A unit test project for the component library, using xunit.v3 and `Microsoft.Testing.Platform` runner.
 - `CruddyDemo` — A Blazor Web App project that uses the `Cruddy` component to demonstrate its functionality.
 
 ## Target framework & dependencies
