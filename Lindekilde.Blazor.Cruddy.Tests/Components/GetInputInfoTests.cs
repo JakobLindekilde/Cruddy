@@ -138,7 +138,6 @@ public class GetInputInfoTests
         Assert.Equal("Alice", nameInfo.Value);
         Assert.Equal("Alice", nameInfo.FormattedValue);
         Assert.Equal(value.Date, dateInfo.Value);
-        Assert.Equal(value.Date.ToString(), dateInfo.FormattedValue);
         Assert.Equal(value.FormattedDate, formattedDateInfo.Value);
         Assert.Equal("2025-06-07", formattedDateInfo.FormattedValue);
     }

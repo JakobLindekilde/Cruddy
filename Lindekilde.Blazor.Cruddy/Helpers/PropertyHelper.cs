@@ -240,11 +240,12 @@ static public class PropertyHelper
     /// </summary>
     /// <param name="prop">The property for which to get the formatted value.</param>
     /// <param name="item">The object from which to get the property value.</param>
+    /// <param name="defaultFormat">The default format to use if no display format is specified.</param>
     /// <returns>The formatted value of the property.</returns>
-    static public string GetFormattedValue(PropertyInfo prop, object? item)
+    static public string GetFormattedValue(PropertyInfo prop, object? item, string? defaultFormat = null)
     {
         string formattedValue;
-        var format = PropertyHelper.GetDisplayFormat(prop);
+        var format = PropertyHelper.GetDisplayFormat(prop) ?? defaultFormat;
         var value = prop.GetValue(item);
 
         if (value == null)

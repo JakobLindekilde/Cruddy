@@ -633,7 +633,7 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> where TEntity : class
         if (!object.Equals(item, default(TEntity)))
         {
             ii.Value = prop.GetValue(item);
-            ii.FormattedValue = PropertyHelper.GetFormattedValue(prop, item);
+            ii.FormattedValue = PropertyHelper.GetFormattedValue(prop, item, ii.DisplayFormat);
         }
 
         return ii;
