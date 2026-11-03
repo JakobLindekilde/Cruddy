@@ -27,7 +27,7 @@ Else the database tests will not be run. I have not set up a test database in Gi
 
 - Date for version 1: Before end of 2026
 - Get stable and usable for production
-- Make it a NuGet package
+- Make final NuGet package (alpha prerelease is available on nuget.org now)
 
 ## Examples 
 
