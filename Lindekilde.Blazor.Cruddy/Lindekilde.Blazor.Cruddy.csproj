@@ -11,8 +11,9 @@
     <Description>Simple ASP.NET Blazor component that does database table CRUD</Description>
     <RepositoryUrl>https://github.com/JakobLindekilde/Cruddy</RepositoryUrl>
     <PackageTags>Blazor; QuickGrid; ASP.NET; ASP.NET Core; Crud; Crud-generator; dapper; database; sql</PackageTags>
+    <PackageReadmeFile>ReadMe.md</PackageReadmeFile>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
-    <Version>0.9.0-alpha</Version>
+    <Version>0.9.1-alpha</Version>
   </PropertyGroup>
 
 
@@ -30,6 +31,13 @@
     <Folder Include="wwwroot\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="ReadMe.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>  
+  
   <ItemGroup>
     <None Include="..\LICENSE.txt">
       <Pack>True</Pack>
