@@ -582,11 +582,7 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> where TEntity : class
         {
             RenderFragment<TEntity> fkTemplate = item => builder =>
             {
-                var value = prop.GetValue(item);
-                var option = value is null
-                    ? null
-                    : fkOptions.FirstOrDefault(o => Equals(o.Id, value) || o.Id?.ToString() == value.ToString());
-                builder.AddContent(0, option is not null ? option.Display : value);
+                builder.AddContent(0, GetForeignKeyDisplayValue(prop, item, fkOptions));
             };
 
             MyColumns.Add(builder =>
@@ -596,6 +592,8 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> where TEntity : class
                 builder.AddAttribute(2, nameof(TemplateColumn<>.Title), columnTitle);
                 builder.AddAttribute(3, nameof(TemplateColumn<>.Align), Align.Left);
                 builder.AddAttribute(4, nameof(TemplateColumn<>.Sortable), true);
+                builder.AddAttribute(5, nameof(TemplateColumn<>.SortBy), 
+                    GridSort<TEntity>.ByAscending(item => GetForeignKeyDisplayText(prop, item, fkOptions)));
                 builder.CloseComponent();
             });
             return true;
@@ -603,6 +601,18 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> where TEntity : class
 
         return false;
     }
+
+    private static object? GetForeignKeyDisplayValue(PropertyInfo prop, TEntity item, List<FKeyOption> fkOptions)
+    {
+        var value = prop.GetValue(item);
+        var option = value is null
+            ? null
+            : fkOptions.FirstOrDefault(o => Equals(o.Id, value) || o.Id?.ToString() == value.ToString());
+        return option is not null ? option.Display : value;
+    }
+
+    private static string? GetForeignKeyDisplayText(PropertyInfo prop, TEntity item, List<FKeyOption> fkOptions) =>
+        GetForeignKeyDisplayValue(prop, item, fkOptions)?.ToString();
 
     #endregion
 
