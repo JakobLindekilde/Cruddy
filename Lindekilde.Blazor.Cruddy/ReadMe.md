@@ -9,7 +9,8 @@ A simple ASP.NET Blazor component that could do CRUD operations on any database 
 - Cruddy uses Dapper - not Entity Framework
 
 ## How to Use
-See CruddyDemo project for examples of how to use the Cruddy component.
+See CruddyDemo project for examples of how to use the Cruddy component:
+https://github.com/JakobLindekilde/Cruddy
 
 ## Main Types
 The main types provided by this library are:

@@ -1,3 +1,5 @@
+#pragma warning disable BL0005 // Component parameter should not be set outside of its component.
+
 using Lindekilde.Blazor.Cruddy.Components;
 using System.Reflection;
 

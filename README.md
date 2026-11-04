@@ -30,10 +30,39 @@ Else the database tests will not be run. I have not set up a test database in Gi
 - Make final NuGet package (alpha prerelease is available on nuget.org now)
 
 ## Examples 
-
 Note: There are more examples in the CruddyDemo project.
 
-Typical use - file Customers.razor:
+### ConnectionString in appsettings.json:
+```csharp
+{
+  "ConnectionStrings": {
+    "CruddyDB": "Server=.;Database=CruddyDB;MultipleActiveResultSets=True;Trusted_Connection=True;TrustServerCertificate=True"
+  },
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
+    }
+  },
+  ...
+}
+```
+
+### First add SqlConnection in Program.cs:
+```csharp
+public static void Main(string[] args)
+{
+    var builder = WebApplication.CreateBuilder(args);
+
+    builder.Services.AddScoped(serviceProvider =>
+    {
+        return new SqlConnection(builder.Configuration.GetConnectionString("CruddyDB"));
+    });
+
+    ...  
+```
+
+### Typical use - file Customers.razor:
 
 ```razor
 @page "/Customers"
@@ -84,7 +113,7 @@ Or use the KeyColumn parameter to specify the primary key column name.
 <img src="Docs/Create.png" alt="Cruddy Create" width="800" />
 <img src="Docs/Delete.png" alt="Cruddy Delete" width="800" />
 
-Most simple use (no CRUD):
+### Most simple use (no CRUD):
 ```razor
 @page "/Products"
 @inject Microsoft.Data.SqlClient.SqlConnection dbConnection
@@ -97,7 +126,7 @@ Most simple use (no CRUD):
 @code {}
 ```
 
-Advanced use example 1:
+### SQL example:
 ```razor
 @page "/AnyPoco"
 @inject Microsoft.Data.SqlClient.SqlConnection dbConnection
@@ -110,7 +139,7 @@ Advanced use example 1:
 @code {}
 ```
 
-Advanced use example 2:
+### SQL example with INNER JOIN:
 ```razor
 <Cruddy TEntity="Models.OrderCruddy" TableName="Orders" TableColumns="Id, CustomerName, ProductName, Qty, Paid, OrderDate" Select=@sql DbConnection="dbConnection" />
 
