@@ -66,8 +66,8 @@ public class GetInputInfoTests
     }
 
     [Theory]
-    [InlineData(nameof(InputInfoType.Date), "datetime-default", "Date")]
-    [InlineData(nameof(InputInfoType.Time), "datetime-default", "Time")]
+    [InlineData(nameof(InputInfoType.Date), "date-only-default", "Date")]
+    [InlineData(nameof(InputInfoType.Time), "time-only-default", "Time")]
     [InlineData(nameof(InputInfoType.DateOnly), "date-only-default", "DateOnly")]
     [InlineData(nameof(InputInfoType.TimeOnly), "time-only-default", "TimeOnly")]
     [InlineData(nameof(InputInfoType.Decimal), "decimal-default", "Decimal")]

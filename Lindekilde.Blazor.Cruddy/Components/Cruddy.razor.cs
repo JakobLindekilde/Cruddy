@@ -721,6 +721,19 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> where TEntity : class
             return string.IsNullOrEmpty(DefaultNumberFormat) ? null : DefaultNumberFormat;
         }
 
+        var dataType = prop.GetCustomAttribute<DataTypeAttribute>()?.DataType;
+        if (dataType.HasValue)
+        {
+            if (dataType == DataType.Date)
+            {
+                return string.IsNullOrEmpty(DefaultDateFormat) ? null : DefaultDateFormat;
+            }
+            if (dataType == DataType.Time)
+            {
+                return string.IsNullOrEmpty(DefaultTimeFormat) ? null : DefaultTimeFormat;
+            }
+        }
+
         return propertyType.Name switch
         {
             "TimeOnly" => string.IsNullOrEmpty(DefaultTimeFormat) ? null : DefaultTimeFormat,
