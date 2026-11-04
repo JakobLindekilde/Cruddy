@@ -574,7 +574,7 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> where TEntity : class
     /// <param name="prop">The property that might be a foreign key.</param>
     /// <param name="columnTitle">The title of the column to be displayed in the QuickGrid.</param>
     /// <returns>True if the property is a foreign key and the column was added; otherwise, false.</returns>
-    protected bool HandleFKey(PropertyInfo prop, string columnTitle)
+    public bool HandleFKey(PropertyInfo prop, string columnTitle)
     {
         LoadFKeyOptions();
         var fkOptions = GetFKeyOptions(prop);
@@ -602,7 +602,17 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> where TEntity : class
         return false;
     }
 
-    private static object? GetForeignKeyDisplayValue(PropertyInfo prop, TEntity item, List<FKeyOption> fkOptions)
+    /// <summary>
+    /// Resolves the display value for a foreign key property from the provided option list.
+    /// </summary>
+    /// <remarks>Matching first uses object equality on option identifiers and then compares string
+    /// representations.</remarks>
+    /// <param name="prop">Property metadata for the foreign key value to read.</param>
+    /// <param name="item">Entity instance that contains the foreign key value.</param>
+    /// <param name="fkOptions">Available foreign key options to match by identifier.</param>
+    /// <returns>The matched option display value when a corresponding identifier is found; otherwise, the original property
+    /// value.</returns>
+    public static object? GetForeignKeyDisplayValue(PropertyInfo prop, TEntity item, List<FKeyOption> fkOptions)
     {
         var value = prop.GetValue(item);
         var option = value is null
@@ -611,7 +621,15 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> where TEntity : class
         return option is not null ? option.Display : value;
     }
 
-    private static string? GetForeignKeyDisplayText(PropertyInfo prop, TEntity item, List<FKeyOption> fkOptions) =>
+    /// <summary>
+    /// Gets the display text for a foreign key property value on the specified entity.
+    /// </summary>
+    /// <param name="prop">The property that represents the foreign key.</param>
+    /// <param name="item">The entity instance that contains the foreign key value.</param>
+    /// <param name="fkOptions">The available foreign key options used to resolve the display value.</param>
+    /// <returns>The string representation of the resolved foreign key display value, or <see langword="null"/> when no value is
+    /// resolved.</returns>
+    public static string? GetForeignKeyDisplayText(PropertyInfo prop, TEntity item, List<FKeyOption> fkOptions) =>
         GetForeignKeyDisplayValue(prop, item, fkOptions)?.ToString();
 
     #endregion
