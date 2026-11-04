@@ -27,7 +27,7 @@ Else the database tests will not be run. I have not set up a test database in Gi
 
 - Date for version 1: Before end of 2026
 - Get stable and usable for production
-- Make final NuGet package (alpha prerelease is available on nuget.org now)
+- Make final NuGet package (beta prerelease is available on nuget.org now)
 
 ## Examples 
 Note: There are more examples in the CruddyDemo project.
@@ -37,12 +37,6 @@ Note: There are more examples in the CruddyDemo project.
 {
   "ConnectionStrings": {
     "CruddyDB": "Server=.;Database=CruddyDB;MultipleActiveResultSets=True;Trusted_Connection=True;TrustServerCertificate=True"
-  },
-  "Logging": {
-    "LogLevel": {
-      "Default": "Information",
-      "Microsoft.AspNetCore": "Warning"
-    }
   },
   ...
 }
@@ -208,7 +202,6 @@ Note how attribute Key, DisplayName and DisplayFormat are used in the model clas
 - Compile and run CruddyDemo project
 
 ## Known issues
-- It's a beta! Needs beautification...
 - Only tested with MS SQL Server - but should work with any database that Dapper supports
 - Method DapperRepository.Add() will need more work for other databases than MS SQL Server
-- Cruddy does not support composite primary keys (no plans for that in version 1)
+- Cruddy does not support composite primary keys (no plans for this in version 1)

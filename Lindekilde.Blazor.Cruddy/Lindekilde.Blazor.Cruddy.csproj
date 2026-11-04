@@ -13,7 +13,7 @@
     <PackageTags>Blazor; QuickGrid; ASP.NET; ASP.NET Core; Crud; Crud-generator; dapper; database; sql</PackageTags>
     <PackageReadmeFile>ReadMe.md</PackageReadmeFile>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
-    <Version>0.9.0-beta</Version>
+    <Version>0.9.1-beta</Version>
   </PropertyGroup>
 
 
@@ -23,8 +23,8 @@
 
   <ItemGroup>
     <PackageReference Include="Dapper" Version="2.1.89" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.QuickGrid" Version="10.0.13" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="10.0.13" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.QuickGrid" Version="10.0.14" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="10.0.14" />
   </ItemGroup>
 
   <ItemGroup>
