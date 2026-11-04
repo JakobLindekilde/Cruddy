@@ -666,6 +666,21 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> where TEntity : class
 
         return ii;
     }
+
+    /// <summary>
+    /// Gets the foreign key option for the specified property that matches the current input value.
+    /// </summary>
+    /// <param name="prop">The property whose foreign key options are evaluated.</param>
+    /// <param name="ii">The input data containing the value used to find a matching option.</param>
+    /// <returns>The matching <c>FKeyOption</c> when a value is present and a match is found; otherwise, <see langword="null"/>.</returns>
+    public FKeyOption? GetFkeyOption(PropertyInfo prop, InputInfo ii)
+    {
+        var fkeyOptions = GetFKeyOptions(prop);
+        var fkeyOption = ii.Value is null ? null :
+            fkeyOptions?.FirstOrDefault(o => Equals(o.Id, ii.Value) || o.Id?.ToString() == ii.Value.ToString());
+        return fkeyOption;
+    }
+
     private async Task ShowErrorMessage(int showDuration = 8000)
     {
         await InvokeAsync(StateHasChanged);
