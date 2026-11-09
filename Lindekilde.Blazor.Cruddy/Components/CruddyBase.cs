@@ -170,7 +170,7 @@ public partial class CruddyBase<TEntity> : ComponentBase where TEntity : class
     /// During component initialization, this method fills <see cref="FKeyInfo"/> and <see cref="ColumnAliasDict"/>, 
     /// adds columns to the grid and retrieves the rows from the database.
     /// </summary>
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
         FKeyInfoList = FillFKeyInfoList(FKeys, DefaultSchema, PluralizeTableName);
         FillColumnAliasDict();
@@ -198,7 +198,7 @@ public partial class CruddyBase<TEntity> : ComponentBase where TEntity : class
                 var guessed = GuessFKeyInfo(fKey, defaultSchema, pluralizeTableName);
                 if (guessed != null)
                 {
-                    result.AddRange(guessed);
+                    result.Add(guessed);
                 }
                 continue;
             }
@@ -229,12 +229,12 @@ public partial class CruddyBase<TEntity> : ComponentBase where TEntity : class
     /// <param name="defaultSchema">The default schema to use if the primary table does not specify one.</param>
     /// <param name="pluralizeTableName">Indicates whether to pluralize the table name if it is not already pluralized.</param>
     /// <returns>The guessed <see cref="FKeyInfo"/> object, or null if it cannot be guessed.</returns>
-    public static FKeyInfo GuessFKeyInfo(string fKey, string defaultSchema, bool pluralizeTableName)
+    public static FKeyInfo? GuessFKeyInfo(string fKey, string defaultSchema, bool pluralizeTableName)
     {
         var primaryId = fKey.EndsWith("Id", StringComparison.OrdinalIgnoreCase) ? "Id" : string.Empty;
         if (string.IsNullOrEmpty(primaryId))
         {
-            return null!;
+            return null;
         }
 
         var primaryTable = fKey[..^2];
@@ -348,7 +348,7 @@ public partial class CruddyBase<TEntity> : ComponentBase where TEntity : class
         var props = PropertyHelper.GetColumnProperties(entity.GetType())
             .Where(p => TypeHelper.IsSupported(p.PropertyType) &&
                         p.CanRead && p.CanWrite &&
-                        (cols.Count == 0 || (cols.Count > 0 && cols.Contains(p.Name))))
+                        (cols.Count == 0 || cols.Contains(p.Name)))
             .ToArray();
 
         return props;
@@ -403,7 +403,7 @@ public partial class CruddyBase<TEntity> : ComponentBase where TEntity : class
 
         var props = PropertyHelper.GetColumnProperties(entity.GetType())
             .Where(p => p.CanRead && p.CanWrite &&
-                        (cols.Count == 0 || (cols.Count > 0 && cols.Contains(p.Name))) && IncludeColumn(operation, p.Name))
+                        (cols.Count == 0 || cols.Contains(p.Name)) && IncludeColumn(operation, p.Name))
             .ToArray();
 
         return props;

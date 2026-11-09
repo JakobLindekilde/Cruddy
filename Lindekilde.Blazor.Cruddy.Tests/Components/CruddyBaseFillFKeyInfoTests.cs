@@ -73,9 +73,9 @@ public class CruddyBaseFillFKeyInfoTests
     public void GuessFKeyInfo_ReturnsPopulatedInfo(string fKey)
     {
         var result = CruddyBase<object>.GuessFKeyInfo(fKey, "dbo", true);
-        Assert.Equal("dbo.Categories", result.PrimaryTable);
-        Assert.Equal("Id", result.PrimaryId);
-        Assert.Equal("Name", result.PrimaryDisplay);
+        Assert.Equal("dbo.Categories", result?.PrimaryTable);
+        Assert.Equal("Id", result?.PrimaryId);
+        Assert.Equal("Name", result?.PrimaryDisplay);
     }
 
     [Theory]
@@ -92,35 +92,35 @@ public class CruddyBaseFillFKeyInfoTests
     public void GuessFKeyInfo_SetsFKey()
     {
         var result = CruddyBase<object>.GuessFKeyInfo("CategoryId", "dbo", true);
-        Assert.Equal("CategoryId", result.FKey);
+        Assert.Equal("CategoryId", result?.FKey);
     }
 
     [Fact]
     public void GuessFKeyInfo_NoPluralize_KeepsTableName()
     {
         var result = CruddyBase<object>.GuessFKeyInfo("CategoryId", "dbo", false);
-        Assert.Equal("dbo.Category", result.PrimaryTable);
+        Assert.Equal("dbo.Category", result?.PrimaryTable);
     }
 
     [Fact]
     public void GuessFKeyInfo_AlreadyPluralized_NotPluralizedAgain()
     {
         var result = CruddyBase<object>.GuessFKeyInfo("CategoriesId", "dbo", true);
-        Assert.Equal("dbo.Categories", result.PrimaryTable);
+        Assert.Equal("dbo.Categories", result?.PrimaryTable);
     }
 
     [Fact]
     public void GuessFKeyInfo_TableWithSchema_DoesNotPrependDefaultSchema()
     {
         var result = CruddyBase<object>.GuessFKeyInfo("shop.CategoryId", "dbo", false);
-        Assert.Equal("shop.Category", result.PrimaryTable);
+        Assert.Equal("shop.Category", result?.PrimaryTable);
     }
 
     [Fact]
     public void GuessFKeyInfo_UsesDefaultSchema()
     {
         var result = CruddyBase<object>.GuessFKeyInfo("CategoryId", "sales", false);
-        Assert.Equal("sales.Category", result.PrimaryTable);
+        Assert.Equal("sales.Category", result?.PrimaryTable);
     }
 
 }

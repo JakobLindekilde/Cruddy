@@ -241,11 +241,7 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> where TEntity : class
     {
         ActionCrud = CrudOperation.None;
         ActionItem = default;
-
-        if (ActionCrud == CrudOperation.Create || ActionCrud == CrudOperation.Update)
-        {
-            EditCtx = null;
-        }
+        EditCtx = null;
     }
 
     private void PersistCreated(TEntity item)
@@ -658,7 +654,7 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> where TEntity : class
             DataType = prop.GetCustomAttribute<DataTypeAttribute>()?.DataType,
         };
 
-        if (!object.Equals(item, default(TEntity)))
+        if (item is not null)
         {
             ii.Value = prop.GetValue(item);
             ii.FormattedValue = PropertyHelper.GetFormattedValue(prop, item, ii.DisplayFormat);
@@ -701,7 +697,9 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> where TEntity : class
     /// </summary>
     /// <param name="prop">The property to get the display format for.</param>
     /// <returns>The display format string, or null if none is specified.</returns>
+#pragma warning disable S3776   // Cognitive Complexity of methods should not be too high
     protected string? GetDisplayFormat(PropertyInfo prop)
+#pragma warning restore S3776
     {
         var displayFormat = PropertyHelper.GetDisplayFormat(prop);
         if (!string.IsNullOrEmpty(displayFormat))
