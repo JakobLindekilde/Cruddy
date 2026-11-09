@@ -95,17 +95,7 @@
                                                 var fkOptions = GetFKeyOptions(prop);
                                                 if (fkOptions != null)
                                                 {
-                                                    <select class="form-select" disabled="@ii.Disabled" required="@ii.Required" @onchange="(e) => OnFieldChanged(prop, e.Value)">
-                                                        @if (PropertyHelper.IsNullable(prop) || ActionCrud == CrudOperation.Create)
-                                                        {
-                                                            <option value="">--</option>
-                                                        }
-                                                        @foreach (var opt in fkOptions)
-                                                        {
-                                                            var optId = opt.Id?.ToString();
-                                                            <option value="@optId" selected="@(ii.Value != null && ii.Value.ToString() == optId)">@opt.Display</option>
-                                                        }
-                                                    </select>
+                                                    <ForeignKeyInput Options="fkOptions" Value="ii.Value" ShowEmptyOption="PropertyHelper.IsNullable(prop) || ActionCrud == CrudOperation.Create" Disabled="ii.Disabled" Required="ii.Required" ValueChanged="(value) => OnFieldChanged(prop, value)" />
                                                 }
                                                 else if (TypeHelper.IsNumber(ii.Type))
                                                 {
@@ -133,20 +123,7 @@
                                                 }
                                                 else if (ii.Type.IsEnum)
                                                 {
-                                                    var enumValues = Enum.GetValues(ii.Type);
-                                                    <select class="form-select" disabled="@ii.Disabled" required="@ii.Required" @onchange="(e) => OnFieldChanged(prop, e.Value)">
-                                                        @if (PropertyHelper.IsNullable(prop))
-                                                        {
-                                                            <option value="">--</option>
-                                                        }
-
-                                                        @foreach (var enumVal in enumValues)
-                                                        {
-                                                            var enumName = enumVal?.ToString();
-                                                            var selected = ii.Value != null && ii.Value.ToString() == enumName;
-                                                            <option value="@enumName" selected="@selected">@enumName</option>
-                                                        }
-                                                    </select>
+                                                    <EnumInput EnumType="ii.Type" Value="ii.Value" IsNullable="PropertyHelper.IsNullable(prop)" Disabled="ii.Disabled" Required="ii.Required" ValueChanged="(value) => OnFieldChanged(prop, value)" />
                                                 }
                                                 else
                                                 {

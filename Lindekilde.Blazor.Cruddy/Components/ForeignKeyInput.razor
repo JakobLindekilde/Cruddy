@@ -1,0 +1,37 @@
+@using Microsoft.AspNetCore.Components
+
+<select class="form-select" disabled="@Disabled" required="@Required" @onchange="HandleChange">
+    @if (ShowEmptyOption)
+    {
+        <option value="">--</option>
+    }
+
+    @foreach (var option in Options)
+    {
+        var optionId = option.Id?.ToString();
+        var selected = Value != null && Value.ToString() == optionId;
+        <option value="@optionId" selected="@selected">@option.Display</option>
+    }
+</select>
+
+@code {
+    [Parameter, EditorRequired]
+    public IReadOnlyList<FKeyOption> Options { get; set; } = [];
+
+    [Parameter]
+    public object? Value { get; set; }
+
+    [Parameter]
+    public bool ShowEmptyOption { get; set; }
+
+    [Parameter]
+    public bool Disabled { get; set; }
+
+    [Parameter]
+    public bool Required { get; set; }
+
+    [Parameter]
+    public EventCallback<object?> ValueChanged { get; set; }
+
+    private Task HandleChange(ChangeEventArgs args) => ValueChanged.InvokeAsync(args.Value);
+}
