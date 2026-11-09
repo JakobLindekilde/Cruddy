@@ -16,25 +16,11 @@ static public class PluralizeHelper
         if (string.IsNullOrEmpty(name))
         {
             return false;
-        }   
+        }
 
-        if (name.EndsWith("ies", StringComparison.OrdinalIgnoreCase))
-        {
-            return true;
-        }
-        else if (name.EndsWith("es", StringComparison.OrdinalIgnoreCase))
-        {
-            return true;
-        }
-        else if (name.EndsWith("ss", StringComparison.OrdinalIgnoreCase))
-        {
-            return false;   // E.g. "class"
-        }
-        else if (name.EndsWith("us", StringComparison.OrdinalIgnoreCase))
-        {
-            return false;   // E.g. "cactus", "bus"
-        }
-        else if (name.EndsWith("s", StringComparison.OrdinalIgnoreCase))
+        if (name.EndsWith("s", StringComparison.OrdinalIgnoreCase) && 
+            !name.EndsWith("ss", StringComparison.OrdinalIgnoreCase) && 
+            !name.EndsWith("us", StringComparison.OrdinalIgnoreCase))
         {
             return true;
         }

@@ -100,12 +100,8 @@ static public class PropertyHelper
     {
         if (type == null) return null;
 
-        if (type.GetProperties().Any(p => Attribute.IsDefined(p, typeof(System.ComponentModel.DataAnnotations.KeyAttribute))))
-        {
-            return type.GetProperties().First(p => Attribute.IsDefined(p, typeof(System.ComponentModel.DataAnnotations.KeyAttribute))).Name;
-        }
-
-        return null;
+        var key = type.GetProperties().FirstOrDefault(p => Attribute.IsDefined(p, typeof(System.ComponentModel.DataAnnotations.KeyAttribute)));
+        return key?.Name;
     }
 
     /// <summary>
@@ -119,19 +115,19 @@ static public class PropertyHelper
     {
         var key = GetKey(type);
 
-        if (string.IsNullOrEmpty(key) && PropertyHelper.PropExists(type, "Id"))
+        if (string.IsNullOrEmpty(key) && PropertyHelper.GetProperty(type, "Id") != null)
         {
             key = "Id";
         }
-        else if (string.IsNullOrEmpty(key) && PropertyHelper.PropExists(type, "ID"))
+        else if (string.IsNullOrEmpty(key) && PropertyHelper.GetProperty(type, "ID") != null)
         {
             key = "ID";
         }
-        else if (string.IsNullOrEmpty(key) && PropertyHelper.PropExists(type, $"{type.Name}Id"))
+        else if (string.IsNullOrEmpty(key) && PropertyHelper.GetProperty(type, $"{type.Name}Id") != null)
         {
             key = $"{type.Name}Id";
         }
-        else if (string.IsNullOrEmpty(key) && PropertyHelper.PropExists(type, $"{type.Name}ID"))
+        else if (string.IsNullOrEmpty(key) && PropertyHelper.GetProperty(type, $"{type.Name}ID") != null)
         {
             key = $"{type.Name}ID";
         }
@@ -153,26 +149,6 @@ static public class PropertyHelper
     public static PropertyInfo? GetProperty(Type type, string propName)
     {
         return type.GetProperty(propName, BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
-    }
-
-    /// <summary>
-    /// Checks if a property with the given name exists in the specified type.
-    /// </summary>
-    /// <param name="type">The type in which to check for the property.</param>
-    /// <param name="propName">The name of the property to check for.</param>
-    /// <returns>True if the property exists; otherwise, false.</returns>
-    public static bool PropExists(Type type, string propName)
-    {
-        if (!string.IsNullOrEmpty(propName))
-        {
-            var prop = type.GetProperty(propName, BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
-            if (prop != null)
-            {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     /// <summary>

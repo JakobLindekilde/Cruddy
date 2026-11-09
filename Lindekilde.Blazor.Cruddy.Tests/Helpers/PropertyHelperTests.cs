@@ -141,21 +141,6 @@ public class PropertyHelperTests
         Assert.Null(hasKeyWithoutKey);
     }
 
-    [Fact]
-    public void PropExists()
-    {
-        var hasIdProperty = PropertyHelper.PropExists(typeof(ClassWithoutKey), "Id");
-        var hasFirstnameProperty = PropertyHelper.PropExists(typeof(ClassWithoutKey), "Firstname");
-        var hasAgeProperty = PropertyHelper.PropExists(typeof(ClassWithoutKey), "Age");
-        var hasNonExistentProperty = PropertyHelper.PropExists(typeof(ClassWithoutKey), "NonExistent");
-
-        // Assert
-        Assert.True(hasIdProperty);
-        Assert.True(hasFirstnameProperty);
-        Assert.True(hasAgeProperty);
-        Assert.False(hasNonExistentProperty);
-    }
-
     private class UpperIdModel { public int ID { get; set; } }
     private class TypeIdModel { public int TypeIdModelId { get; set; } }
     private class TypeUpperIdModel { public int TypeUpperIdModelID { get; set; } }
@@ -407,32 +392,6 @@ public class PropertyHelperTests
     {
         Assert.Equal(typeof(int?), PropertyHelper.GetProperty(typeof(TestAllType), "int32nullable")!.PropertyType);
         Assert.Equal(typeof(Guid), PropertyHelper.GetProperty(typeof(TestAllType), "GuidNotNull")!.PropertyType);
-    }
-
-    #endregion
-
-    #region PropExists
-
-    [Theory]
-    [InlineData("id", true)]
-    [InlineData("ID", true)]
-    [InlineData("firstname", true)]
-    [InlineData("Hight", true)]
-    [InlineData("PrivateProperty", false)]
-    [InlineData("ProtectedProperty", false)]
-    [InlineData("", false)]
-    [InlineData(null, false)]
-    [InlineData("Unknown", false)]
-    public void PropExists_ReturnsExpected(string? name, bool expected)
-    {
-        Assert.Equal(expected, PropertyHelper.PropExists(typeof(ClassWithoutKey), name!));
-    }
-
-    [Fact]
-    public void PropExists_InheritedProperty_ReturnsTrue()
-    {
-        Assert.True(PropertyHelper.PropExists(typeof(Person), "Email"));
-        Assert.True(PropertyHelper.PropExists(typeof(Person), "Description"));
     }
 
     #endregion

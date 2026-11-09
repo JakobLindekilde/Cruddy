@@ -79,14 +79,16 @@ static public class TypeHelper
     /// <param name="value">The value to parse.</param>
     /// <param name="targetType">The target type to parse the value to.</param>
     /// <returns>The parsed value, or null if parsing fails.</returns>
+#pragma warning disable S3776   // Complex methods should not be too complex
     public static object? TryParseValue(object? value, Type targetType)
+#pragma warning restore S3776
     {
-        object? converted = null;
         if (value == null)
         {
-            return converted;
+            return null;
         }
 
+        object? converted;
         if (targetType == typeof(string)) converted = value.ToString();
         else if (targetType.IsEnum) converted = Enum.Parse(targetType, value.ToString()!);
         else if (targetType == typeof(int)) converted = int.TryParse(value.ToString(), out var i) ? i : (int?)null;

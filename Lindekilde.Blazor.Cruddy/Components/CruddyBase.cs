@@ -170,7 +170,7 @@ public partial class CruddyBase<TEntity> : ComponentBase where TEntity : class
     /// During component initialization, this method fills <see cref="FKeyInfo"/> and <see cref="ColumnAliasDict"/>, 
     /// adds columns to the grid and retrieves the rows from the database.
     /// </summary>
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
         FKeyInfoList = FillFKeyInfoList(FKeys, DefaultSchema, PluralizeTableName);
         FillColumnAliasDict();
