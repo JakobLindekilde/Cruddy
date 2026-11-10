@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Components.QuickGrid;
 using Microsoft.AspNetCore.Components.Web;
+using Microsoft.Extensions.Configuration;
 using System.ComponentModel.DataAnnotations;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -15,6 +16,13 @@ namespace Lindekilde.Blazor.Cruddy.Components;
 /// </summary>
 public partial class Cruddy<TEntity> : CruddyBase<TEntity> where TEntity : class
 {
+    /// <summary>
+    /// Provides access to application configuration settings.
+    /// </summary>
+    /// <remarks>Supplied by dependency injection via the <c>[Inject]</c> attribute.</remarks>
+    [Inject]
+    protected IConfiguration Configuration { get; set; } = default!;
+
     #region Parameters
 
     /// <summary>
@@ -179,6 +187,19 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> where TEntity : class
     #endregion
 
     #region Lifecycle methods
+
+    /// <summary>
+    /// Binds the "Cruddy" configuration section in appsettings.json to the 
+    /// component and applies the incoming parameter values.
+    /// </summary>
+    /// <remarks>Called by the Blazor framework during component initialization and updates.</remarks>
+    /// <param name="parameters">The set of parameter values to assign to the component.</param>
+    /// <returns>A task that completes when parameter assignment has finished.</returns>
+    public override Task SetParametersAsync(ParameterView parameters)
+    {
+        Configuration.GetSection("Cruddy").Bind(this);
+        return base.SetParametersAsync(parameters);
+    }
 
     /// <summary>
     /// During component initialization, this method adds columns to the grid.

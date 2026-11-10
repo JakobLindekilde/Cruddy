@@ -38,6 +38,17 @@ Note: There are more examples in the CruddyDemo project.
   "ConnectionStrings": {
     "CruddyDB": "Server=.;Database=CruddyDB;MultipleActiveResultSets=True;Trusted_Connection=True;TrustServerCertificate=True"
   },
+  "Cruddy": {
+    "DefaultDateFormat": "d",
+    "DefaultDateTimeFormat": "g",
+    "DefaultTimeFormat": "t",
+    "DefaultDecimalFormat": "0.00",
+    "DefaultNumberFormat": "0",
+    "ActionsTitle": "Actions",
+    "CruddyGridTheme": "twentyAI",
+    "CruddyGridClass": "table table-sm table-index table-striped small table-fit table-thead-sticky mb-0",
+    "ModalTableClass": "table table-sm table-striped"
+  },
   ...
 }
 ```
@@ -52,7 +63,6 @@ public static void Main(string[] args)
     {
         return new SqlConnection(builder.Configuration.GetConnectionString("CruddyDB"));
     });
-
     ...  
 ```
 
@@ -168,6 +178,10 @@ Note how attribute Key, DisplayName and DisplayFormat are used in the model clas
 | FKeys | Foreign key info in format "FKey: PrimaryTable, PrimaryId, PrimaryDisplay; FKey2: ...". Or just the foreign key column name(s) and Cruddy will try to guess the rest. |
 
 ## UI and formatting related parameters - Cruddy.razor.cs:
+
+Note: All parameters below can be set in appsettings.json file. 
+The value in appsettings.json will be used as default, but can be overridden by setting the parameter in the component.
+If the parameter is not set in appsettings.json or in the component, the default value will be used.
 
 | Parameter | Description |
 |-----------|-------------|
