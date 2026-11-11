@@ -61,13 +61,15 @@ public static void Main(string[] args)
 {
     var builder = WebApplication.CreateBuilder(args);
 
-    builder.Services.AddSingleton<ITableRepositoryFactory, TableRepositorySqlServerFactory>();
+    builder.Services.AddSingleton<IRepositoryFactory, DapperRepositoryFactory>();
     builder.Services.AddScoped(serviceProvider =>
     {
         return new SqlConnection(builder.Configuration.GetConnectionString("CruddyDB"));
     });
     ...  
 ```
+
+The factory is stateless; the component still uses the `DbConnection` passed to it. To use a different repository implementation, register your own `IRepositoryFactory` instead.
 
 ### Typical use - file Customers.razor:
 

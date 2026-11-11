@@ -5,11 +5,11 @@ using Lindekilde.Blazor.Cruddy.Tests.Components;
 namespace Lindekilde.Blazor.Cruddy.Tests.Repositories;
 
 /// <summary>
-/// Unit tests for <see cref="TableRepositorySqlServer.GetFKeyOptions"/> using an in-memory fake connection.
+/// Unit tests for <see cref="DapperRepository.GetFKeyOptions"/> using an in-memory fake connection.
 /// </summary>
-public class TableRepositoryGetFKeyOptionsTests
+public class DapperRepositoryGetFKeyOptionsTests
 {
-    private static TableRepositorySqlServer CreateRepo(FakeDbConnection connection) =>
+    private static DapperRepository CreateRepo(FakeDbConnection connection) =>
         new(connection, "dbo", "People", "Id");
 
     private static Dictionary<string, object?> Row(object? id, object? display) =>
@@ -45,7 +45,7 @@ public class TableRepositoryGetFKeyOptionsTests
     public void GetFKeyOptions_DoesNotUseRepositorySchemaOrTable()
     {
         var connection = new FakeDbConnection();
-        var repo = new TableRepositorySqlServer(connection, "other", "OtherTable", "OtherKey");
+        var repo = new DapperRepository(connection, "other", "OtherTable", "OtherKey");
 
         repo.GetFKeyOptions(new FKeyInfo("FK", "dbo.Countries", "Id", "Name"));
 

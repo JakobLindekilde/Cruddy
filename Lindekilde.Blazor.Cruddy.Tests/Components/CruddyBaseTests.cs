@@ -10,7 +10,7 @@ public class CruddyBaseTests
 {
     private sealed class TestableCruddy : CruddyBase
     {
-        public TestableCruddy() => RepositoryFactory = new TableRepositorySqlServerFactory();
+        public TestableCruddy() => RepositoryFactory = new DapperRepositoryFactory();
 
         public Task InitializeAsync() => OnInitializedAsync();
         public List<CruddyRow> LoadedRows => Rows;

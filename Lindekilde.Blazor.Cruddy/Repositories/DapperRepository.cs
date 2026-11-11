@@ -8,7 +8,7 @@ namespace Lindekilde.Blazor.Cruddy.Repositories;
 /// Dapper based repository that does CRUD on the rows of a database table without needing a model.
 /// A row is a dictionary of column name/value pairs, and the table columns are described by <see cref="CruddyField"/>.
 /// </summary>
-public class TableRepositorySqlServer(DbConnection dbConnection, string schema, string tableName, string? keyColumn) : ITableRepository
+public class DapperRepository(DbConnection dbConnection, string schema, string tableName, string? keyColumn) : IRepository
 {
     private const string ColumnsSql =
         """

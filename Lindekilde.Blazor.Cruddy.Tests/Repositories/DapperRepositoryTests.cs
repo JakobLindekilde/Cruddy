@@ -7,10 +7,10 @@ using Microsoft.Data.SqlClient;
 namespace Lindekilde.Blazor.Cruddy.Tests.Repositories.DatabaseTests;
 
 /// <summary>
-/// Integration tests for <see cref="TableRepositorySqlServer"/> against a real CruddyDB database.
+/// Integration tests for <see cref="DapperRepository"/> against a real CruddyDB database.
 /// Every test removes the rows it inserted in a finally block.
 /// </summary>
-public class TableRepositorySqlServerTests
+public class DapperRepositoryTests
 {
     private static readonly string ConnectionString = LoadConnectionString();
 
@@ -34,7 +34,7 @@ public class TableRepositorySqlServerTests
     private const string DateTimeTable = "DateTimeTypes";
     private const string AllTypesTable = "TestAllTypes";
 
-    private static TableRepositorySqlServer CreateRepo(SqlConnection c, string table, string? keyColumn = "Id") =>
+    private static DapperRepository CreateRepo(SqlConnection c, string table, string? keyColumn = "Id") =>
         new(c, "dbo", table, keyColumn);
 
     private static CruddyField Field(string column, Type type, bool nullable = false, bool isKey = false) =>
@@ -108,7 +108,7 @@ public class TableRepositorySqlServerTests
         ["GuidNullable"] = withNullables ? Guid.NewGuid() : null,
     };
 
-    private static int AddRow(TableRepositorySqlServer repo, CruddyRow row, IReadOnlyList<CruddyField> fields) =>
+    private static int AddRow(DapperRepository repo, CruddyRow row, IReadOnlyList<CruddyField> fields) =>
         Convert.ToInt32(repo.Add(row, fields));
 
     private static void DeleteRows(SqlConnection c, string table, IEnumerable<int> ids)
@@ -139,7 +139,7 @@ public class TableRepositorySqlServerTests
         CruddyField[] fields = [Field("A", typeof(int)), Field("B", typeof(string)), Field("C", typeof(bool))];
         var row = new CruddyRow { ["A"] = 1, ["B"] = "two", ["C"] = true };
 
-        var dp = TableRepositorySqlServer.CreateParameters(row, fields);
+        var dp = DapperRepository.CreateParameters(row, fields);
 
         Assert.Equal(["p0", "p1", "p2"], dp.ParameterNames);
         Assert.Equal(1, dp.Get<int>("p0"));
@@ -150,7 +150,7 @@ public class TableRepositorySqlServerTests
     [Fact]
     public void CreateParameters_EmptyFields_ReturnsNoParameters()
     {
-        var dp = TableRepositorySqlServer.CreateParameters(new CruddyRow { ["A"] = 1 }, []);
+        var dp = DapperRepository.CreateParameters(new CruddyRow { ["A"] = 1 }, []);
 
         Assert.Empty(dp.ParameterNames);
     }
@@ -158,7 +158,7 @@ public class TableRepositorySqlServerTests
     [Fact]
     public void CreateParameters_MissingKeyInRow_YieldsNullValue()
     {
-        var dp = TableRepositorySqlServer.CreateParameters(new CruddyRow(), [Field("A", typeof(string), true)]);
+        var dp = DapperRepository.CreateParameters(new CruddyRow(), [Field("A", typeof(string), true)]);
 
         Assert.Equal(["p0"], dp.ParameterNames);
         Assert.Null(dp.Get<string?>("p0"));
@@ -167,7 +167,7 @@ public class TableRepositorySqlServerTests
     [Fact]
     public void CreateParameters_NullValueInRow_YieldsNullValue()
     {
-        var dp = TableRepositorySqlServer.CreateParameters(new CruddyRow { ["A"] = null }, [Field("A", typeof(int), true)]);
+        var dp = DapperRepository.CreateParameters(new CruddyRow { ["A"] = null }, [Field("A", typeof(int), true)]);
 
         Assert.Null(dp.Get<int?>("p0"));
     }
@@ -178,7 +178,7 @@ public class TableRepositorySqlServerTests
         var field = new CruddyField("db_col", "Alias", typeof(int), false, false, false, false);
         var row = new CruddyRow { ["Alias"] = 5, ["db_col"] = 99 };
 
-        var dp = TableRepositorySqlServer.CreateParameters(row, [field]);
+        var dp = DapperRepository.CreateParameters(row, [field]);
 
         Assert.Equal(5, dp.Get<int>("p0"));
     }
@@ -188,7 +188,7 @@ public class TableRepositorySqlServerTests
     {
         var row = new CruddyRow { ["A"] = 1, ["Extra"] = "ignored" };
 
-        var dp = TableRepositorySqlServer.CreateParameters(row, [Field("A", typeof(int))]);
+        var dp = DapperRepository.CreateParameters(row, [Field("A", typeof(int))]);
 
         Assert.Equal(["p0"], dp.ParameterNames);
     }
@@ -198,7 +198,7 @@ public class TableRepositorySqlServerTests
     {
         var row = new CruddyRow { ["A"] = 1, ["B"] = 2 };
 
-        var dp = TableRepositorySqlServer.CreateParameters(row, [Field("B", typeof(int)), Field("A", typeof(int))]);
+        var dp = DapperRepository.CreateParameters(row, [Field("B", typeof(int)), Field("A", typeof(int))]);
 
         Assert.Equal(2, dp.Get<int>("p0"));
         Assert.Equal(1, dp.Get<int>("p1"));
@@ -233,7 +233,7 @@ public class TableRepositorySqlServerTests
     [InlineData("sysname", typeof(string))]
     public void MapSqlType_SupportedType_ReturnsClrType(string sqlType, Type expected)
     {
-        Assert.Equal(expected, TableRepositorySqlServer.MapSqlType(sqlType, out _));
+        Assert.Equal(expected, DapperRepository.MapSqlType(sqlType, out _));
     }
 
     [Theory]
@@ -243,7 +243,7 @@ public class TableRepositorySqlServerTests
     [InlineData("Time", typeof(TimeSpan))]
     public void MapSqlType_IsCaseInsensitive(string sqlType, Type expected)
     {
-        Assert.Equal(expected, TableRepositorySqlServer.MapSqlType(sqlType, out _));
+        Assert.Equal(expected, DapperRepository.MapSqlType(sqlType, out _));
     }
 
     [Theory]
@@ -260,7 +260,7 @@ public class TableRepositorySqlServerTests
     [InlineData("unknown")]
     public void MapSqlType_UnsupportedType_ReturnsNull(string sqlType)
     {
-        Assert.Null(TableRepositorySqlServer.MapSqlType(sqlType, out var isDate));
+        Assert.Null(DapperRepository.MapSqlType(sqlType, out var isDate));
         Assert.False(isDate);
     }
 
@@ -275,7 +275,7 @@ public class TableRepositorySqlServerTests
     [InlineData("nvarchar", false)]
     public void MapSqlType_IsDateOnlyForDateType(string sqlType, bool expectedIsDate)
     {
-        TableRepositorySqlServer.MapSqlType(sqlType, out var isDate);
+        DapperRepository.MapSqlType(sqlType, out var isDate);
 
         Assert.Equal(expectedIsDate, isDate);
     }
@@ -374,7 +374,7 @@ public class TableRepositorySqlServerTests
     {
         using var c = OpenConnection();
 
-        var columns = new TableRepositorySqlServer(c, "no_such_schema", DateTimeTable, "Id").GetColumns();
+        var columns = new DapperRepository(c, "no_such_schema", DateTimeTable, "Id").GetColumns();
 
         Assert.Empty(columns);
     }

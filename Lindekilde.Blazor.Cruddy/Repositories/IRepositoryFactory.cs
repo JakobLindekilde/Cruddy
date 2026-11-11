@@ -5,7 +5,7 @@ namespace Lindekilde.Blazor.Cruddy.Repositories;
 /// <summary>
 /// Creates a repository for a component's database table.
 /// </summary>
-public interface ITableRepositoryFactory
+public interface IRepositoryFactory
 {
     /// <summary>
     /// Creates a repository using the specified connection and table settings.
@@ -15,5 +15,5 @@ public interface ITableRepositoryFactory
     /// <param name="tableName">The table name.</param>
     /// <param name="keyColumn">The table's key column, if known.</param>
     /// <returns>A repository for the specified table.</returns>
-    ITableRepository Create(DbConnection dbConnection, string schema, string tableName, string? keyColumn);
+    IRepository Create(DbConnection dbConnection, string schema, string tableName, string? keyColumn);
 }

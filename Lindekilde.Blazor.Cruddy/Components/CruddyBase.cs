@@ -263,12 +263,12 @@ public partial class CruddyBase : ComponentBase
     /// The factory used to create repositories for this component.
     /// </summary>
     [Inject]
-    public ITableRepositoryFactory RepositoryFactory { get; set; } = default!;
+    public IRepositoryFactory RepositoryFactory { get; set; } = default!;
 
     /// <summary>
     /// The repository used for all database operations.
     /// </summary>
-    protected ITableRepository Repository =>
+    protected IRepository Repository =>
         RepositoryFactory.Create(DbConnection, DefaultSchema, TableName, KeyColumn);
 
     /// <summary>

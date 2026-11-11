@@ -13,19 +13,19 @@ public class CruddyRepositoryInjectionTests
         public Task InitializeAsync() => OnInitializedAsync();
     }
 
-    private sealed class RecordingFactory : ITableRepositoryFactory
+    private sealed class RecordingFactory : IRepositoryFactory
     {
         public List<(DbConnection Connection, string Schema, string Table, string? Key)> Calls { get; } = [];
         public RecordingRepository Repository { get; } = new();
 
-        public ITableRepository Create(DbConnection dbConnection, string schema, string tableName, string? keyColumn)
+        public IRepository Create(DbConnection dbConnection, string schema, string tableName, string? keyColumn)
         {
             Calls.Add((dbConnection, schema, tableName, keyColumn));
             return Repository;
         }
     }
 
-    private sealed class RecordingRepository : ITableRepository
+    private sealed class RecordingRepository : IRepository
     {
         public string? SelectSql { get; private set; }
         public object? DeletedKey { get; private set; }

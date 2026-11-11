@@ -5,12 +5,12 @@ using Lindekilde.Blazor.Cruddy.Tests.Components;
 namespace Lindekilde.Blazor.Cruddy.Tests.Repositories;
 
 /// <summary>
-/// Integration tests for <see cref="TableRepositorySqlServer"/> against a fake repository.
+/// Integration tests for <see cref="DapperRepository"/> against a fake repository.
 /// </summary>
-public class TableRepositorySqlServerFakeRepoTests
+public class DapperRepositoryFakeRepoTests
 {
 
-    private static TableRepositorySqlServer CreateFakeRepo(FakeDbConnection connection) =>
+    private static DapperRepository CreateFakeRepo(FakeDbConnection connection) =>
         new(connection, "dbo", "People", "PersonId");
 
     private static CruddyField Field(string column, Type type, bool nullable = false, bool isKey = false) =>
@@ -31,7 +31,7 @@ public class TableRepositorySqlServerFakeRepoTests
     {
         var connection = new FakeDbConnection();
 
-        new TableRepositorySqlServer(connection, "mySchema", "myTable", "Id").GetColumns();
+        new DapperRepository(connection, "mySchema", "myTable", "Id").GetColumns();
 
         var command = Assert.Single(connection.Commands);
         Assert.Equal("Reader", command.Kind);

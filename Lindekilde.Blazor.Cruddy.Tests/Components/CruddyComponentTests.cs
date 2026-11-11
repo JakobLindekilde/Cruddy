@@ -28,7 +28,7 @@ public class CruddyComponentTests
         new(column, column, type ?? typeof(string), nullable, pk, false, isDate);
 
     private static TestCruddy Create(FakeDbConnection? db = null) =>
-        new() { TableName = "Persons", DbConnection = db ?? new FakeDbConnection(), RepositoryFactory = new TableRepositorySqlServerFactory() };
+        new() { TableName = "Persons", DbConnection = db ?? new FakeDbConnection(), RepositoryFactory = new DapperRepositoryFactory() };
 
     private static FKeyOption Option(object? id, object? display) => new() { Id = id, Display = display };
 
