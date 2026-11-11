@@ -2,6 +2,7 @@
 #pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
 
 using Lindekilde.Blazor.Cruddy.Components;
+using Lindekilde.Blazor.Cruddy.Repositories;
 
 namespace Lindekilde.Blazor.Cruddy.Tests.Components;
 
@@ -27,7 +28,7 @@ public class CruddyComponentTests
         new(column, column, type ?? typeof(string), nullable, pk, false, isDate);
 
     private static TestCruddy Create(FakeDbConnection? db = null) =>
-        new() { TableName = "Persons", DbConnection = db ?? new FakeDbConnection() };
+        new() { TableName = "Persons", DbConnection = db ?? new FakeDbConnection(), RepositoryFactory = new TableRepositorySqlServerFactory() };
 
     private static FKeyOption Option(object? id, object? display) => new() { Id = id, Display = display };
 

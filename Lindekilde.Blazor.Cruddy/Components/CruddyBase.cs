@@ -260,10 +260,16 @@ public partial class CruddyBase : ComponentBase
     }
 
     /// <summary>
+    /// The factory used to create repositories for this component.
+    /// </summary>
+    [Inject]
+    public ITableRepositoryFactory RepositoryFactory { get; set; } = default!;
+
+    /// <summary>
     /// The repository used for all database operations.
     /// </summary>
-    protected TableRepositorySqlServer Repository =>
-        new(DbConnection, DefaultSchema, TableName, KeyColumn);
+    protected ITableRepository Repository =>
+        RepositoryFactory.Create(DbConnection, DefaultSchema, TableName, KeyColumn);
 
     /// <summary>
     /// A dictionary that maps the column names specified in <seealso cref="TableColumns"/> 

@@ -2,6 +2,7 @@
 #pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
 
 using Lindekilde.Blazor.Cruddy.Components;
+using Lindekilde.Blazor.Cruddy.Repositories;
 
 namespace Lindekilde.Blazor.Cruddy.Tests.Components;
 
@@ -9,6 +10,8 @@ public class CruddyBaseTests
 {
     private sealed class TestableCruddy : CruddyBase
     {
+        public TestableCruddy() => RepositoryFactory = new TableRepositorySqlServerFactory();
+
         public Task InitializeAsync() => OnInitializedAsync();
         public List<CruddyRow> LoadedRows => Rows;
         public void SetFields(params CruddyField[] fields)
@@ -261,7 +264,7 @@ public class CruddyBaseTests
     public void Delete_ExecutesDeleteSql()
     {
         var db = new FakeDbConnection { ScalarResult = null };
-        var dut = new CruddyBase { TableName = "Persons", KeyColumn = "Id", DbConnection = db };
+        var dut = new TestableCruddy { TableName = "Persons", KeyColumn = "Id", DbConnection = db };
 
         var result = dut.Delete(3);
 
@@ -276,7 +279,7 @@ public class CruddyBaseTests
     {
         var db = new FakeDbConnection();
         db.Rows.Add(new Dictionary<string, object?> { ["Id"] = 4, ["Name"] = "Ann" });
-        var dut = new CruddyBase { TableName = "Persons", KeyColumn = "Id", DbConnection = db };
+        var dut = new TestableCruddy { TableName = "Persons", KeyColumn = "Id", DbConnection = db };
 
         var row = dut.GetTableRow(4);
 
@@ -292,7 +295,7 @@ public class CruddyBaseTests
     public void GetTableRow_UsesColumnsParameter()
     {
         var db = new FakeDbConnection();
-        var dut = new CruddyBase { TableName = "Persons", KeyColumn = "Id", DbConnection = db };
+        var dut = new TestableCruddy { TableName = "Persons", KeyColumn = "Id", DbConnection = db };
 
         dut.GetTableRow(1, "Id, Name");
 
@@ -302,7 +305,7 @@ public class CruddyBaseTests
     [Fact]
     public void GetTableRow_NotFound_ReturnsNull()
     {
-        var dut = new CruddyBase { TableName = "Persons", KeyColumn = "Id", DbConnection = new FakeDbConnection() };
+        var dut = new TestableCruddy { TableName = "Persons", KeyColumn = "Id", DbConnection = new FakeDbConnection() };
         Assert.Null(dut.GetTableRow(123));
     }
 

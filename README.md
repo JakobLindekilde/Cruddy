@@ -61,6 +61,7 @@ public static void Main(string[] args)
 {
     var builder = WebApplication.CreateBuilder(args);
 
+    builder.Services.AddSingleton<ITableRepositoryFactory, TableRepositorySqlServerFactory>();
     builder.Services.AddScoped(serviceProvider =>
     {
         return new SqlConnection(builder.Configuration.GetConnectionString("CruddyDB"));

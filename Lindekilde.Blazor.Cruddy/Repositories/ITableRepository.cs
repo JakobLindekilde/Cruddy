@@ -2,7 +2,10 @@
 
 namespace Lindekilde.Blazor.Cruddy.Repositories;
 
-internal interface ITableRepository
+/// <summary>
+/// Provides CRUD operations for a database table.
+/// </summary>
+public interface ITableRepository
 {
     /// <summary>
     /// Gets all columns of the table, of a supported type, using sys.columns, sys.tables, sys.types and sys.indexes.
