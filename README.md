@@ -9,6 +9,7 @@ https://github.com/JakobLindekilde/Cruddy
 ## Overview
 
 - Cruddy is an ASP.NET Blazor component that does CRUD operations on any table in any database
+- Cruddy only requires a table name and a DbConnection (e.g. SqlConnection) to work with
 - Cruddy is based on the Microsoft QuickGrid component
 - When editing or creating validation is done table columns properties
 - Cruddy uses Dapper - not Entity Framework
