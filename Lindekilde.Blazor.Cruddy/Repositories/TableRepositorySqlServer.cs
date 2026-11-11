@@ -8,7 +8,7 @@ namespace Lindekilde.Blazor.Cruddy.Repositories;
 /// Dapper based repository that does CRUD on the rows of a database table without needing a model.
 /// A row is a dictionary of column name/value pairs, and the table columns are described by <see cref="CruddyField"/>.
 /// </summary>
-public class TableRepository(DbConnection dbConnection, string schema, string tableName, string? keyColumn)
+public class TableRepositorySqlServer(DbConnection dbConnection, string schema, string tableName, string? keyColumn) : ITableRepository
 {
     private const string ColumnsSql =
         """
@@ -174,7 +174,13 @@ public class TableRepository(DbConnection dbConnection, string schema, string ta
 
 #pragma warning restore S2077
 
-    private static DynamicParameters CreateParameters(CruddyRow row, IReadOnlyList<CruddyField> fields)
+    /// <summary>
+    /// Creates Dapper parameters from the row values corresponding to the specified fields.
+    /// </summary>
+    /// <param name="row">The row containing the values to add.</param>
+    /// <param name="fields">The fields whose values are added as parameters.</param>
+    /// <returns>The generated parameters, named sequentially as `p0`, `p1`, and so on.</returns>
+    public static DynamicParameters CreateParameters(CruddyRow row, IReadOnlyList<CruddyField> fields)
     {
         var dp = new DynamicParameters();
         for (var i = 0; i < fields.Count; i++)

@@ -262,7 +262,7 @@ public partial class CruddyBase : ComponentBase
     /// <summary>
     /// The repository used for all database operations.
     /// </summary>
-    protected TableRepository Repository =>
+    protected TableRepositorySqlServer Repository =>
         new(DbConnection, DefaultSchema, TableName, KeyColumn);
 
     /// <summary>
