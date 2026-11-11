@@ -1,16 +1,15 @@
-using Lindekilde.Blazor.Cruddy.Components;
+﻿using Lindekilde.Blazor.Cruddy.Components;
 using Lindekilde.Blazor.Cruddy.Repositories;
 using Lindekilde.Blazor.Cruddy.Tests.Components;
-using Lindekilde.Blazor.Cruddy.Tests.Models;
 
 namespace Lindekilde.Blazor.Cruddy.Tests.Repositories;
 
 /// <summary>
-/// Unit tests for <see cref="DapperRepository{TEntity}.GetFKeyOptions"/> using an in-memory fake connection.
+/// Unit tests for <see cref="TableRepository.GetFKeyOptions"/> using an in-memory fake connection.
 /// </summary>
-public class DapperRepositoryGetFKeyOptionsTests
+public class TableRepositoryGetFKeyOptionsTests
 {
-    private static DapperRepository<ClassWithKey> CreateRepo(FakeDbConnection connection) =>
+    private static TableRepository CreateRepo(FakeDbConnection connection) =>
         new(connection, "dbo", "People", "Id");
 
     private static Dictionary<string, object?> Row(object? id, object? display) =>
@@ -46,7 +45,7 @@ public class DapperRepositoryGetFKeyOptionsTests
     public void GetFKeyOptions_DoesNotUseRepositorySchemaOrTable()
     {
         var connection = new FakeDbConnection();
-        var repo = new DapperRepository<ClassWithKey>(connection, "other", "OtherTable", "OtherKey");
+        var repo = new TableRepository(connection, "other", "OtherTable", "OtherKey");
 
         repo.GetFKeyOptions(new FKeyInfo("FK", "dbo.Countries", "Id", "Name"));
 
@@ -157,3 +156,4 @@ public class DapperRepositoryGetFKeyOptionsTests
         Assert.Empty(connection.Commands[0].Parameters);
     }
 }
+

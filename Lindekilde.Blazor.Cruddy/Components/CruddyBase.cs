@@ -2,36 +2,16 @@ using Lindekilde.Blazor.Cruddy.Helpers;
 using Lindekilde.Blazor.Cruddy.Repositories;
 using Microsoft.AspNetCore.Components;
 using System.Data.Common;
-using System.Reflection;
 
 namespace Lindekilde.Blazor.Cruddy.Components;
 
 /// <summary>
-/// Base class for simple CRUD operations in a blazor component.
+/// Base class for simple CRUD operations in a blazor component. A row in table <see cref="TableName"/> is the
+/// CRUD entity, and <see cref="TableColumns"/> specifies the CRUD fields. information about
+/// the fields is read from the database catalog (sys.columns, sys.tables etc.).
 /// </summary>
-public partial class CruddyBase<TEntity> : ComponentBase where TEntity : class
+public partial class CruddyBase : ComponentBase
 {
-    /// <summary>
-    /// The parameterless constructor initializes the <seealso cref="TableName"/> and <seealso cref="KeyColumn"/> 
-    /// properties based on the type of <typeparamref name="TEntity"/>.
-    /// </summary>
-    public CruddyBase()
-    {
-        if (string.IsNullOrEmpty(TableName))
-        {
-            TableName = typeof(TEntity).Name;
-            if (PluralizeTableName)
-            {
-                TableName = PluralizeHelper.Pluralize(TableName);
-            }
-        }
-
-        if (string.IsNullOrEmpty(KeyColumn))
-        {
-            KeyColumn = PropertyHelper.CalcKey(typeof(TEntity));
-        }
-    }
-
     /// <summary>
     /// The default schema for the database table. Default is "dbo".
     /// </summary>
@@ -39,29 +19,28 @@ public partial class CruddyBase<TEntity> : ComponentBase where TEntity : class
     public string DefaultSchema { get; set; } = "dbo";
 
     /// <summary>
-    /// Name of database table to 'CRUD'. If not specified, the name of the class <typeparamref name="TEntity"/> will be used.
+    /// Name of database table to 'CRUD'. A row in this table is the CRUD entity. Required.
     /// </summary>
     [Parameter]
-    public string TableName { get; set; }
+    public string TableName { get; set; } = string.Empty;
 
     /// <summary>
-    /// Whether to pluralize <seealso cref="TableName"/> (add 's') when doing SQL SELECT. Default is true.
+    /// Whether to pluralize guessed foreign key table names (add 's'). Default is true.
     /// </summary>
     [Parameter]
     public bool PluralizeTableName { get; set; } = true;
 
     /// <summary>
-    /// The columns to retrieve from table <seealso cref="TableName"/>, separated by commas.
-    /// Default is "*" (all columns). Must be valid column names in the table.
+    /// The columns of table <see cref="TableName"/> that are the CRUD fields, separated by commas.
+    /// Default is "*" (all columns). Must be valid column names in the table. Use 'AS' to specify an alias.
     /// </summary>
     [Parameter]
     public string TableColumns { get; set; } = "*";
 
     /// <summary>
-    /// The column that is the primary key of table <seealso cref="TableName"/>.
-    /// If not specified, the first property of <typeparamref name="TEntity"/> marked with 
-    /// the KeyAttribute will be used. If no property is marked with KeyAttribute, it will 
-    /// look for a property named "Id" or "{ClassName}Id".
+    /// The column that is the primary key of table <see cref="TableName"/>.
+    /// If not specified, the primary key of the table is used. If the table has no primary key, 
+    /// it will look for a column named "Id".
     /// </summary>
     [Parameter]
     public string? KeyColumn { get; set; }
@@ -73,7 +52,7 @@ public partial class CruddyBase<TEntity> : ComponentBase where TEntity : class
     public bool AllowKeyColumnEditOnCreate { get; set; } = false;
 
     /// <summary>
-    /// The maximum number of rows to retrieve from table <seealso cref="TableName"/>.
+    /// The maximum number of rows to retrieve from table <see cref="TableName"/>.
     /// </summary>
     /// <remarks>Default is 10000.</remarks>
     [Parameter]
@@ -88,7 +67,7 @@ public partial class CruddyBase<TEntity> : ComponentBase where TEntity : class
 
     /// <summary>
     /// The column(s) to order the results by, separated by commas. 
-    /// Must be a valid column name in table <seealso cref="TableName"/>.
+    /// Must be a valid column name in table <see cref="TableName"/>.
     /// </summary>
     [Parameter]
     public string? OrderBy { get; set; }
@@ -100,21 +79,22 @@ public partial class CruddyBase<TEntity> : ComponentBase where TEntity : class
     public string? Where { get; set; }
 
     /// <summary>
-    /// Sorting order for the rows when using <seealso cref="OrderBy"/>. 
+    /// Sorting order for the rows when using <see cref="OrderBy"/>. 
     /// </summary>
-    /// <remarks>Default is <seealso cref="SortOrder.Ascending"/></remarks>
+    /// <remarks>Default is <see cref="SortOrder.Ascending"/></remarks>
     [Parameter]
     public SortOrder SortOrder { get; set; } = SortOrder.Ascending;
 
     /// <summary>
     /// Here the complete SQL SELECT statement, including joins, can be specified.
-    /// If specified, parameters like <seealso cref="Top"/> and <seealso cref="OrderBy"/> are ignored.
+    /// If specified, parameters like <see cref="Top"/> and <see cref="OrderBy"/> are ignored.
+    /// The names of the selected columns must match the CRUD fields (<see cref="TableColumns"/>).
     /// </summary>
     [Parameter]
     public string? Select { get; set; }
 
     /// <summary>
-    /// A database connection e.g an SqlConnection or MysqlConnection. 
+    /// A database connection e.g an SqlConnection. 
     /// </summary>
     [Parameter]
     public required DbConnection DbConnection { get; set; }
@@ -155,25 +135,54 @@ public partial class CruddyBase<TEntity> : ComponentBase where TEntity : class
     }
 
     /// <summary>
-    /// Gets the dropdown options for a property if it is a foreign key, otherwise null.
+    /// Gets the dropdown options for a field if it is a foreign key, otherwise null.
     /// </summary>
-    protected List<FKeyOption>? GetFKeyOptions(PropertyInfo prop) =>
-        FKeyOptions.TryGetValue(prop.Name, out var options) ? options : null;
+    protected List<FKeyOption>? GetFKeyOptions(CruddyField field) =>
+        FKeyOptions.TryGetValue(field.Name, out var options) ? options : null;
 
+    /// <summary>
+    /// All (supported) columns of table <see cref="TableName"/>, read from the database catalog.
+    /// </summary>
+    public List<CruddyField> AllColumns { get; protected set; } = [];
+
+    /// <summary>
+    /// The CRUD fields, i.e. the columns specified in <see cref="TableColumns"/>.
+    /// </summary>
+    public List<CruddyField> Fields { get; protected set; } = [];
 
     /// <summary>
     /// The rows retrieved from the database.
     /// </summary>
-    protected List<TEntity> Rows = [];
+    protected List<CruddyRow> Rows = [];
 
     /// <summary>
-    /// During component initialization, this method fills <see cref="FKeyInfo"/> and <see cref="ColumnAliasDict"/>, 
-    /// adds columns to the grid and retrieves the rows from the database.
+    /// During component initialization, this method reads the table column info from the database, fills 
+    /// <see cref="FKeyInfoList"/>, <see cref="ColumnAliasDict"/> and <see cref="Fields"/>, 
+    /// and retrieves the rows from the database.
     /// </summary>
     protected override async Task OnInitializedAsync()
     {
+        if (string.IsNullOrWhiteSpace(TableName))
+        {
+            throw new InvalidOperationException("Parameter TableName is required.");
+        }
+
         FKeyInfoList = FillFKeyInfoList(FKeys, DefaultSchema, PluralizeTableName);
+
+        AllColumns = Repository.GetColumns();
+        if (AllColumns.Count == 0)
+        {
+            throw new InvalidOperationException($"Table {DefaultSchema}.{TableName} was not found or has no supported columns.");
+        }
+
+        if (string.IsNullOrEmpty(KeyColumn))
+        {
+            KeyColumn = (AllColumns.FirstOrDefault(c => c.IsPrimaryKey) ??
+                AllColumns.FirstOrDefault(c => c.Column.Equals("Id", StringComparison.OrdinalIgnoreCase)))?.Column;
+        }
+
         FillColumnAliasDict();
+        Fields = GetFields(TableColumns);
         Rows = Repository.GetAll(BuildSql());
     }
 
@@ -246,44 +255,85 @@ public partial class CruddyBase<TEntity> : ComponentBase where TEntity : class
         {
             primaryTable = defaultSchema + "." + primaryTable;
         }
-        
+
         return new FKeyInfo(fKey, primaryTable, primaryId, "Name");
     }
 
     /// <summary>
     /// The repository used for all database operations.
     /// </summary>
-    protected IRepository<TEntity> Repository =>
-        new DapperRepository<TEntity>(DbConnection, DefaultSchema, TableName, KeyColumn);
+    protected TableRepository Repository =>
+        new(DbConnection, DefaultSchema, TableName, KeyColumn);
 
     /// <summary>
     /// A dictionary that maps the column names specified in <seealso cref="TableColumns"/> 
-    /// to their corresponding property names in <typeparamref name="TEntity"/>.
+    /// to their corresponding field names (the alias, if 'AS' is used, otherwise the column name).
     /// </summary>
     public readonly Dictionary<string, string> ColumnAliasDict = new(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>
-    /// Fills the <seealso cref="ColumnAliasDict"/> dictionary with the column names and their 
-    /// corresponding property names. Use 'AS' to specify a property in the <typeparamref name="TEntity"/>. 
+    /// Parses a comma separated list of columns, where each column can have an alias specified with 'AS'.
     /// </summary>
-    public void FillColumnAliasDict()
+    /// <param name="columns">The comma separated list of columns.</param>
+    /// <returns>The distinct (column, alias) pairs. The alias is the column name if no alias is specified.</returns>
+    public static List<(string Column, string Alias)> ParseColumns(string columns)
     {
-        var columns = TableColumns.Split(',').Select(c => c.Trim());
-        foreach (var column in columns)
+        var result = new List<(string Column, string Alias)>();
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var column in columns.Split(',').Select(c => c.Trim()))
         {
             var parts = column.Split([" AS "], StringSplitOptions.RemoveEmptyEntries);
 
-            if (parts.Length == 2 && parts[1].Contains('['))
+            var key = parts[0].Replace("[", "").Replace("]", "").Trim();
+            if (key.Length == 0 || key == "*" || !seen.Add(key))
             {
-                parts[1] = parts[1].Replace("[", "").Replace("]", "").Trim();
+                continue;
             }
 
-            var key = parts[0].Trim();
-            if (!ColumnAliasDict.ContainsKey(key))
+            var alias = parts.Length == 2 ? parts[1].Replace("[", "").Replace("]", "").Trim() : key;
+            result.Add((key, alias));
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// Fills the <seealso cref="ColumnAliasDict"/> dictionary with the column names and their 
+    /// corresponding field names. Use 'AS' to specify an alias. 
+    /// </summary>
+    public void FillColumnAliasDict()
+    {
+        foreach (var (column, alias) in ParseColumns(TableColumns))
+        {
+            ColumnAliasDict.TryAdd(column, alias);
+        }
+    }
+
+    /// <summary>
+    /// Gets the fields that correspond to the specified columns. "*" means all columns of the table.
+    /// Columns not found in the table (or of an unsupported type) are ignored.
+    /// </summary>
+    /// <param name="columns">Comma separated list of columns, or "*".</param>
+    /// <returns>The matching fields, in the order they are specified.</returns>
+    public List<CruddyField> GetFields(string columns)
+    {
+        if (columns.Trim() == "*")
+        {
+            return [.. AllColumns];
+        }
+
+        var fields = new List<CruddyField>();
+        foreach (var (column, alias) in ParseColumns(columns))
+        {
+            var field = AllColumns.FirstOrDefault(c => c.Column.Equals(column, StringComparison.OrdinalIgnoreCase));
+            if (field is not null)
             {
-                ColumnAliasDict.Add(key, parts.Length == 2 ? parts[1] : key);
+                fields.Add(field with { Name = alias });
             }
         }
+
+        return fields;
     }
 
     /// <summary>
@@ -326,45 +376,33 @@ public partial class CruddyBase<TEntity> : ComponentBase where TEntity : class
     }
 
     /// <summary>
-    /// Gets the properties of <typeparamref name="TEntity"/> that correspond
-    /// to the columns specified in <seealso cref="TableColumns"/>.
-    /// Only public readable and writable properties of supported types are returned. 
-    /// NOTE: When operation is <seealso cref="CrudOperation.Create"/>, 
-    /// all properties are returned regardless of <seealso cref="TableColumns"/>.
+    /// Gets the CRUD fields that can be written for the operation (the key column and read-only 
+    /// columns are excluded as described in <see cref="IncludeColumn"/>).
     /// </summary>
-    /// <param name="entity">The entity instance.</param>
-    /// <param name="operation">The CRUD operation type.</param>
-    /// <param name="columnsAlt">An optional alternative set of columns to use instead of <seealso cref="TableColumns"/>.</param>
-    /// <returns>An array of <see cref="PropertyInfo"/> objects that match the specified columns and operation.</returns>
-    /// <exception cref="ArgumentNullException"></exception>
-    public PropertyInfo[] GetPropertiesForTableColumns(TEntity entity, CrudOperation operation, string columnsAlt = "")
+    /// <param name="operation">The CRUD operation type. Must be Create or Update.</param>
+    /// <returns>The fields to include in the SQL operation.</returns>
+    /// <exception cref="ArgumentException">Thrown if the operation is not Create or Update.</exception>
+    public List<CruddyField> GetFieldsForCreateOrUpdate(CrudOperation operation)
     {
-        ArgumentNullException.ThrowIfNull(entity);
+        if (operation != CrudOperation.Create && operation != CrudOperation.Update)
+        {
+            throw new ArgumentException("Invalid operation. Must be either Create or Update.", nameof(operation));
+        }
 
-        var colsToUse = string.IsNullOrEmpty(columnsAlt) ? TableColumns : columnsAlt;
-        var cols = colsToUse == "*" || operation == CrudOperation.Create
-            ? [] : colsToUse.Split(",", StringSplitOptions.TrimEntries).ToList();
-
-        var props = PropertyHelper.GetColumnProperties(entity.GetType())
-            .Where(p => TypeHelper.IsSupported(p.PropertyType) &&
-                        p.CanRead && p.CanWrite &&
-                        (cols.Count == 0 || cols.Contains(p.Name)))
-            .ToArray();
-
-        return props;
+        return Fields.Where(f => !f.IsReadOnly && IncludeColumn(operation, f.Column)).ToList();
     }
 
     /// <summary>
-    /// Determines whether a given property name should be included in the
+    /// Determines whether a given column should be included in the
     /// SQL operation based on the operation type. For example, the key column 
-    /// is excluded from UPDATE operations unless AllowKeyColumnEditOnCreate is true.
+    /// is excluded from UPDATE operations, and from CREATE operations unless AllowKeyColumnEditOnCreate is true.
     /// </summary>
     /// <param name="operation">The CRUD operation type.</param>
-    /// <param name="propName">The name of the property.</param>
-    /// <returns>True if the property should be included; otherwise, false.</returns>
-    public bool IncludeColumn(CrudOperation operation, string propName)
+    /// <param name="columnName">The name of the column.</param>
+    /// <returns>True if the column should be included; otherwise, false.</returns>
+    public bool IncludeColumn(CrudOperation operation, string columnName)
     {
-        if (string.Equals(propName, KeyColumn, StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(columnName, KeyColumn, StringComparison.OrdinalIgnoreCase))
         {
             if (operation == CrudOperation.Create)
             {
@@ -377,6 +415,24 @@ public partial class CruddyBase<TEntity> : ComponentBase where TEntity : class
     }
 
     /// <summary>
+    /// Gets the value of a field in a row, or null if the field is missing or the value is DBNull.
+    /// </summary>
+    public static object? GetCell(CruddyRow row, string name) =>
+        row.TryGetValue(name, out var value) && value is not DBNull ? value : null;
+
+    /// <summary>
+    /// Gets the key value of a row.
+    /// </summary>
+    /// <param name="row">The row.</param>
+    /// <returns>The value of the key column, or null if the row does not contain it.</returns>
+    public object? GetKeyValue(CruddyRow row)
+    {
+        var name = Fields.FirstOrDefault(f => string.Equals(f.Column, KeyColumn, StringComparison.OrdinalIgnoreCase))?.Name
+            ?? KeyColumn;
+        return name is null ? null : GetCell(row, name);
+    }
+
+    /// <summary>
     /// Deletes a row from the database table based on the specified key value.
     /// </summary>
     /// <param name="keyValue">The value of the key column for the row to delete.</param>
@@ -384,76 +440,40 @@ public partial class CruddyBase<TEntity> : ComponentBase where TEntity : class
     public object? Delete(object keyValue) => Repository.Delete(keyValue);
 
     /// <summary>
-    /// Gets the properties of <typeparamref name="TEntity"/> that correspond to 
-    /// the columns specified in <seealso cref="TableColumns"/>
+    /// Updates an existing row in the database table based on the specified key value.
     /// </summary>
-    /// <param name="entity">The entity instance from which to get the properties.</param>
-    /// <param name="operation">The CRUD operation being performed.</param>
-    /// <returns>An array of <see cref="PropertyInfo"/> objects representing the properties to include in the operation.</returns>
-    /// <exception cref="ArgumentException">Thrown if the operation is not Create or Update.</exception>
-    public PropertyInfo[] GetPropertiesForCreateOrUpdate(TEntity entity, CrudOperation operation)
-    {
-        if (operation != CrudOperation.Create && operation != CrudOperation.Update)
-        {
-            throw new ArgumentException("Invalid operation. Must be either Create or Update.", nameof(operation));
-        }
-
-        var cols = TableColumns == "*" || operation == CrudOperation.Create
-            ? [] : TableColumns.Split(",", StringSplitOptions.TrimEntries).ToList();
-
-        var props = PropertyHelper.GetColumnProperties(entity.GetType())
-            .Where(p => p.CanRead && p.CanWrite &&
-                        (cols.Count == 0 || cols.Contains(p.Name)) && IncludeColumn(operation, p.Name))
-            .ToArray();
-
-        return props;
-    }
-
-    /// <summary>
-    /// Updates an existing entity in the database table based on the specified key value.
-    /// </summary>
-    /// <param name="entity">The entity to update.</param>
+    /// <param name="row">The row to update.</param>
     /// <param name="keyValue">The value of the key column for the row to update.</param>
     /// <returns>The number of rows affected.</returns>
-    /// <exception cref="ArgumentNullException">Thrown if <paramref name="entity"/> is null.</exception>    
-    public int Update(TEntity entity, object keyValue)
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="row"/> is null.</exception>    
+    public int Update(CruddyRow row, object keyValue)
     {
-        ArgumentNullException.ThrowIfNull(entity);
+        ArgumentNullException.ThrowIfNull(row);
 
-        var props = GetPropertiesForCreateOrUpdate(entity, CrudOperation.Update);
-        return Repository.Update(entity, keyValue, props);
+        var fields = GetFieldsForCreateOrUpdate(CrudOperation.Update);
+        return Repository.Update(row, keyValue, fields);
     }
 
     /// <summary>
-    /// Inserts a new entity into the database table. By default the key column is excluded from the INSERT
+    /// Inserts a new row into the database table. By default the key column is excluded from the INSERT
     /// (useful when the key is an identity column). Returns the database scalar result if available
     /// (for example SCOPE_IDENTITY()), otherwise returns the number of rows affected.
     /// </summary>
-    /// <param name="entity">The entity to insert.</param>
+    /// <param name="row">The row to insert.</param>
     /// <returns>Scalar result from the DB (e.g. new id) or rows affected.</returns>
-    public object? Create(TEntity entity)
+    public object? Create(CruddyRow row)
     {
-        ArgumentNullException.ThrowIfNull(entity);
+        ArgumentNullException.ThrowIfNull(row);
 
-        var props = GetPropertiesForCreateOrUpdate(entity, CrudOperation.Create);
-        return Repository.Add(entity, props);
+        var fields = GetFieldsForCreateOrUpdate(CrudOperation.Create);
+        return Repository.Add(row, fields);
     }
 
     /// <summary>
     /// Gets a single row from the database table in <seealso cref="TableName"/> based on the specified key value
     /// </summary>
-    /// <param name="id">The value of the key column for the row to retrieve.</param>    /// <param name="columns">The columns to include in the result.</param>
-    /// <returns>The entity corresponding to the specified key value, or null if not found.</returns>
-    public TEntity? GetTableRow(object id, string columns = "*") => Repository.GetById(id, columns);
-
-    /// <summary>
-    /// Maps a collection of dynamics to a list of strongly typed objects of type T.
-    /// </summary>
-    /// <typeparam name="T">The type to map the dynamic items to.</typeparam>
-    /// <param name="dynItems">The collection of dynamics.</param>
-    /// <returns>A list of strongly typed objects of type T.</returns>
-    public static List<T> Map<T>(IEnumerable<dynamic> dynItems)
-    {
-        return DapperRepository<TEntity>.Map<T>(dynItems);
-    }
+    /// <param name="id">The value of the key column for the row to retrieve.</param>
+    /// <param name="columns">The columns to include in the result.</param>
+    /// <returns>The row corresponding to the specified key value, or null if not found.</returns>
+    public CruddyRow? GetTableRow(object id, string columns = "*") => Repository.GetById(id, columns);
 }

@@ -5,57 +5,53 @@ using Microsoft.AspNetCore.Components.QuickGrid;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.Configuration;
 using System.ComponentModel.DataAnnotations;
-using System.Linq.Expressions;
-using System.Reflection;
+using System.Globalization;
 
 namespace Lindekilde.Blazor.Cruddy.Components;
 
 /// <summary>
-/// Lists the rows of a database table in a QuickGrid component, 
-/// with columns automatically generated from the public properties of TEntity.
+/// Lists the rows of a database table in a QuickGrid component, with columns 
+/// generated from the table columns specified in <see cref="CruddyBase.TableColumns"/>.
+/// No model is needed.
 /// </summary>
-public partial class Cruddy<TEntity> : CruddyBase<TEntity> where TEntity : class
+public partial class Cruddy : CruddyBase
 {
     /// <summary>
-    /// Provides access to application configuration settings.
+    /// Gets or sets the application configuration.
     /// </summary>
-    /// <remarks>Supplied by dependency injection via the <c>[Inject]</c> attribute.</remarks>
+    /// <remarks>Provided by dependency injection.</remarks>
     [Inject]
     protected IConfiguration Configuration { get; set; } = default!;
 
     #region Parameters
 
     /// <summary>
-    /// The default date format to use when displaying date values when not 
-    /// using <seealso cref="DisplayFormatAttribute"/>. Default format is d (aka 'Short date pattern').
+    /// The default date format to use when displaying date values. Default format is d (aka 'Short date pattern').
     /// </summary>
     [Parameter]
     public string? DefaultDateFormat { get; set; } = "d";
 
     /// <summary>
-    /// The default date format to use when displaying datetime values when not using <seealso cref="DisplayFormatAttribute"/>.
+    /// The default date format to use when displaying datetime values.
     /// Default format is g (aka 'general date/time pattern (short time)').
     /// </summary>
     [Parameter]
     public string? DefaultDateTimeFormat { get; set; } = "g";
 
     /// <summary>
-    /// The default date format to use when displaying time values when not 
-    /// using <seealso cref="DisplayFormatAttribute"/>. Default format is t (aka 'short time pattern').
+    /// The default date format to use when displaying time values. Default format is t (aka 'short time pattern').
     /// </summary>
     [Parameter]
     public string? DefaultTimeFormat { get; set; } = "t";
 
     /// <summary>
-    /// The default decimal, double and float format to use when displaying decimal values 
-    /// when not using <seealso cref="DisplayFormatAttribute"/>. Default format is 0.00.
+    /// The default decimal, double and float format to use when displaying decimal values. Default format is 0.00.
     /// </summary>
     [Parameter]
     public string? DefaultDecimalFormat { get; set; } = "0.00";
 
     /// <summary>
-    /// The default format to use when displaying numbers when not 
-    /// using <seealso cref="DisplayFormatAttribute"/>. Default format is 0.
+    /// The default format to use when displaying numbers. Default format is 0.
     /// </summary>
     [Parameter]
     public string? DefaultNumberFormat { get; set; } = "0";
@@ -86,7 +82,7 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> where TEntity : class
 
     /// <summary>
     /// List of table columns, separated by commas, to display in the Details modal. 
-    /// If "*" is specified, all public readable properties of TEntity will be displayed.
+    /// If "*" is specified, all table columns will be displayed.
     /// If empty string TableColumns is used.
     /// </summary>
     [Parameter]
@@ -151,7 +147,7 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> where TEntity : class
     /// <summary>
     /// The QuickGrid component that displays the rows retrieved from the database.
     /// </summary>
-    protected QuickGrid<TEntity>? MyGrid;
+    protected QuickGrid<CruddyRow>? MyGrid;
 
     /// <summary>
     /// The ColumnManager that manages the columns of the QuickGrid component.
@@ -175,12 +171,12 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> where TEntity : class
     protected NavigationManager? NavigationManager { get; set; }
 
     /// <summary>
-    /// The currently selected item being crud'ed (a copy).
+    /// The currently selected row being crud'ed (a copy).
     /// </summary>
-    protected TEntity? ActionItem { get; set; }
+    protected CruddyRow? ActionItem { get; set; }
 
     /// <summary>
-    /// The currently selected item being crud'ed (a copy).
+    /// The currently active crud operation.
     /// </summary>
     protected CrudOperation ActionCrud { get; set; } = CrudOperation.None;
 
@@ -189,12 +185,9 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> where TEntity : class
     #region Lifecycle methods
 
     /// <summary>
-    /// Binds the "Cruddy" configuration section in appsettings.json to the 
-    /// component and applies the incoming parameter values.
+    /// Parameters not supplied in the Cruddy razor tag are read from the "Cruddy" section in appsettings.json. 
+    /// If a parameter is in neither, the default value is used.
     /// </summary>
-    /// <remarks>Called by the Blazor framework during component initialization and updates.</remarks>
-    /// <param name="parameters">The set of parameter values to assign to the component.</param>
-    /// <returns>A task that completes when parameter assignment has finished.</returns>
     public override Task SetParametersAsync(ParameterView parameters)
     {
         Configuration.GetSection("Cruddy").Bind(this);
@@ -219,7 +212,13 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> where TEntity : class
     /// </summary>
     protected bool ShowDetailsModal { get; set; }
 
-    private void ShowDetails(TEntity item)
+    /// <summary>
+    /// The fields shown in the details modal.
+    /// </summary>
+    protected List<CruddyField> DetailsFields =>
+        string.IsNullOrEmpty(DetailsColumns) ? Fields : GetFields(DetailsColumns);
+
+    private void ShowDetails(CruddyRow item)
     {
         LoadFKeyOptions();
 
@@ -229,8 +228,8 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> where TEntity : class
         }
         else
         {
-            var keyValue = PropertyHelper.GetValue(item, KeyColumn!);
-            ActionItem = GetTableRow(keyValue, DetailsColumns);
+            var keyValue = GetKeyValue(item);
+            ActionItem = keyValue is null ? item : GetTableRow(keyValue, DetailsColumns) ?? item;
         }
 
         ActionCrud = CrudOperation.Read;
@@ -241,43 +240,58 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> where TEntity : class
     #region Edit
 
     /// <summary>
-    /// EditContext used for DataAnnotations validation.
+    /// EditContext used for validation.
     /// </summary>
     protected EditContext? EditCtx { get; set; }
 
-    private Task ShowEdit(CrudOperation actionCrud, TEntity item = default!)
+    /// <summary>
+    /// The fields shown in the create and edit modal.
+    /// </summary>
+    protected List<CruddyField> EditFields => Fields.Where(f => !f.IsReadOnly).ToList();
+
+    private Task ShowEdit(CrudOperation actionCrud, CruddyRow? item = null)
     {
         LoadFKeyOptions();
 
-        ActionItem = actionCrud == CrudOperation.Create ? 
-                CruddyHelper.NewInstance<TEntity>() :
-                CruddyHelper.DeepCopy(item);
+        ActionItem = actionCrud == CrudOperation.Create
+            ? NewRow()
+            : new CruddyRow(item!, StringComparer.OrdinalIgnoreCase);
 
         EditCtx = new EditContext(ActionItem);
         ActionCrud = actionCrud;
         return Task.CompletedTask;
     }
 
+    private CruddyRow NewRow()
+    {
+        var row = new CruddyRow(StringComparer.OrdinalIgnoreCase);
+        foreach (var field in Fields)
+        {
+            row[field.Name] = field.IsNullable || field.Type == typeof(string)
+                ? null
+                : Activator.CreateInstance(field.Type);
+        }
+        return row;
+    }
+
     private void CancelAction()
     {
         ActionCrud = CrudOperation.None;
-        ActionItem = default;
+        ActionItem = null;
         EditCtx = null;
     }
 
-    private void PersistCreated(TEntity item)
+    private void PersistCreated(CruddyRow item)
     {
-        // Persist via base Create method
         var result = Create(item);
 
-        // If a scalar id was returned, attempt to set the key property
-        var keyProp = PropertyHelper.GetProperty(typeof(TEntity), KeyColumn!);
-        if (keyProp != null && result != null)
+        // If a scalar id was returned, attempt to set the key field
+        var keyField = Fields.FirstOrDefault(f => string.Equals(f.Column, KeyColumn, StringComparison.OrdinalIgnoreCase));
+        if (keyField != null && result != null && result is not DBNull)
         {
             try
             {
-                var converted = Convert.ChangeType(result, TypeHelper.GetUnderlyingType(keyProp.PropertyType));
-                keyProp.SetValue(item, converted);
+                item[keyField.Name] = Convert.ChangeType(result, keyField.Type);
             }
             catch
             {
@@ -288,22 +302,16 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> where TEntity : class
         Rows?.Insert(0, item);
     }
 
-    private void PersistUpdated(TEntity item)
+    private void PersistUpdated(CruddyRow item)
     {
-        // Get key value from edited item
-        var keyProp = PropertyHelper.GetProperty(typeof(TEntity), KeyColumn!);
-        object? keyValue = null;
-        if (keyProp != null) keyValue = keyProp.GetValue(item);
+        var keyValue = GetKeyValue(item);
 
-        // Call base Update method to persist changes
         var rowsAffected = Update(item, keyValue!);
 
-        // Update in-memory list
         if (rowsAffected > 0 && Rows != null)
         {
-            // find original item by key and replace
-            var original = Rows.FirstOrDefault(r => string.Equals(PropertyHelper.GetValue(r, KeyColumn!),
-                PropertyHelper.GetValue(item, KeyColumn!), StringComparison.OrdinalIgnoreCase));
+            var original = Rows.FirstOrDefault(r =>
+                string.Equals(GetKeyValue(r)?.ToString(), keyValue?.ToString(), StringComparison.OrdinalIgnoreCase));
             if (original != null)
             {
                 var idx = Rows.IndexOf(original);
@@ -321,14 +329,6 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> where TEntity : class
 
         try
         {
-            // Validate using DataAnnotations
-            if (EditCtx != null && !EditCtx.Validate())
-            {
-                // validation failed - keep modal open and show messages (ValidationSummary will display)
-                await InvokeAsync(StateHasChanged);
-                return;
-            }
-
             if (ActionCrud == CrudOperation.Create)
             {
                 PersistCreated(ActionItem);
@@ -339,7 +339,7 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> where TEntity : class
             }
 
             ActionCrud = CrudOperation.None;
-            ActionItem = default;
+            ActionItem = null;
             EditCtx = null;
             if (ReloadPageAfterChange)
             {
@@ -365,30 +365,23 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> where TEntity : class
     }
 
     /// <summary>
-    /// Called when a single field is changed in the edit form. Updates the EditItem property via reflection
-    /// and notifies the EditContext for validation.
+    /// Called when a single field is changed in the edit form. Updates the field in the row being edited
+    /// and notifies the EditContext.
     /// </summary>
-    /// <param name="prop">Property being changed.</param>
-    /// <param name="value">New value (as string) from the input event.</param>
-    protected void OnFieldChanged(PropertyInfo prop, object? value)
+    /// <param name="field">Field being changed.</param>
+    /// <param name="value">New value from the input event.</param>
+    protected void OnFieldChanged(CruddyField field, object? value)
     {
         if (ActionItem == null) return;
 
         try
         {
-            var targetType = TypeHelper.GetUnderlyingType(prop.PropertyType);
-            object? converted = TypeHelper.TryParseValue(value, targetType);
-            prop.SetValue(ActionItem, converted);
-
-            if (EditCtx != null)
-            {
-                var field = new FieldIdentifier(ActionItem, prop.Name);
-                EditCtx.NotifyFieldChanged(field);
-            }
+            ActionItem[field.Name] = TypeHelper.TryParseValue(value, field.Type);
+            EditCtx?.NotifyFieldChanged(new FieldIdentifier(ActionItem, field.Name));
         }
         catch
         {
-            // ignore conversion errors here; validation will catch invalid values on submit
+            // ignore conversion errors here
         }
     }
 
@@ -396,7 +389,7 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> where TEntity : class
 
     #region Delete
 
-    private Task ConfirmAndDeleteAsync(TEntity item)
+    private Task ConfirmAndDeleteAsync(CruddyRow item)
     {
         ActionItem = item;
         ActionCrud = CrudOperation.Delete;
@@ -407,16 +400,14 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> where TEntity : class
     {
         var item = ActionItem;
         ActionCrud = CrudOperation.None;
-        ActionItem = default;
+        ActionItem = null;
 
         if (item == null) return;
 
         try
         {
-            var keyValue = PropertyHelper.GetValue(item, KeyColumn!);
-            Delete(keyValue);
+            Delete(GetKeyValue(item)!);
 
-            // Remove the item from the in-memory rows and refresh UI
             Rows?.Remove(item);
             if (ReloadPageAfterChange)
             {
@@ -429,27 +420,24 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> where TEntity : class
         }
         catch (Exception ex)
         {
-            // Show an error message to the user and refresh the UI
             ErrorMessage = $"Delete failed: {ex.Message}";
             await ShowErrorMessage();
         }
     }
 
-    private string DeleteMessage(TEntity item)
+    private string DeleteMessage(CruddyRow item)
     {
-        var sureToDelete = "Sure you want to delete " + typeof(TEntity).Name.ToLower() + " ";
-        var keyInfo = HideKeyColumn ? "" : $"({KeyColumn}={PropertyHelper.GetValue(item, KeyColumn!)})";
-        string nameUxValue = PropertyHelper.GetValue(item, NameUx!);
+        var sureToDelete = "Sure you want to delete " + TableName.ToLower() + " row ";
+        var keyInfo = HideKeyColumn ? "" : $"({KeyColumn}={GetKeyValue(item)})";
+        var nameUxValue = string.IsNullOrEmpty(NameUx) ? "" : GetCell(item, NameUx)?.ToString() ?? "";
         if (!string.IsNullOrEmpty(nameUxValue))
         {
             nameUxValue += " ";
         }
 
-        var message = string.IsNullOrEmpty(nameUxValue)
+        return string.IsNullOrEmpty(nameUxValue)
             ? $"{sureToDelete}{keyInfo}?"
             : $"{sureToDelete}{nameUxValue}{keyInfo}?";
-
-        return message;
     }
 
     #endregion
@@ -457,36 +445,19 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> where TEntity : class
     #region AddColumns 
 
     /// <summary>
-    /// Add a simple column for each public readable property on TEntity.
+    /// Add a simple column for each CRUD field.
     /// </summary>
     protected virtual void AddColumnsToGrid()
     {
-        var props = PropertyHelper.GetReadProperties(typeof(TEntity));
-
-        if (TableColumns == "*")
+        foreach (var field in Fields)
         {
-            foreach (var prop in props.Where(prop => TypeHelper.IsSupported(prop.PropertyType)))
-            {
-                AddColumn(prop);
-            }
-        }
-        else
-        {
-            foreach (var col in ColumnAliasDict)
-            {
-                var prop = props.FirstOrDefault(p => p.Name.Equals(col.Value, StringComparison.OrdinalIgnoreCase));
-                if (prop != null && TypeHelper.IsSupported(prop.PropertyType))
-                {
-                    AddColumn(prop);
-                }
-            }
+            AddColumn(field);
         }
 
         if (AllowCrud || AllowDetails || AllowEdit || AllowDelete)
         {
             AddActionColumn();
         }
-
     }
 
     /// <summary>
@@ -495,7 +466,7 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> where TEntity : class
     /// </summary>
     private void AddActionColumn()
     {
-        RenderFragment<TEntity> actionTemplate = item => builder =>
+        RenderFragment<CruddyRow> actionTemplate = item => builder =>
         {
             if (AllowCrud || AllowDetails)
             {
@@ -527,90 +498,77 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> where TEntity : class
 
         MyColumns.Add(builder =>
         {
-            builder.OpenComponent<TemplateColumn<TEntity>>(0);
+            builder.OpenComponent<TemplateColumn<CruddyRow>>(0);
             builder.AddAttribute(1, nameof(TemplateColumn<>.ChildContent), actionTemplate);
             builder.AddAttribute(2, nameof(TemplateColumn<>.Title), ActionsTitle);
             builder.AddAttribute(3, nameof(TemplateColumn<>.Class), "text-left");
             builder.CloseComponent();
         });
     }
-        
+
     /// <summary>
-    /// Adds a PropertyColumn to the QuickGrid for the specified property.
+    /// Adds a column to the QuickGrid for the specified field.
     /// </summary>
-    /// <param name="prop">The property to add a column for.</param>
-    private void AddColumn(PropertyInfo prop)
+    /// <param name="field">The field to add a column for.</param>
+    private void AddColumn(CruddyField field)
     {
-        try
+        var ii = GetInputInfo(field, null, CrudOperation.Read);
+        if (!ii.Visible)
         {
-            var ii = GetInputInfo(prop, default, CrudOperation.Read);
-            if (!ii.Visible)
-            {
-                return;
-            }
-
-            if (HandleFKey(prop, ii.DisplayName))
-            {
-                return;
-            }
-
-            var entityType = typeof(TEntity);
-            var param = Expression.Parameter(entityType, "p");
-            var access = Expression.Property(param, prop);
-            var delegateType = typeof(Func<,>).MakeGenericType(entityType, prop.PropertyType);
-            var lambda = Expression.Lambda(delegateType, access, param);
-
-            var columnType = typeof(PropertyColumn<,>).MakeGenericType(entityType, prop.PropertyType);
-            var format = typeof(IFormattable).IsAssignableFrom(TypeHelper.GetUnderlyingType(prop.PropertyType))
-                ? ii.DisplayFormat
-                : null;
-
-            MyColumns.Add(builder =>
-            {
-                builder.OpenComponent(0, columnType);
-                builder.AddAttribute(1, "Property", lambda);
-                builder.AddAttribute(2, "Title", ii.DisplayName);
-                builder.AddAttribute(3, "Format", format);
-                builder.AddAttribute(4, "Align", Align.Left);
-                builder.AddAttribute(5, "Sortable", true);
-                builder.CloseComponent();
-            });
+            return;
         }
-        catch
+
+        if (HandleFKey(field, ii.DisplayName))
         {
-            // ignore any failures adding a specific column
-            // TODO: What should we do here? Log the error? Show a message in the UI?
+            return;
         }
+
+        RenderFragment<CruddyRow> template = item => builder =>
+        {
+            builder.AddContent(0, FormatValue(GetCell(item, field.Name), ii.DisplayFormat));
+        };
+
+        MyColumns.Add(builder =>
+        {
+            builder.OpenComponent<TemplateColumn<CruddyRow>>(0);
+            builder.AddAttribute(1, nameof(TemplateColumn<>.ChildContent), template);
+            builder.AddAttribute(2, nameof(TemplateColumn<>.Title), ii.DisplayName);
+            builder.AddAttribute(3, nameof(TemplateColumn<>.Align), Align.Left);
+            builder.AddAttribute(4, nameof(TemplateColumn<>.Sortable), true);
+            builder.AddAttribute(5, nameof(TemplateColumn<>.SortBy),
+                GridSort<CruddyRow>.ByAscending(item => GetCell(item, field.Name)));
+            builder.CloseComponent();
+        });
     }
 
     /// <summary>
-    /// Handles the rendering of a (possible) foreign key column in the QuickGrid. If the property is 
+    /// Handles the rendering of a (possible) foreign key column in the QuickGrid. If the field is 
     /// a foreign key, it retrieves the options for the foreign key and creates a template column 
     /// that displays the corresponding display value instead of the raw foreign key value.
     /// </summary>
-    /// <param name="prop">The property that might be a foreign key.</param>
+    /// <param name="field">The field that might be a foreign key.</param>
     /// <param name="columnTitle">The title of the column to be displayed in the QuickGrid.</param>
-    /// <returns>True if the property is a foreign key and the column was added; otherwise, false.</returns>
-    public bool HandleFKey(PropertyInfo prop, string columnTitle)
+    /// <returns>True if the field is a foreign key and the column was added; otherwise, false.</returns>
+    public bool HandleFKey(CruddyField field, string columnTitle)
     {
         LoadFKeyOptions();
-        var fkOptions = GetFKeyOptions(prop);
+        var fkOptions = GetFKeyOptions(field);
         if (fkOptions is not null)
         {
-            RenderFragment<TEntity> fkTemplate = item => builder =>
+            RenderFragment<CruddyRow> fkTemplate = item => builder =>
             {
-                builder.AddContent(0, GetForeignKeyDisplayValue(prop, item, fkOptions));
+                builder.AddContent(0, GetForeignKeyDisplayValue(field, item, fkOptions));
             };
 
             MyColumns.Add(builder =>
             {
-                builder.OpenComponent<TemplateColumn<TEntity>>(0);
+                builder.OpenComponent<TemplateColumn<CruddyRow>>(0);
                 builder.AddAttribute(1, nameof(TemplateColumn<>.ChildContent), fkTemplate);
                 builder.AddAttribute(2, nameof(TemplateColumn<>.Title), columnTitle);
                 builder.AddAttribute(3, nameof(TemplateColumn<>.Align), Align.Left);
                 builder.AddAttribute(4, nameof(TemplateColumn<>.Sortable), true);
-                builder.AddAttribute(5, nameof(TemplateColumn<>.SortBy), 
-                    GridSort<TEntity>.ByAscending(item => GetForeignKeyDisplayText(prop, item, fkOptions)));
+                builder.AddAttribute(5, nameof(TemplateColumn<>.SortBy),
+                    GridSort<CruddyRow>.ByAscending(item => GetForeignKeyDisplayText(field, item, fkOptions)));
                 builder.CloseComponent();
             });
             return true;
@@ -620,18 +578,18 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> where TEntity : class
     }
 
     /// <summary>
-    /// Resolves the display value for a foreign key property from the provided option list.
+    /// Resolves the display value for a foreign key field from the provided option list.
     /// </summary>
     /// <remarks>Matching first uses object equality on option identifiers and then compares string
     /// representations.</remarks>
-    /// <param name="prop">Property metadata for the foreign key value to read.</param>
-    /// <param name="item">Entity instance that contains the foreign key value.</param>
+    /// <param name="field">The foreign key field.</param>
+    /// <param name="item">The row that contains the foreign key value.</param>
     /// <param name="fkOptions">Available foreign key options to match by identifier.</param>
-    /// <returns>The matched option display value when a corresponding identifier is found; otherwise, the original property
+    /// <returns>The matched option display value when a corresponding identifier is found; otherwise, the original 
     /// value.</returns>
-    public static object? GetForeignKeyDisplayValue(PropertyInfo prop, TEntity item, List<FKeyOption> fkOptions)
+    public static object? GetForeignKeyDisplayValue(CruddyField field, CruddyRow item, List<FKeyOption> fkOptions)
     {
-        var value = prop.GetValue(item);
+        var value = GetCell(item, field.Name);
         var option = value is null
             ? null
             : fkOptions.FirstOrDefault(o => Equals(o.Id, value) || o.Id?.ToString() == value.ToString());
@@ -639,60 +597,60 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> where TEntity : class
     }
 
     /// <summary>
-    /// Gets the display text for a foreign key property value on the specified entity.
+    /// Gets the display text for a foreign key field value in the specified row.
     /// </summary>
-    /// <param name="prop">The property that represents the foreign key.</param>
-    /// <param name="item">The entity instance that contains the foreign key value.</param>
+    /// <param name="field">The field that represents the foreign key.</param>
+    /// <param name="item">The row that contains the foreign key value.</param>
     /// <param name="fkOptions">The available foreign key options used to resolve the display value.</param>
     /// <returns>The string representation of the resolved foreign key display value, or <see langword="null"/> when no value is
     /// resolved.</returns>
-    public static string? GetForeignKeyDisplayText(PropertyInfo prop, TEntity item, List<FKeyOption> fkOptions) =>
-        GetForeignKeyDisplayValue(prop, item, fkOptions)?.ToString();
+    public static string? GetForeignKeyDisplayText(CruddyField field, CruddyRow item, List<FKeyOption> fkOptions) =>
+        GetForeignKeyDisplayValue(field, item, fkOptions)?.ToString();
 
     #endregion
 
     #region Misc methods
 
     /// <summary>
-    /// Gets the InputInfo for a given property, item and operation. This is used to 
+    /// Gets the InputInfo for a given field, row and operation. This is used to 
     /// generate the columns in the QuickGrid and the input fields in the modals.
     /// </summary>
-    /// <param name="prop">The property for which to get the InputInfo.</param>
-    /// <param name="item">The item from which to get the property value.</param>
+    /// <param name="field">The field for which to get the InputInfo.</param>
+    /// <param name="item">The row from which to get the field value.</param>
     /// <param name="operation">The CRUD operation being performed.</param>
-    /// <returns>An InputInfo object containing metadata about the property.</returns>
-    public InputInfo GetInputInfo(PropertyInfo prop, TEntity? item, CrudOperation operation)
+    /// <returns>An InputInfo object containing metadata about the field.</returns>
+    public InputInfo GetInputInfo(CruddyField field, CruddyRow? item, CrudOperation operation)
     {
         var ii = new InputInfo
         {
-            DisplayName = PropertyHelper.GetDisplayName(prop),
-            DisplayFormat = GetDisplayFormat(prop),
-            Type = TypeHelper.GetUnderlyingType(prop.PropertyType),
-            Disabled = !IncludeColumn(operation, prop.Name),
-            Required = !PropertyHelper.IsNullable(prop),
+            DisplayName = field.Name,
+            DisplayFormat = GetDisplayFormat(field),
+            Type = field.Type,
+            Disabled = !IncludeColumn(operation, field.Column),
+            Required = !field.IsNullable,
             HideKeyColumn = HideKeyColumn,
-            IsKeyColumn = string.Equals(prop.Name, KeyColumn, StringComparison.OrdinalIgnoreCase),
-            DataType = prop.GetCustomAttribute<DataTypeAttribute>()?.DataType,
+            IsKeyColumn = string.Equals(field.Column, KeyColumn, StringComparison.OrdinalIgnoreCase),
+            DataType = field.IsDate ? DataType.Date : null,
         };
 
         if (item is not null)
         {
-            ii.Value = prop.GetValue(item);
-            ii.FormattedValue = PropertyHelper.GetFormattedValue(prop, item, ii.DisplayFormat);
+            ii.Value = GetCell(item, field.Name);
+            ii.FormattedValue = FormatValue(ii.Value, ii.DisplayFormat);
         }
 
         return ii;
     }
 
     /// <summary>
-    /// Gets the foreign key option for the specified property that matches the current input value.
+    /// Gets the foreign key option for the specified field that matches the current input value.
     /// </summary>
-    /// <param name="prop">The property whose foreign key options are evaluated.</param>
+    /// <param name="field">The field whose foreign key options are evaluated.</param>
     /// <param name="ii">The input data containing the value used to find a matching option.</param>
     /// <returns>The matching <c>FKeyOption</c> when a value is present and a match is found; otherwise, <see langword="null"/>.</returns>
-    public FKeyOption? GetFkeyOption(PropertyInfo prop, InputInfo ii)
+    public FKeyOption? GetFkeyOption(CruddyField field, InputInfo ii)
     {
-        var fkeyOptions = GetFKeyOptions(prop);
+        var fkeyOptions = GetFKeyOptions(field);
         var fkeyOption = ii.Value is null ? null :
             fkeyOptions?.FirstOrDefault(o => Equals(o.Id, ii.Value) || o.Id?.ToString() == ii.Value.ToString());
         return fkeyOption;
@@ -713,53 +671,58 @@ public partial class Cruddy<TEntity> : CruddyBase<TEntity> where TEntity : class
     }
 
     /// <summary>
-    /// Gets the display format for the specified property either 
-    /// from the DisplayFormatAttribute, or from the default formats.
+    /// Formats a value using the format if the value is formattable, otherwise uses ToString().
     /// </summary>
-    /// <param name="prop">The property to get the display format for.</param>
-    /// <returns>The display format string, or null if none is specified.</returns>
-#pragma warning disable S3776   // Cognitive Complexity of methods should not be too high
-    protected string? GetDisplayFormat(PropertyInfo prop)
-#pragma warning restore S3776
+    protected static string FormatValue(object? value, string? format)
     {
-        var displayFormat = PropertyHelper.GetDisplayFormat(prop);
-        if (!string.IsNullOrEmpty(displayFormat))
+        if (value == null)
         {
-            return displayFormat;
+            return string.Empty;
         }
 
-        var propertyType = TypeHelper.GetUnderlyingType(prop.PropertyType);
+        if (!string.IsNullOrEmpty(format) && value is IFormattable f)
+        {
+            try
+            {
+                return f.ToString(format, CultureInfo.CurrentCulture);
+            }
+            catch (FormatException)
+            {
+                // the format does not fit the type, so fall through to ToString()
+            }
+        }
 
-        if (TypeHelper.IsDecimal(propertyType))
+        return value.ToString() ?? string.Empty;
+    }
+
+    /// <summary>
+    /// Gets the default display format for the specified field.
+    /// </summary>
+    /// <param name="field">The field to get the display format for.</param>
+    /// <returns>The display format string, or null if none is specified.</returns>
+    protected string? GetDisplayFormat(CruddyField field)
+    {
+        if (TypeHelper.IsDecimal(field.Type))
         {
             return string.IsNullOrEmpty(DefaultDecimalFormat) ? null : DefaultDecimalFormat;
         }
 
-        if (TypeHelper.IsNumber(propertyType))
+        if (TypeHelper.IsNumber(field.Type))
         {
             return string.IsNullOrEmpty(DefaultNumberFormat) ? null : DefaultNumberFormat;
         }
 
-        var dataType = prop.GetCustomAttribute<DataTypeAttribute>()?.DataType;
-        if (dataType.HasValue)
+        if (field.IsDate)
         {
-            if (dataType == DataType.Date)
-            {
-                return string.IsNullOrEmpty(DefaultDateFormat) ? null : DefaultDateFormat;
-            }
-            if (dataType == DataType.Time)
-            {
-                return string.IsNullOrEmpty(DefaultTimeFormat) ? null : DefaultTimeFormat;
-            }
+            return string.IsNullOrEmpty(DefaultDateFormat) ? null : DefaultDateFormat;
         }
 
-        return propertyType.Name switch
+        if (field.Type == typeof(DateTime))
         {
-            "TimeOnly" => string.IsNullOrEmpty(DefaultTimeFormat) ? null : DefaultTimeFormat,
-            "DateOnly" => string.IsNullOrEmpty(DefaultDateFormat) ? null : DefaultDateFormat,
-            "DateTime" => string.IsNullOrEmpty(DefaultDateTimeFormat) ? null : DefaultDateTimeFormat,
-            _ => null,
-        };
+            return string.IsNullOrEmpty(DefaultDateTimeFormat) ? null : DefaultDateTimeFormat;
+        }
+
+        return null;
     }
 
     #endregion

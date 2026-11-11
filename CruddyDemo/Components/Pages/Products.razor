@@ -4,15 +4,11 @@
 <h3>Table Products</h3>
 
 <h4>Simple as possible</h4>
-<Cruddy TEntity="Models.Product" DbConnection="dbConnection" />
+<Cruddy TableName="Products" DbConnection="dbConnection" AllowDetails="true" />
 
 <br />
 <h4>Distinct="true"</h4>
-<Cruddy TEntity="Models.Product" TableName="Products" TableColumns="Name" OrderBy="Name" Distinct="true" DbConnection="dbConnection" />
-
-<br />
-<h4>All products</h4>
-<Cruddy TEntity="Models.Product" TableName="Products" TableColumns="Id, Name, Price" OrderBy="Name" AllowDetails="true" DbConnection="dbConnection" />
+<Cruddy TableName="Products" TableColumns="Name" OrderBy="Name" Distinct="true" DbConnection="dbConnection" />
 
 @code {
 

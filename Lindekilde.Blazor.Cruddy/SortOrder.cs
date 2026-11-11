@@ -8,7 +8,7 @@ namespace Lindekilde.Blazor.Cruddy;
 public enum SortOrder
 {
     /// <summary>
-    /// Do not sort the rows. Use this if ASC/DESC is used in <seealso cref="CruddyBase{T}.OrderBy"/> parameter.
+    /// Do not sort the rows. Use this if ASC/DESC is used in <seealso cref="CruddyBase.OrderBy"/> parameter.
     /// </summary>
     None = 0,
     /// <summary>

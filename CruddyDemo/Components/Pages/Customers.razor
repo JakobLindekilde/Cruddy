@@ -3,12 +3,12 @@
 
 <h3>Table Customers</h3>
 
-<h4>TableColumns="*"</h4>
-<Cruddy TEntity="Models.Customer" AllowCrud="true" ReloadPageAfterChange="true" DbConnection="dbConnection" HideKeyColumn="true" />
+<h4>TableColumns="*" HideKeyColumn="true"</h4>
+<Cruddy TableName="Customers" AllowCrud="true" ReloadPageAfterChange="true" DbConnection="dbConnection" HideKeyColumn="true" />
 
 <br />
 <h4>Columns specified in parameter TableColumns</h4>
-<Cruddy TEntity="Models.Customer" TableName="Customers" TableColumns="Id, Vip, Name, Email, Email, Phone" NameUx="Name" AllowCrud="true" DbConnection="dbConnection" />
+<Cruddy TableName="Customers" TableColumns="Id, Vip, Name, Email, Phone" NameUx="Name" AllowCrud="true" DbConnection="dbConnection" />
 
 @code {
 

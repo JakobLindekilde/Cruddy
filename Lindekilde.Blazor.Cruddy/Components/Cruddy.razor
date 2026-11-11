@@ -1,7 +1,6 @@
 ﻿@using Microsoft.AspNetCore.Components.QuickGrid
 @using Lindekilde.Blazor.Cruddy.Helpers
-@inherits CruddyBase<TEntity>
-@typeparam TEntity
+@inherits CruddyBase
 
 @if (!Rows.Any())
 {
@@ -20,7 +19,7 @@
     </div>
 }
 
-<QuickGrid @ref="MyGrid" id="CruddyGrid" Items="@Rows.AsQueryable()" Class="@CruddyGridClass" Theme="@CruddyGridTheme">
+<QuickGrid TGridItem="CruddyRow" @ref="MyGrid" id="CruddyGrid" Items="@Rows.AsQueryable()" Class="@CruddyGridClass" Theme="@CruddyGridTheme">
     @foreach (var column in MyColumns)
     {
         @column
@@ -33,17 +32,17 @@
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Details - @typeof(TEntity).Name</h5>
+                    <h5 class="modal-title">Details - @TableName</h5>
                     <button type="button" class="btn-close" aria-label="Close" @onclick="CancelAction"></button>
                 </div>
                 <div class="modal-body">
                     <table class="@ModalTableClass">
                         <tbody>
-                            @foreach (var prop in GetPropertiesForTableColumns(ActionItem, ActionCrud, DetailsColumns))
+                            @foreach (var field in DetailsFields)
                             {
-                                var ii = GetInputInfo(prop, ActionItem, ActionCrud);
+                                var ii = GetInputInfo(field, ActionItem, ActionCrud);
                                 if (!ii.Visible) continue;
-                                var fkeyOption = GetFkeyOption(prop, ii);   
+                                var fkeyOption = GetFkeyOption(field, ii);
                                 <tr>
                                     <th>@ii.DisplayName</th>
                                     <td>@(fkeyOption is not null ? fkeyOption.Display : ii.FormattedValue)</td>
@@ -66,7 +65,7 @@
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">@(ActionCrud == CrudOperation.Create ? "Create" : "Edit") - @typeof(TEntity).Name</h5>
+                    <h5 class="modal-title">@(ActionCrud == CrudOperation.Create ? "Create" : "Edit") - @TableName</h5>
                     <button type="button" class="btn-close" aria-label="Close" @onclick="CancelAction"></button>
                 </div>
                 @if (!string.IsNullOrEmpty(EditErrorMessage))
@@ -80,9 +79,9 @@
 
                         <table class="@ModalTableClass">
                             <tbody>
-                                @foreach (var prop in GetPropertiesForTableColumns(ActionItem!, ActionCrud))
+                                @foreach (var field in EditFields)
                                 {
-                                    var ii = GetInputInfo(prop, ActionItem, ActionCrud);
+                                    var ii = GetInputInfo(field, ActionItem, ActionCrud);
                                     if (!ii.Visible)
                                     {
                                         <input type="hidden" class="form-control" value="@(ii.Value?.ToString() ?? string.Empty)" />
@@ -92,42 +91,34 @@
                                         <th>@ii.DisplayName</th>
                                         <td>
                                             @{
-                                                var fkOptions = GetFKeyOptions(prop);
+                                                var fkOptions = GetFKeyOptions(field);
                                                 if (fkOptions != null)
                                                 {
-                                                    <ForeignKeyInput Options="fkOptions" Value="ii.Value" ShowEmptyOption="PropertyHelper.IsNullable(prop) || ActionCrud == CrudOperation.Create" Disabled="ii.Disabled" Required="ii.Required" ValueChanged="(value) => OnFieldChanged(prop, value)" />
+                                                    <ForeignKeyInput Options="fkOptions" Value="ii.Value" ShowEmptyOption="field.IsNullable || ActionCrud == CrudOperation.Create" Disabled="ii.Disabled" Required="ii.Required" ValueChanged="(value) => OnFieldChanged(field, value)" />
                                                 }
-                                                else if (TypeHelper.IsNumber(ii.Type))
+                                                else if (TypeHelper.IsNumber(ii.Type) || TypeHelper.IsDecimal(ii.Type))
                                                 {
-                                                    <input type="number" class="form-control" value="@(ii.Value?.ToString() ?? string.Empty)" disabled="@ii.Disabled" required="@ii.Required" @onchange="(e) => OnFieldChanged(prop, e.Value)" />
+                                                    <input type="number" step="@(TypeHelper.IsDecimal(ii.Type) ? "any" : null)" class="form-control" value="@(ii.Value?.ToString() ?? string.Empty)" disabled="@ii.Disabled" required="@ii.Required" @onchange="(e) => OnFieldChanged(field, e.Value)" />
                                                 }
                                                 else if (ii.Type == typeof(bool))
                                                 {
-                                                    <input type="checkbox" class="form-check-input" checked="@(ii.Value is bool b && b)" disabled="@ii.Disabled" @onchange="(e) => OnFieldChanged(prop, e.Value)" />
+                                                    <input type="checkbox" class="form-check-input" checked="@(ii.Value is bool b && b)" disabled="@ii.Disabled" @onchange="(e) => OnFieldChanged(field, e.Value)" />
                                                 }
                                                 else if (ii.Type == typeof(DateTime) && ii.DataType == System.ComponentModel.DataAnnotations.DataType.Date)
                                                 {
-                                                    <input type="date" class="form-control" value="@ii.InputDateTimeValue()" disabled="@ii.Disabled" required="@ii.Required" @onchange="(e) => OnFieldChanged(prop, e.Value)" />
+                                                    <input type="date" class="form-control" value="@ii.InputDateTimeValue()" disabled="@ii.Disabled" required="@ii.Required" @onchange="(e) => OnFieldChanged(field, e.Value)" />
                                                 }
                                                 else if (ii.Type == typeof(DateTime))
                                                 {
-                                                    <input type="datetime-local" step="1" class="form-control" value="@ii.InputDateTimeValue()" disabled="@ii.Disabled" required="@ii.Required" @onchange="(e) => OnFieldChanged(prop, e.Value)" />
+                                                    <input type="datetime-local" step="1" class="form-control" value="@ii.InputDateTimeValue()" disabled="@ii.Disabled" required="@ii.Required" @onchange="(e) => OnFieldChanged(field, e.Value)" />
                                                 }
                                                 else if (ii.Type == typeof(TimeSpan))
                                                 {
-                                                    <input type="time" step="1" class="form-control" value="@(ii.Value?.ToString() ?? string.Empty)" disabled="@ii.Disabled" required="@ii.Required" @onchange="(e) => OnFieldChanged(prop, e.Value)" />
-                                                }
-                                                else if (ii.Type == typeof(TimeOnly))
-                                                {
-                                                    <input type="time" class="form-control" value="@(ii.Value?.ToString() ?? string.Empty)" disabled="@ii.Disabled" required="@ii.Required" @onchange="(e) => OnFieldChanged(prop, e.Value)" />
-                                                }
-                                                else if (ii.Type.IsEnum)
-                                                {
-                                                    <EnumInput EnumType="ii.Type" Value="ii.Value" IsNullable="PropertyHelper.IsNullable(prop)" Disabled="ii.Disabled" Required="ii.Required" ValueChanged="(value) => OnFieldChanged(prop, value)" />
+                                                    <input type="time" step="1" class="form-control" value="@(ii.Value?.ToString() ?? string.Empty)" disabled="@ii.Disabled" required="@ii.Required" @onchange="(e) => OnFieldChanged(field, e.Value)" />
                                                 }
                                                 else
                                                 {
-                                                    <input type="text" class="form-control" value="@(ii.Value?.ToString() ?? string.Empty)" disabled="@ii.Disabled" required="@ii.Required" @onchange="(e) => OnFieldChanged(prop, e.Value)" />
+                                                    <input type="text" class="form-control" value="@(ii.Value?.ToString() ?? string.Empty)" disabled="@ii.Disabled" required="@ii.Required" @onchange="(e) => OnFieldChanged(field, e.Value)" />
                                                 }
                                             }
                                         </td>

@@ -1,15 +1,16 @@
 # Cruddy
 
-Why Cruddy? -I needed a simple component that could do CRUD operations on any database table.
+Why Cruddy? -I needed a simple component that can do CRUD operations on any database table.
 I wanted to be able to use it with any class or record. It had to use Dapper for database operations. 
+
+NOTE: See also the twin component CruddyModel that uses a model class: 
+https://github.com/JakobLindekilde/Cruddy
 
 ## Overview
 
 - Cruddy is an ASP.NET Blazor component that does CRUD operations on any table in any database
 - Cruddy is based on the Microsoft QuickGrid component
-- Cruddy requires a model class or record
-- When editing or creating validation is done based on the class properties and attributes (DataAnnotations) 
-- The model class/record properties do not need to match the database table columns
+- When editing or creating validation is done table columns properties
 - Cruddy uses Dapper - not Entity Framework
 - Cruddy will generate the appropriate CRUD SQL statements
 - Cruddy does not use any non-Microsoft NuGet packages (except for Dapper)
@@ -74,8 +75,8 @@ public static void Main(string[] args)
 
 <h3>Table Customers</h3>
 
-<h4>TableColumns="*"</h4>
-<Cruddy TEntity="Models.Customer" AllowCrud="true" DbConnection="dbConnection" HideKeyColumn="true" />
+<h4>TableColumns="*" HideKeyColumn="true"</h4>
+<Cruddy TableName="Customers" AllowCrud="true" ReloadPageAfterChange="true" DbConnection="dbConnection" HideKeyColumn="true" />
 
 @code {
 }
@@ -84,32 +85,7 @@ public static void Main(string[] args)
 The razor file above will result in this QuickGrid:
 <img src="Docs/TableCustomersCruddy.png" alt="Cruddy example" width="800" />
 
-Models.Customer:
-```csharp   
-public class Customer
-{
-    public Customer() { }
-
-    [Key]
-    public int Id { get; set; }
-
-    [DisplayName("Customer Name")]
-    public required string Name { get; set; }
-
-    [MaxLength(30, ErrorMessage = "Email cannot exceed 30 digits.")]    
-    public required string Email { get; set; }
-
-    public bool Vip { get; set; }
-
-    public int Phone { get; set; }
-
-    [DisplayName("Birth Date")]
-    public DateTime Birthdate { get; set; }
-}
-```
-**Key**: If the model class has a property with the attribute [Key], Cruddy will use that property as the primary key column. 
-If no property has the [Key] attribute, Cruddy will try to find a property named "Id" or "{ClassName}Id" and use that as the primary key column.
-Or use the KeyColumn parameter to specify the primary key column name.
+**Key**: The KeyColumn parameter is used to specify the primary key column name (default: "Id").
 
 <img src="Docs/TableCustomers.png" alt="Cruddy example" width="400" />
 <img src="Docs/Details.png" alt="Cruddy Details" width="800" />
@@ -125,38 +101,11 @@ Or use the KeyColumn parameter to specify the primary key column name.
 <h3>Table Products</h3>
 
 <h4>Simple as possible</h4>
-<Cruddy TEntity="Models.Product" DbConnection="dbConnection" />
-
-@code {}
-```
-
-### SQL example:
-```razor
-@page "/AnyPoco"
-@inject Microsoft.Data.SqlClient.SqlConnection dbConnection
-
-<h3>Select into any POCO class</h3>
-
-<h4>SELECT Id, Name, LTRIM(STR(Price)) AS Info FROM Products</h4>
-<Cruddy TEntity="Models.AnyPoco" Select="SELECT Id, Name, LTRIM(STR(Price)) AS Info FROM Products" DbConnection="dbConnection" />
-
-@code {}
-```
-
-### SQL example with INNER JOIN:
-```razor
-<Cruddy TEntity="Models.OrderCruddy" TableName="Orders" TableColumns="Id, CustomerName, ProductName, Qty, Paid, OrderDate" Select=@sql DbConnection="dbConnection" />
+<Cruddy TableName="Products" DbConnection="dbConnection" AllowDetails="true" />
 
 @code {
-    string sql = @"
-        SELECT o.Id, c.Name AS CustomerName, p.Name AS ProductName, Pid, o.Qty, o.Paid, o.OrderDate FROM Orders o
-        INNER JOIN Customers c ON c.Id = o.Cid
-        INNER JOIN Products p ON p.Id = o.PId
-";
 }
 ```
-
-Note how attribute Key, DisplayName and DisplayFormat are used in the model classes.
 
 ## Database related parameters - CruddyBase.cs:
 

@@ -1,20 +1,12 @@
 ﻿@page "/Orders"
 @inject Microsoft.Data.SqlClient.SqlConnection dbConnection
 
-
-<h3>Table Orders - using record as POCO</h3>
-
-<Cruddy TEntity="Models.Order" TableName="Orders" DbConnection="dbConnection" FKeys="CId: Customers, Id, Name; PId: Products, Id, Name; EId: Employees, Id, Name" AllowCrud="true" />
+<h3>Table Orders - with foreign keys</h3>
+<Cruddy TableName="Orders" AllowCrud="true" DbConnection="dbConnection" FKeys="CId: Customers, Id, Name; PId: Products, Id, Name; EId: Employees, Id, Name" />
 
 <br />
-<h3>Table Orders - handcrafted SQL</h3>
-
-<Cruddy TEntity="Models.OrderCruddy" TableName="Orders" TableColumns="Id, CustomerName, ProductName, Qty, Paid, OrderDate" Select=@sql AllowDetails="true" DbConnection="dbConnection" />
+<h3>Table Orders - without foreign keys</h3>
+<Cruddy TableName="Orders" AllowCrud="true" DbConnection="dbConnection" />
 
 @code {
-    string sql = @"
-        SELECT o.Id, c.Name AS CustomerName, p.Name AS ProductName, Pid, o.Qty, o.Paid, o.OrderDate FROM Orders o
-        INNER JOIN Customers c ON c.Id = o.Cid
-        INNER JOIN Products p ON p.Id = o.PId
-";
 }

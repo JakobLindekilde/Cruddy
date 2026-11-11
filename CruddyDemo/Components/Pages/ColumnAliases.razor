@@ -1,0 +1,12 @@
+﻿@page "/ColumnAliases"
+@inject Microsoft.Data.SqlClient.SqlConnection dbConnection
+
+<h3>Column aliases</h3>
+
+<br />
+<h4>TableName="Customers" TableColumns="Id, Name, Email AS Info"</h4>
+<Cruddy TableName="Customers" TableColumns="Id, Name, Email AS Info" DbConnection="dbConnection" />
+
+@code {
+
+}
