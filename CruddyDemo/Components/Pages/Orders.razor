@@ -2,7 +2,8 @@
 @inject Microsoft.Data.SqlClient.SqlConnection dbConnection
 
 <h3>Table Orders - with foreign keys</h3>
-<Cruddy TableName="Orders" AllowCrud="true" DbConnection="dbConnection" FKeys="CId: Customers, Id, Name; PId: Products, Id, Name; EId: Employees, Id, Name" />
+<Cruddy TableName="Orders" TableColumns="Id, CId AS Customer, PId AS Product, EId AS Employee, Qty, Paid, OrderDate" AllowCrud="true" DbConnection="dbConnection"
+        FKeys="Customer: Customers, Id, Name; Product: Products, Id, Name; Employee: Employees, Id, Name" />
 
 <br />
 <h3>Table Orders - without foreign keys</h3>
