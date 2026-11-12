@@ -96,9 +96,9 @@
                                                 {
                                                     <ForeignKeyInput Options="fkOptions" Value="ii.Value" ShowEmptyOption="field.IsNullable || ActionCrud == CrudOperation.Create" Disabled="ii.Disabled" Required="ii.Required" ValueChanged="(value) => OnFieldChanged(field, value)" />
                                                 }
-                                                else if (TypeHelper.IsNumber(ii.Type) || TypeHelper.IsDecimal(ii.Type))
+                                                else if (TypeHelper.IsNumber(ii.Type))
                                                 {
-                                                    <input type="number" step="@(TypeHelper.IsDecimal(ii.Type) ? "any" : null)" class="form-control" value="@(ii.Value?.ToString() ?? string.Empty)" disabled="@ii.Disabled" required="@ii.Required" @onchange="(e) => OnFieldChanged(field, e.Value)" />
+                                                    <input type="number" class="form-control" value="@(ii.Value?.ToString() ?? string.Empty)" disabled="@ii.Disabled" required="@ii.Required" @onchange="(e) => OnFieldChanged(field, e.Value)" />
                                                 }
                                                 else if (ii.Type == typeof(bool))
                                                 {
