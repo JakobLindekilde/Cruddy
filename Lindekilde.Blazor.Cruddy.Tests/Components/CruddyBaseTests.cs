@@ -109,7 +109,7 @@ public class CruddyBaseTests
 
         var fields = dut.GetFields("*");
 
-        Assert.Equal(["Id", "Name", "Email"], fields.Select(f => f.Name));
+        Assert.Equal(["Id", "Name", "Email"], fields.Select(f => f.AliasName));
     }
 
     [Fact]
@@ -120,8 +120,8 @@ public class CruddyBaseTests
 
         var fields = dut.GetFields("Email AS Mail, id, Unknown");
 
-        Assert.Equal(["Mail", "id"], fields.Select(f => f.Name));
-        Assert.Equal(["Email", "Id"], fields.Select(f => f.Column));
+        Assert.Equal(["Mail", "id"], fields.Select(f => f.AliasName));
+        Assert.Equal(["Email", "Id"], fields.Select(f => f.ColumnName));
     }
 
     #endregion
@@ -176,8 +176,8 @@ public class CruddyBaseTests
         var dut = new TestableCruddy { KeyColumn = "Id", DbConnection = null };
         dut.SetFields(Field("Id", typeof(int), false, true), Field("Name"), Field("RowVer", readOnly: true));
 
-        Assert.Equal(["Name"], dut.GetFieldsForCreateOrUpdate(CrudOperation.Create).Select(f => f.Column));
-        Assert.Equal(["Name"], dut.GetFieldsForCreateOrUpdate(CrudOperation.Update).Select(f => f.Column));
+        Assert.Equal(["Name"], dut.GetFieldsForCreateOrUpdate(CrudOperation.Create).Select(f => f.ColumnName));
+        Assert.Equal(["Name"], dut.GetFieldsForCreateOrUpdate(CrudOperation.Update).Select(f => f.ColumnName));
     }
 
     [Fact]
@@ -205,7 +205,7 @@ public class CruddyBaseTests
     public void GetKeyValue_UsesAliasOfKeyField()
     {
         var dut = new TestableCruddy { KeyColumn = "Id", DbConnection = null };
-        dut.SetFields(Field("Id", typeof(int), false, true) with { Name = "PersonId" });
+        dut.SetFields(Field("Id", typeof(int), false, true) with { AliasName = "PersonId" });
 
         Assert.Equal(5, dut.GetKeyValue(new CruddyRow { ["PersonId"] = 5 }));
     }
@@ -339,7 +339,7 @@ public class CruddyBaseTests
         await dut.InitializeAsync();
 
         Assert.Equal("Id", dut.KeyColumn);
-        Assert.Equal(["Id", "Name"], dut.Fields.Select(f => f.Column));
+        Assert.Equal(["Id", "Name"], dut.Fields.Select(f => f.ColumnName));
         Assert.Equal(typeof(int), dut.Fields[0].Type);
         Assert.False(dut.Fields[0].IsNullable);
         Assert.True(dut.Fields[0].IsPrimaryKey);
@@ -360,7 +360,7 @@ public class CruddyBaseTests
 
         await dut.InitializeAsync();
 
-        Assert.Equal(["Who", "Id"], dut.Fields.Select(f => f.Name));
+        Assert.Equal(["Who", "Id"], dut.Fields.Select(f => f.AliasName));
         Assert.Equal(2, dut.ColumnAliasDict.Count);
     }
 

@@ -112,7 +112,7 @@ public class DapperRepository(DbConnection dbConnection, string schema, string t
         ArgumentNullException.ThrowIfNull(row);
         if (fields.Count == 0) return 0;
 
-        var colNames = fields.Select(f => $"[{f.Column}]");
+        var colNames = fields.Select(f => $"[{f.ColumnName}]");
         var paramNames = fields.Select((_, i) => $"@p{i}");
 
         var sql = $"INSERT INTO {schema}.{tableName} ({string.Join(", ", colNames)}) VALUES ({string.Join(", ", paramNames)})";
@@ -141,7 +141,7 @@ public class DapperRepository(DbConnection dbConnection, string schema, string t
         ArgumentNullException.ThrowIfNull(row);
         if (fields.Count == 0) return 0;
 
-        var setClauses = fields.Select((f, i) => $"[{f.Column}] = @p{i}");
+        var setClauses = fields.Select((f, i) => $"[{f.ColumnName}] = @p{i}");
         var sql = $"UPDATE {schema}.{tableName} SET {string.Join(", ", setClauses)} WHERE {keyColumn} = @keyValue";
 
         var dp = CreateParameters(row, fields);
@@ -185,7 +185,7 @@ public class DapperRepository(DbConnection dbConnection, string schema, string t
         var dp = new DynamicParameters();
         for (var i = 0; i < fields.Count; i++)
         {
-            row.TryGetValue(fields[i].Name, out var value);
+            row.TryGetValue(fields[i].AliasName, out var value);
             dp.Add($"p{i}", value);
         }
         return dp;

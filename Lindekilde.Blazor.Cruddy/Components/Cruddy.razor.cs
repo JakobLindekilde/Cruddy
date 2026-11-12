@@ -267,7 +267,7 @@ public partial class Cruddy : CruddyBase
         var row = new CruddyRow(StringComparer.OrdinalIgnoreCase);
         foreach (var field in Fields)
         {
-            row[field.Name] = field.IsNullable || field.Type == typeof(string)
+            row[field.AliasName] = field.IsNullable || field.Type == typeof(string)
                 ? null
                 : Activator.CreateInstance(field.Type);
         }
@@ -286,12 +286,12 @@ public partial class Cruddy : CruddyBase
         var result = Create(item);
 
         // If a scalar id was returned, attempt to set the key field
-        var keyField = Fields.FirstOrDefault(f => string.Equals(f.Column, KeyColumn, StringComparison.OrdinalIgnoreCase));
+        var keyField = Fields.FirstOrDefault(f => string.Equals(f.ColumnName, KeyColumn, StringComparison.OrdinalIgnoreCase));
         if (keyField != null && result != null && result is not DBNull)
         {
             try
             {
-                item[keyField.Name] = Convert.ChangeType(result, keyField.Type);
+                item[keyField.AliasName] = Convert.ChangeType(result, keyField.Type);
             }
             catch
             {
@@ -376,8 +376,8 @@ public partial class Cruddy : CruddyBase
 
         try
         {
-            ActionItem[field.Name] = TypeHelper.TryParseValue(value, field.Type);
-            EditCtx?.NotifyFieldChanged(new FieldIdentifier(ActionItem, field.Name));
+            ActionItem[field.AliasName] = TypeHelper.TryParseValue(value, field.Type);
+            EditCtx?.NotifyFieldChanged(new FieldIdentifier(ActionItem, field.AliasName));
         }
         catch
         {
@@ -525,7 +525,7 @@ public partial class Cruddy : CruddyBase
 
         RenderFragment<CruddyRow> template = item => builder =>
         {
-            builder.AddContent(0, FormatValue(GetCell(item, field.Name), ii.DisplayFormat));
+            builder.AddContent(0, FormatValue(GetCell(item, field.AliasName), ii.DisplayFormat));
         };
 
         MyColumns.Add(builder =>
@@ -536,7 +536,7 @@ public partial class Cruddy : CruddyBase
             builder.AddAttribute(3, nameof(TemplateColumn<>.Align), Align.Left);
             builder.AddAttribute(4, nameof(TemplateColumn<>.Sortable), true);
             builder.AddAttribute(5, nameof(TemplateColumn<>.SortBy),
-                GridSort<CruddyRow>.ByAscending(item => GetCell(item, field.Name)));
+                GridSort<CruddyRow>.ByAscending(item => GetCell(item, field.AliasName)));
             builder.CloseComponent();
         });
     }
@@ -589,7 +589,7 @@ public partial class Cruddy : CruddyBase
     /// value.</returns>
     public static object? GetForeignKeyDisplayValue(CruddyField field, CruddyRow item, List<FKeyOption> fkOptions)
     {
-        var value = GetCell(item, field.Name);
+        var value = GetCell(item, field.AliasName);
         var option = value is null
             ? null
             : fkOptions.FirstOrDefault(o => Equals(o.Id, value) || o.Id?.ToString() == value.ToString());
@@ -623,19 +623,20 @@ public partial class Cruddy : CruddyBase
     {
         var ii = new InputInfo
         {
-            DisplayName = field.Name,
+            ColumnName = field.ColumnName,
+            DisplayName = field.AliasName,
             DisplayFormat = GetDisplayFormat(field),
             Type = field.Type,
-            Disabled = !IncludeColumn(operation, field.Column),
+            Disabled = !IncludeColumn(operation, field.ColumnName),
             Required = !field.IsNullable,
             HideKeyColumn = HideKeyColumn,
-            IsKeyColumn = string.Equals(field.Column, KeyColumn, StringComparison.OrdinalIgnoreCase),
+            IsKeyColumn = string.Equals(field.ColumnName, KeyColumn, StringComparison.OrdinalIgnoreCase),
             DataType = field.IsDate ? DataType.Date : null,
         };
 
         if (item is not null)
         {
-            ii.Value = GetCell(item, field.Name);
+            ii.Value = GetCell(item, field.AliasName);
             ii.FormattedValue = FormatValue(ii.Value, ii.DisplayFormat);
         }
 

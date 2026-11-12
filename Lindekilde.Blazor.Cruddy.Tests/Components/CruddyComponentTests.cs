@@ -72,7 +72,7 @@ public class CruddyComponentTests
     [Fact]
     public void GetInputInfo_UsesAliasAsDisplayName()
     {
-        var info = Create().GetInputInfo(Field("Name") with { Name = "Who" }, null, CrudOperation.Read);
+        var info = Create().GetInputInfo(Field("Name") with { AliasName = "Who" }, null, CrudOperation.Read);
 
         Assert.Equal("Who", info.DisplayName);
     }
@@ -113,7 +113,7 @@ public class CruddyComponentTests
         dut.KeyColumn = "Id";
         dut.AllowKeyColumnEditOnCreate = allowKeyOnCreate;
 
-        var info = dut.GetInputInfo(Field("id", typeof(int), false, true) with { Column = "Id" }, null, operation);
+        var info = dut.GetInputInfo(Field("id", typeof(int), false, true) with { ColumnName = "Id" }, null, operation);
 
         Assert.True(info.IsKeyColumn);
         Assert.Equal(expectedDisabled, info.Disabled);
@@ -192,7 +192,8 @@ public class CruddyComponentTests
 
     private static InputInfo Info(CruddyField field, object? value) => new()
     {
-        DisplayName = field.Name,
+        ColumnName = field.ColumnName,
+        DisplayName = field.AliasName,
         DisplayFormat = null,
         Type = field.Type,
         Disabled = false,

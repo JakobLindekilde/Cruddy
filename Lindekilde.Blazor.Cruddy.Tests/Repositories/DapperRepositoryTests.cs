@@ -127,7 +127,7 @@ public class DapperRepositoryTests
         Assert.NotNull(actual);
         foreach (var field in fields)
         {
-            Assert.Equal(expected[field.Name], actual[field.Name]);
+            Assert.Equal(expected[field.AliasName], actual[field.AliasName]);
         }
     }
 
@@ -291,7 +291,7 @@ public class DapperRepositoryTests
 
         Assert.Equal(
             ["Id", "DateTimeNotNull", "DateTimeNullable", "TimeSpanNotNull", "TimeSpanNullable", "TimeOnlyNotNull", "TimeOnlyNullable"],
-            columns.Select(f => f.Column));
+            columns.Select(f => f.ColumnName));
     }
 
     [Fact]
@@ -299,7 +299,7 @@ public class DapperRepositoryTests
     {
         using var c = OpenConnection();
 
-        var columns = CreateRepo(c, DateTimeTable).GetColumns().ToDictionary(f => f.Column);
+        var columns = CreateRepo(c, DateTimeTable).GetColumns().ToDictionary(f => f.ColumnName);
 
         Assert.Equal(typeof(int), columns["Id"].Type);
         Assert.True(columns["Id"].IsPrimaryKey);
@@ -307,7 +307,7 @@ public class DapperRepositoryTests
 
         foreach (var field in DateTimeFields)
         {
-            var actual = columns[field.Column];
+            var actual = columns[field.ColumnName];
             Assert.Equal(field.Type, actual.Type);
             Assert.Equal(field.IsNullable, actual.IsNullable);
             Assert.False(actual.IsPrimaryKey);
@@ -324,14 +324,14 @@ public class DapperRepositoryTests
         var columns = CreateRepo(c, AllTypesTable).GetColumns();
 
         Assert.Equal(AllTypesFields.Length + 1, columns.Count);
-        Assert.Equal("Id", columns[0].Column);
+        Assert.Equal("Id", columns[0].ColumnName);
         Assert.Equal(typeof(int), columns[0].Type);
         Assert.True(columns[0].IsPrimaryKey);
 
-        var byColumn = columns.ToDictionary(f => f.Column);
+        var byColumn = columns.ToDictionary(f => f.ColumnName);
         foreach (var expected in AllTypesFields)
         {
-            var actual = byColumn[expected.Column];
+            var actual = byColumn[expected.ColumnName];
             Assert.Equal(expected.Type, actual.Type);
             Assert.Equal(expected.IsNullable, actual.IsNullable);
             Assert.False(actual.IsPrimaryKey);
@@ -346,7 +346,7 @@ public class DapperRepositoryTests
 
         var columns = CreateRepo(c, AllTypesTable).GetColumns();
 
-        Assert.All(columns, f => Assert.Equal(f.Column, f.Name));
+        Assert.All(columns, f => Assert.Equal(f.ColumnName, f.AliasName));
     }
 
     [Fact]
@@ -356,7 +356,7 @@ public class DapperRepositoryTests
 
         var columns = CreateRepo(c, AllTypesTable).GetColumns();
 
-        Assert.Equal(["Id"], columns.Where(f => f.IsPrimaryKey).Select(f => f.Column));
+        Assert.Equal(["Id"], columns.Where(f => f.IsPrimaryKey).Select(f => f.ColumnName));
     }
 
     [Fact]
@@ -581,7 +581,7 @@ public class DapperRepositoryTests
 
             var stored = repo.GetById(id);
             AssertRowMatches(row, stored, AllTypesFields);
-            Assert.All(AllTypesFields.Where(f => f.IsNullable), f => Assert.Null(stored![f.Name]));
+            Assert.All(AllTypesFields.Where(f => f.IsNullable), f => Assert.Null(stored![f.AliasName]));
         }
         finally
         {
@@ -871,7 +871,7 @@ public class DapperRepositoryTests
 
             var stored = Assert.Single(repo.GetAll($"SELECT * FROM dbo.{AllTypesTable} WHERE Id = {id}"));
 
-            Assert.All(AllTypesFields.Where(f => f.IsNullable), f => Assert.Null(stored[f.Name]));
+            Assert.All(AllTypesFields.Where(f => f.IsNullable), f => Assert.Null(stored[f.AliasName]));
         }
         finally
         {
@@ -993,7 +993,7 @@ public class DapperRepositoryTests
 
             repo.Update(DateTimeRow(false), id, nullableFields);
             var cleared = repo.GetById(id)!;
-            Assert.All(nullableFields, f => Assert.Null(cleared[f.Name]));
+            Assert.All(nullableFields, f => Assert.Null(cleared[f.AliasName]));
 
             var restored = DateTimeRow(true);
             repo.Update(restored, id, nullableFields);
@@ -1072,7 +1072,7 @@ public class DapperRepositoryTests
             repo.Update(updated, id, AllTypesFields);
 
             var stored = repo.GetById(id)!;
-            Assert.All(AllTypesFields.Where(f => f.IsNullable), f => Assert.Null(stored[f.Name]));
+            Assert.All(AllTypesFields.Where(f => f.IsNullable), f => Assert.Null(stored[f.AliasName]));
         }
         finally
         {

@@ -138,7 +138,7 @@ public partial class CruddyBase : ComponentBase
     /// Gets the dropdown options for a field if it is a foreign key, otherwise null.
     /// </summary>
     protected List<FKeyOption>? GetFKeyOptions(CruddyField field) =>
-        FKeyOptions.TryGetValue(field.Name, out var options) ? options : null;
+        FKeyOptions.TryGetValue(field.AliasName, out var options) ? options : null;
 
     /// <summary>
     /// All (supported) columns of table <see cref="TableName"/>, read from the database catalog.
@@ -178,7 +178,7 @@ public partial class CruddyBase : ComponentBase
         if (string.IsNullOrEmpty(KeyColumn))
         {
             KeyColumn = (AllColumns.FirstOrDefault(c => c.IsPrimaryKey) ??
-                AllColumns.FirstOrDefault(c => c.Column.Equals("Id", StringComparison.OrdinalIgnoreCase)))?.Column;
+                AllColumns.FirstOrDefault(c => c.ColumnName.Equals("Id", StringComparison.OrdinalIgnoreCase)))?.ColumnName;
         }
 
         FillColumnAliasDict();
@@ -332,10 +332,10 @@ public partial class CruddyBase : ComponentBase
         var fields = new List<CruddyField>();
         foreach (var (column, alias) in ParseColumns(columns))
         {
-            var field = AllColumns.FirstOrDefault(c => c.Column.Equals(column, StringComparison.OrdinalIgnoreCase));
+            var field = AllColumns.FirstOrDefault(c => c.ColumnName.Equals(column, StringComparison.OrdinalIgnoreCase));
             if (field is not null)
             {
-                fields.Add(field with { Name = alias });
+                fields.Add(field with { AliasName = alias });
             }
         }
 
@@ -395,7 +395,7 @@ public partial class CruddyBase : ComponentBase
             throw new ArgumentException("Invalid operation. Must be either Create or Update.", nameof(operation));
         }
 
-        return Fields.Where(f => !f.IsReadOnly && IncludeColumn(operation, f.Column)).ToList();
+        return Fields.Where(f => !f.IsReadOnly && IncludeColumn(operation, f.ColumnName)).ToList();
     }
 
     /// <summary>
@@ -433,7 +433,7 @@ public partial class CruddyBase : ComponentBase
     /// <returns>The value of the key column, or null if the row does not contain it.</returns>
     public object? GetKeyValue(CruddyRow row)
     {
-        var name = Fields.FirstOrDefault(f => string.Equals(f.Column, KeyColumn, StringComparison.OrdinalIgnoreCase))?.Name
+        var name = Fields.FirstOrDefault(f => string.Equals(f.ColumnName, KeyColumn, StringComparison.OrdinalIgnoreCase))?.AliasName
             ?? KeyColumn;
         return name is null ? null : GetCell(row, name);
     }

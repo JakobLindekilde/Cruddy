@@ -50,7 +50,7 @@ public class DapperRepositoryFakeRepoTests
 
         var columns = CreateFakeRepo(connection).GetColumns();
 
-        Assert.Equal(["Id", "Name"], columns.Select(f => f.Column));
+        Assert.Equal(["Id", "Name"], columns.Select(f => f.ColumnName));
     }
 
     [Fact]
