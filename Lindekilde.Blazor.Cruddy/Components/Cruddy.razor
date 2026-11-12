@@ -104,7 +104,7 @@
                                                 {
                                                     <input type="checkbox" class="form-check-input" checked="@(ii.Value is bool b && b)" disabled="@ii.Disabled" @onchange="(e) => OnFieldChanged(field, e.Value)" />
                                                 }
-                                                else if (ii.Type == typeof(DateTime) && ii.DataType == System.ComponentModel.DataAnnotations.DataType.Date)
+                                                else if (ii.Type == typeof(DateOnly))
                                                 {
                                                     <input type="date" class="form-control" value="@ii.InputDateTimeValue()" disabled="@ii.Disabled" required="@ii.Required" @onchange="(e) => OnFieldChanged(field, e.Value)" />
                                                 }
@@ -115,6 +115,10 @@
                                                 else if (ii.Type == typeof(TimeSpan))
                                                 {
                                                     <input type="time" step="1" class="form-control" value="@(ii.Value?.ToString() ?? string.Empty)" disabled="@ii.Disabled" required="@ii.Required" @onchange="(e) => OnFieldChanged(field, e.Value)" />
+                                                }
+                                                else if (ii.Type == typeof(TimeOnly))
+                                                {
+                                                    <input type="time" class="form-control" value="@(ii.Value?.ToString() ?? string.Empty)" disabled="@ii.Disabled" required="@ii.Required" @onchange="(e) => OnFieldChanged(field, e.Value)" />
                                                 }
                                                 else
                                                 {
