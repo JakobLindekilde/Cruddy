@@ -111,6 +111,24 @@ The razor file above will result in this QuickGrid:
 }
 ```
 
+### Foreign keys example - file Orders.razor:
+
+```razor
+@page "/Orders"
+@inject Microsoft.Data.SqlClient.SqlConnection dbConnection
+
+<h3>Table Orders - with foreign keys</h3>
+<Cruddy TableName="Orders" TableColumns="Id, CId AS Customer, PId AS Product, EId AS Employee, Qty, Paid, OrderDate" AllowCrud="true" DbConnection="dbConnection"
+        FKeys="Customer: Customers, Id, Name; Product: Products, Id, Name; Employee: Employees, Id, Name" />
+ 
+<br />
+<h3>Table Orders - without foreign keys</h3>
+<Cruddy TableName="Orders" AllowCrud="true" DbConnection="dbConnection" />
+
+@code {
+}
+```
+
 ## Database related parameters - CruddyBase.cs:
 
 | Parameter | Description |
