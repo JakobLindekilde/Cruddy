@@ -637,6 +637,10 @@ public partial class Cruddy : CruddyBase
         if (item is not null)
         {
             ii.Value = GetCell(item, field.AliasName);
+            if (ii.Value is null)
+            {
+                ii.Value = GetCell(item, field.ColumnName);
+            }
             ii.FormattedValue = FormatValue(ii.Value, ii.DisplayFormat);
         }
 

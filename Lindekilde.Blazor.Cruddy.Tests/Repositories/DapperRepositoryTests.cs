@@ -287,7 +287,7 @@ public class DapperRepositoryTests
     {
         using var c = OpenConnection();
 
-        var columns = CreateRepo(c, DateTimeTable).GetColumns();
+        var columns = CreateRepo(c, DateTimeTable).GetColumns([]);
 
         Assert.Equal(
             ["Id", "DateTimeNotNull", "DateTimeNullable", "TimeSpanNotNull", "TimeSpanNullable", "TimeOnlyNotNull", "TimeOnlyNullable"],
@@ -299,7 +299,7 @@ public class DapperRepositoryTests
     {
         using var c = OpenConnection();
 
-        var columns = CreateRepo(c, DateTimeTable).GetColumns().ToDictionary(f => f.ColumnName);
+        var columns = CreateRepo(c, DateTimeTable).GetColumns([]).ToDictionary(f => f.ColumnName);
 
         Assert.Equal(typeof(int), columns["Id"].Type);
         Assert.True(columns["Id"].IsPrimaryKey);
@@ -321,7 +321,7 @@ public class DapperRepositoryTests
     {
         using var c = OpenConnection();
 
-        var columns = CreateRepo(c, AllTypesTable).GetColumns();
+        var columns = CreateRepo(c, AllTypesTable).GetColumns([]);
 
         Assert.Equal(AllTypesFields.Length + 1, columns.Count);
         Assert.Equal("Id", columns[0].ColumnName);
@@ -344,7 +344,7 @@ public class DapperRepositoryTests
     {
         using var c = OpenConnection();
 
-        var columns = CreateRepo(c, AllTypesTable).GetColumns();
+        var columns = CreateRepo(c, AllTypesTable).GetColumns([]);
 
         Assert.All(columns, f => Assert.Equal(f.ColumnName, f.AliasName));
     }
@@ -354,7 +354,7 @@ public class DapperRepositoryTests
     {
         using var c = OpenConnection();
 
-        var columns = CreateRepo(c, AllTypesTable).GetColumns();
+        var columns = CreateRepo(c, AllTypesTable).GetColumns([]);
 
         Assert.Equal(["Id"], columns.Where(f => f.IsPrimaryKey).Select(f => f.ColumnName));
     }
@@ -364,7 +364,7 @@ public class DapperRepositoryTests
     {
         using var c = OpenConnection();
 
-        var columns = CreateRepo(c, "NoSuchTable_" + Guid.NewGuid().ToString("N")).GetColumns();
+        var columns = CreateRepo(c, "NoSuchTable_" + Guid.NewGuid().ToString("N")).GetColumns([]);
 
         Assert.Empty(columns);
     }
@@ -374,20 +374,10 @@ public class DapperRepositoryTests
     {
         using var c = OpenConnection();
 
-        var columns = new DapperRepository(c, "no_such_schema", DateTimeTable, "Id").GetColumns();
+        var columns = new DapperRepository(c, "no_such_schema", DateTimeTable, "Id").GetColumns([]);
 
         Assert.Empty(columns);
     }
-
-    private static Dictionary<string, object?> ColumnRow(string name, string typeName, bool isNullable, int isPrimaryKey, bool isComputed) =>
-        new()
-        {
-            ["Name"] = name,
-            ["TypeName"] = typeName,
-            ["IsNullable"] = isNullable,
-            ["IsPrimaryKey"] = isPrimaryKey,
-            ["IsComputed"] = isComputed,
-        };
 
     // ---------- Add ----------
 

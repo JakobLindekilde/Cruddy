@@ -11,7 +11,7 @@ public interface IRepository
     /// Gets all columns of the table, of a supported type, using sys.columns, sys.tables, sys.types and sys.indexes.
     /// </summary>
     /// <returns>The columns in table order. Empty if the table does not exist.</returns>
-    List<CruddyField> GetColumns();
+    List<CruddyField> GetColumns(Dictionary<string, string> columnAliasDict);
 
     /// <summary>
     /// Gets all rows returned by the SQL SELECT statement.

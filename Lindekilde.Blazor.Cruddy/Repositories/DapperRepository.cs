@@ -35,7 +35,7 @@ public class DapperRepository(DbConnection dbConnection, string schema, string t
     /// Gets all columns of the table, of a supported type, using sys.columns, sys.tables, sys.types and sys.indexes.
     /// </summary>
     /// <returns>The columns in table order. Empty if the table does not exist.</returns>
-    public List<CruddyField> GetColumns()
+    public List<CruddyField> GetColumns(Dictionary<string, string> columnAliasDict)
     {
         var rows = dbConnection.Query<ColumnRow>(ColumnsSql, new { Schema = schema, Table = tableName });
 
@@ -48,7 +48,13 @@ public class DapperRepository(DbConnection dbConnection, string schema, string t
                 continue;
             }
 
-            fields.Add(new CruddyField(row.Name, row.Name, type, row.IsNullable, row.IsPrimaryKey == 1, row.IsComputed, isDate));
+            var aliasName = row.Name;
+            if (columnAliasDict.TryGetValue(row.Name, out var value))
+            {
+                aliasName = value;
+            }
+
+            fields.Add(new CruddyField(row.Name, aliasName, type, row.IsNullable, row.IsPrimaryKey == 1, row.IsComputed, isDate));
         }
 
         return fields;
@@ -62,6 +68,7 @@ public class DapperRepository(DbConnection dbConnection, string schema, string t
     /// <returns>The CLR type, or null if the SQL type is not supported.</returns>
     public static Type? MapSqlType(string sqlType, out bool isDate)
     {
+        //TODO: Check if this is the best way to handle "date" type. It is not a CLR type, but we want to treat it as a date in the UI.
         isDate = sqlType.Equals("date", StringComparison.OrdinalIgnoreCase);
 
         return sqlType.ToLowerInvariant() switch

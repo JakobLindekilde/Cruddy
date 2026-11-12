@@ -31,7 +31,7 @@ public class DapperRepositoryFakeRepoTests
     {
         var connection = new FakeDbConnection();
 
-        new DapperRepository(connection, "mySchema", "myTable", "Id").GetColumns();
+        new DapperRepository(connection, "mySchema", "myTable", "Id").GetColumns([]);
 
         var command = Assert.Single(connection.Commands);
         Assert.Equal("Reader", command.Kind);
@@ -48,7 +48,7 @@ public class DapperRepositoryFakeRepoTests
         connection.Rows.Add(ColumnRow("Name", "nvarchar", true, 0, false));
         connection.Rows.Add(ColumnRow("Stamp", "timestamp", false, 0, false));
 
-        var columns = CreateFakeRepo(connection).GetColumns();
+        var columns = CreateFakeRepo(connection).GetColumns([]);
 
         Assert.Equal(["Id", "Name"], columns.Select(f => f.ColumnName));
     }
@@ -61,7 +61,7 @@ public class DapperRepositoryFakeRepoTests
         connection.Rows.Add(ColumnRow("Born", "date", true, 0, false));
         connection.Rows.Add(ColumnRow("Total", "int", false, 0, true));
 
-        var columns = CreateFakeRepo(connection).GetColumns();
+        var columns = CreateFakeRepo(connection).GetColumns([]);
 
         var id = columns[0];
         Assert.True(id.IsPrimaryKey);
@@ -83,7 +83,7 @@ public class DapperRepositoryFakeRepoTests
     [Fact]
     public void GetColumns_NoRows_ReturnsEmptyList()
     {
-        var columns = CreateFakeRepo(new FakeDbConnection()).GetColumns();
+        var columns = CreateFakeRepo(new FakeDbConnection()).GetColumns([]);
 
         Assert.Empty(columns);
     }

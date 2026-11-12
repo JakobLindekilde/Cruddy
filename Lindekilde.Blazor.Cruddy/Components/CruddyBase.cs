@@ -169,7 +169,8 @@ public partial class CruddyBase : ComponentBase
 
         FKeyInfoList = FillFKeyInfoList(FKeys, DefaultSchema, PluralizeTableName);
 
-        AllColumns = Repository.GetColumns();
+        FillColumnAliasDict();
+        AllColumns = Repository.GetColumns(ColumnAliasDict);
         if (AllColumns.Count == 0)
         {
             throw new InvalidOperationException($"Table {DefaultSchema}.{TableName} was not found or has no supported columns.");
@@ -181,7 +182,6 @@ public partial class CruddyBase : ComponentBase
                 AllColumns.FirstOrDefault(c => c.ColumnName.Equals("Id", StringComparison.OrdinalIgnoreCase)))?.ColumnName;
         }
 
-        FillColumnAliasDict();
         Fields = GetFields(TableColumns);
         Rows = Repository.GetAll(BuildSql());
     }
@@ -273,18 +273,18 @@ public partial class CruddyBase : ComponentBase
 
     /// <summary>
     /// A dictionary that maps the column names specified in <seealso cref="TableColumns"/> 
-    /// to their corresponding field names (the alias, if 'AS' is used, otherwise the column name).
+    /// to their corresponding field names (the alias name, if 'AS' is used, otherwise the column name).
     /// </summary>
     public readonly Dictionary<string, string> ColumnAliasDict = new(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>
-    /// Parses a comma separated list of columns, where each column can have an alias specified with 'AS'.
+    /// Parses a comma separated list of columns names, where each column can have an alias specified with 'AS'.
     /// </summary>
-    /// <param name="columns">The comma separated list of columns.</param>
-    /// <returns>The distinct (column, alias) pairs. The alias is the column name if no alias is specified.</returns>
-    public static List<(string Column, string Alias)> ParseColumns(string columns)
+    /// <param name="columns">The comma separated list of columns names.</param>
+    /// <returns>The distinct (columnName, aliasName) pairs. The aliasName is the columnName if no alias is specified.</returns>
+    public static List<(string ColumnName, string AliasName)> ParseColumns(string columns)
     {
-        var result = new List<(string Column, string Alias)>();
+        var result = new List<(string ColumnName, string AliasName)>();
         var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         foreach (var column in columns.Split(',').Select(c => c.Trim()))
@@ -297,8 +297,8 @@ public partial class CruddyBase : ComponentBase
                 continue;
             }
 
-            var alias = parts.Length == 2 ? parts[1].Replace("[", "").Replace("]", "").Trim() : key;
-            result.Add((key, alias));
+            var aliasName = parts.Length == 2 ? parts[1].Replace("[", "").Replace("]", "").Trim() : key;
+            result.Add((key, aliasName));
         }
 
         return result;
@@ -306,13 +306,13 @@ public partial class CruddyBase : ComponentBase
 
     /// <summary>
     /// Fills the <seealso cref="ColumnAliasDict"/> dictionary with the column names and their 
-    /// corresponding field names. Use 'AS' to specify an alias. 
+    /// corresponding field names. Use 'AS' to specify an alias name. 
     /// </summary>
     public void FillColumnAliasDict()
     {
-        foreach (var (column, alias) in ParseColumns(TableColumns))
+        foreach (var (columnName, aliasName) in ParseColumns(TableColumns))
         {
-            ColumnAliasDict.TryAdd(column, alias);
+            ColumnAliasDict.TryAdd(columnName, aliasName);
         }
     }
 
@@ -330,12 +330,12 @@ public partial class CruddyBase : ComponentBase
         }
 
         var fields = new List<CruddyField>();
-        foreach (var (column, alias) in ParseColumns(columns))
+        foreach (var (columnName, aliasName) in ParseColumns(columns))
         {
-            var field = AllColumns.FirstOrDefault(c => c.ColumnName.Equals(column, StringComparison.OrdinalIgnoreCase));
+            var field = AllColumns.FirstOrDefault(c => c.ColumnName.Equals(columnName, StringComparison.OrdinalIgnoreCase));
             if (field is not null)
             {
-                fields.Add(field with { AliasName = alias });
+                fields.Add(field with { AliasName = aliasName });
             }
         }
 
