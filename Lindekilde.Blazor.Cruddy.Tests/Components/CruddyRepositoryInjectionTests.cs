@@ -31,7 +31,7 @@ public class CruddyRepositoryInjectionTests
         public object? DeletedKey { get; private set; }
 
         public List<CruddyField> GetColumns(Dictionary<string, string> columnAliasDict) =>
-            [new CruddyField("PersonId", "PersonId", typeof(int), false, true, false, false)];
+            [new CruddyField("PersonId", "PersonId", typeof(int), false, true, false)];
 
         public List<CruddyRow> GetAll(string sql)
         {

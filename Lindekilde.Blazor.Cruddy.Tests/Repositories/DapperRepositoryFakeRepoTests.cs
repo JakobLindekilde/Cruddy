@@ -14,7 +14,7 @@ public class DapperRepositoryFakeRepoTests
         new(connection, "dbo", "People", "PersonId");
 
     private static CruddyField Field(string column, Type type, bool nullable = false, bool isKey = false) =>
-        new(column, column, type, nullable, isKey, false, false);
+        new(column, column, type, nullable, isKey, false);
 
     private static Dictionary<string, object?> ColumnRow(string name, string typeName, bool isNullable, int isPrimaryKey, bool isComputed) =>
         new()
@@ -67,11 +67,9 @@ public class DapperRepositoryFakeRepoTests
         Assert.True(id.IsPrimaryKey);
         Assert.False(id.IsNullable);
         Assert.False(id.IsReadOnly);
-        Assert.False(id.IsDate);
 
         var born = columns[1];
-        Assert.Equal(typeof(DateTime), born.Type);
-        Assert.True(born.IsDate);
+        Assert.Equal(typeof(DateOnly), born.Type);
         Assert.True(born.IsNullable);
         Assert.False(born.IsPrimaryKey);
 

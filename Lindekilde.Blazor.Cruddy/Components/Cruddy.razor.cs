@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Components.QuickGrid;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.Configuration;
-using System.ComponentModel.DataAnnotations;
 using System.Globalization;
 
 namespace Lindekilde.Blazor.Cruddy.Components;
@@ -630,8 +629,7 @@ public partial class Cruddy : CruddyBase
             Disabled = !IncludeColumn(operation, field.ColumnName),
             Required = !field.IsNullable,
             HideKeyColumn = HideKeyColumn,
-            IsKeyColumn = string.Equals(field.ColumnName, KeyColumn, StringComparison.OrdinalIgnoreCase),
-            DataType = field.IsDate ? DataType.Date : null,
+            IsKeyColumn = string.Equals(field.ColumnName, KeyColumn, StringComparison.OrdinalIgnoreCase)
         };
 
         if (item is not null)
@@ -717,14 +715,19 @@ public partial class Cruddy : CruddyBase
             return string.IsNullOrEmpty(DefaultNumberFormat) ? null : DefaultNumberFormat;
         }
 
-        if (field.IsDate)
+        if (field.Type == typeof(DateTime))
+        {
+            return string.IsNullOrEmpty(DefaultDateTimeFormat) ? null : DefaultDateTimeFormat;
+        }
+
+        if (field.Type == typeof(DateOnly))
         {
             return string.IsNullOrEmpty(DefaultDateFormat) ? null : DefaultDateFormat;
         }
 
-        if (field.Type == typeof(DateTime))
+        if (field.Type == typeof(TimeOnly) || field.Type == typeof(TimeSpan))
         {
-            return string.IsNullOrEmpty(DefaultDateTimeFormat) ? null : DefaultDateTimeFormat;
+            return string.IsNullOrEmpty(DefaultTimeFormat) ? null : DefaultTimeFormat;
         }
 
         return null;

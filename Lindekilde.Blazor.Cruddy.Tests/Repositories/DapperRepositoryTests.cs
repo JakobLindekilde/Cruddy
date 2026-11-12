@@ -38,7 +38,7 @@ public class DapperRepositoryTests
         new(c, "dbo", table, keyColumn);
 
     private static CruddyField Field(string column, Type type, bool nullable = false, bool isKey = false) =>
-        new(column, column, type, nullable, isKey, false, false);
+        new(column, column, type, nullable, isKey, false);
 
     private static readonly CruddyField[] DateTimeFields =
     [
@@ -175,7 +175,7 @@ public class DapperRepositoryTests
     [Fact]
     public void CreateParameters_UsesFieldNameNotColumn()
     {
-        var field = new CruddyField("db_col", "Alias", typeof(int), false, false, false, false);
+        var field = new CruddyField("db_col", "Alias", typeof(int), false, false, false);
         var row = new CruddyRow { ["Alias"] = 5, ["db_col"] = 99 };
 
         var dp = DapperRepository.CreateParameters(row, [field]);
@@ -218,7 +218,7 @@ public class DapperRepositoryTests
     [InlineData("smallmoney", typeof(decimal))]
     [InlineData("float", typeof(double))]
     [InlineData("real", typeof(float))]
-    [InlineData("date", typeof(DateTime))]
+    [InlineData("date", typeof(DateOnly))]
     [InlineData("datetime", typeof(DateTime))]
     [InlineData("datetime2", typeof(DateTime))]
     [InlineData("smalldatetime", typeof(DateTime))]
@@ -233,7 +233,7 @@ public class DapperRepositoryTests
     [InlineData("sysname", typeof(string))]
     public void MapSqlType_SupportedType_ReturnsClrType(string sqlType, Type expected)
     {
-        Assert.Equal(expected, DapperRepository.MapSqlType(sqlType, out _));
+        Assert.Equal(expected, DapperRepository.MapSqlType(sqlType));
     }
 
     [Theory]
@@ -243,41 +243,7 @@ public class DapperRepositoryTests
     [InlineData("Time", typeof(TimeSpan))]
     public void MapSqlType_IsCaseInsensitive(string sqlType, Type expected)
     {
-        Assert.Equal(expected, DapperRepository.MapSqlType(sqlType, out _));
-    }
-
-    [Theory]
-    [InlineData("varbinary")]
-    [InlineData("binary")]
-    [InlineData("image")]
-    [InlineData("xml")]
-    [InlineData("datetimeoffset")]
-    [InlineData("geography")]
-    [InlineData("hierarchyid")]
-    [InlineData("sql_variant")]
-    [InlineData("timestamp")]
-    [InlineData("")]
-    [InlineData("unknown")]
-    public void MapSqlType_UnsupportedType_ReturnsNull(string sqlType)
-    {
-        Assert.Null(DapperRepository.MapSqlType(sqlType, out var isDate));
-        Assert.False(isDate);
-    }
-
-    [Theory]
-    [InlineData("date", true)]
-    [InlineData("DATE", true)]
-    [InlineData("datetime", false)]
-    [InlineData("datetime2", false)]
-    [InlineData("smalldatetime", false)]
-    [InlineData("time", false)]
-    [InlineData("int", false)]
-    [InlineData("nvarchar", false)]
-    public void MapSqlType_IsDateOnlyForDateType(string sqlType, bool expectedIsDate)
-    {
-        DapperRepository.MapSqlType(sqlType, out var isDate);
-
-        Assert.Equal(expectedIsDate, isDate);
+        Assert.Equal(expected, DapperRepository.MapSqlType(sqlType));
     }
 
     // ---------- GetColumns ----------
@@ -312,7 +278,6 @@ public class DapperRepositoryTests
             Assert.Equal(field.IsNullable, actual.IsNullable);
             Assert.False(actual.IsPrimaryKey);
             Assert.False(actual.IsReadOnly);
-            Assert.False(actual.IsDate);
         }
     }
 

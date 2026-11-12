@@ -22,7 +22,7 @@ public class CruddyBaseTests
     }
 
     private static CruddyField Field(string column, Type? type = null, bool nullable = true, bool pk = false, bool readOnly = false) =>
-        new(column, column, type ?? typeof(string), nullable, pk, readOnly, false);
+        new(column, column, type ?? typeof(string), nullable, pk, readOnly);
 
     private static CruddyBase Create(string tableColumns = "*") =>
         new() { TableName = "Persons", TableColumns = tableColumns, DbConnection = null };

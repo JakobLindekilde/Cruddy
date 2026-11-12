@@ -42,7 +42,7 @@ public class DapperRepository(DbConnection dbConnection, string schema, string t
         var fields = new List<CruddyField>();
         foreach (var row in rows)
         {
-            var type = MapSqlType(row.TypeName, out var isDate);
+            var type = MapSqlType(row.TypeName);
             if (type is null)
             {
                 continue;
@@ -54,7 +54,7 @@ public class DapperRepository(DbConnection dbConnection, string schema, string t
                 aliasName = value;
             }
 
-            fields.Add(new CruddyField(row.Name, aliasName, type, row.IsNullable, row.IsPrimaryKey == 1, row.IsComputed, isDate));
+            fields.Add(new CruddyField(row.Name, aliasName, type, row.IsNullable, row.IsPrimaryKey == 1, row.IsComputed));
         }
 
         return fields;
@@ -64,13 +64,9 @@ public class DapperRepository(DbConnection dbConnection, string schema, string t
     /// Maps a SQL Server type name to a supported CLR type.
     /// </summary>
     /// <param name="sqlType">The SQL Server type name e.g. "nvarchar".</param>
-    /// <param name="isDate">True if the SQL type is "date".</param>
     /// <returns>The CLR type, or null if the SQL type is not supported.</returns>
-    public static Type? MapSqlType(string sqlType, out bool isDate)
+    public static Type? MapSqlType(string sqlType)
     {
-        //TODO: Check if this is the best way to handle "date" type. It is not a CLR type, but we want to treat it as a date in the UI.
-        isDate = sqlType.Equals("date", StringComparison.OrdinalIgnoreCase);
-
         return sqlType.ToLowerInvariant() switch
         {
             "int" => typeof(int),
@@ -81,7 +77,8 @@ public class DapperRepository(DbConnection dbConnection, string schema, string t
             "decimal" or "numeric" or "money" or "smallmoney" => typeof(decimal),
             "float" => typeof(double),
             "real" => typeof(float),
-            "date" or "datetime" or "datetime2" or "smalldatetime" => typeof(DateTime),
+            "datetime" or "datetime2" or "smalldatetime" => typeof(DateTime),
+            "date" => typeof(DateOnly),
             "time" => typeof(TimeSpan),
             "uniqueidentifier" => typeof(Guid),
             "char" or "varchar" or "nchar" or "nvarchar" or "text" or "ntext" or "sysname" => typeof(string),

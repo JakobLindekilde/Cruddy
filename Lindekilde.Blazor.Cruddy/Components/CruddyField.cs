@@ -10,12 +10,10 @@ namespace Lindekilde.Blazor.Cruddy.Components;
 /// <param name="IsNullable">Whether the column allows NULL.</param>
 /// <param name="IsPrimaryKey">Whether the column is part of the primary key.</param>
 /// <param name="IsReadOnly">Whether the column can not be written to (computed columns and rowversion/timestamp).</param>
-/// <param name="IsDate">Whether the column is a SQL date column (no time part).</param>
 public sealed record CruddyField(
     string ColumnName,
     string AliasName,
     Type Type,
     bool IsNullable,
     bool IsPrimaryKey,
-    bool IsReadOnly,
-    bool IsDate);
+    bool IsReadOnly);

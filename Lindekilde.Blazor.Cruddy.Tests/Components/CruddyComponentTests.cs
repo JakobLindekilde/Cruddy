@@ -24,8 +24,8 @@ public class CruddyComponentTests
         }
     }
 
-    private static CruddyField Field(string column, Type? type = null, bool nullable = true, bool pk = false, bool isDate = false) =>
-        new(column, column, type ?? typeof(string), nullable, pk, false, isDate);
+    private static CruddyField Field(string column, Type? type = null, bool nullable = true, bool pk = false) =>
+        new(column, column, type ?? typeof(string), nullable, pk, false);
 
     private static TestCruddy Create(FakeDbConnection? db = null) =>
         new() { TableName = "Persons", DbConnection = db ?? new FakeDbConnection(), RepositoryFactory = new DapperRepositoryFactory() };
@@ -59,14 +59,6 @@ public class CruddyComponentTests
 
         Assert.Equal(typeof(int), info.Type);
         Assert.False(info.Required);
-    }
-
-    [Fact]
-    public void GetInputInfo_DateFieldHasDataTypeDate()
-    {
-        var info = Create().GetInputInfo(Field("Born", typeof(DateTime), isDate: true), null, CrudOperation.Read);
-
-        Assert.Equal(System.ComponentModel.DataAnnotations.DataType.Date, info.DataType);
     }
 
     [Fact]
@@ -165,7 +157,7 @@ public class CruddyComponentTests
         dut.DefaultDateFormat = "date-default";
         dut.DefaultDateTimeFormat = "datetime-default";
 
-        Assert.Equal("date-default", dut.Format(Field("D", typeof(DateTime), isDate: true)));
+        Assert.Equal("date-default", dut.Format(Field("D", typeof(DateOnly))));
     }
 
     [Theory]
@@ -332,7 +324,7 @@ public class CruddyComponentTests
 
     private static CruddyRow Row(object? value) => new() { ["CategoryId"] = value };
 
-    private static readonly CruddyField FkField = new("CategoryId", "CategoryId", typeof(int), true, false, false, false);
+    private static readonly CruddyField FkField = new("CategoryId", "CategoryId", typeof(int), true, false, false);
 
     [Fact]
     public void GetForeignKeyDisplayValue_MatchingIdentifier_ReturnsDisplay()
