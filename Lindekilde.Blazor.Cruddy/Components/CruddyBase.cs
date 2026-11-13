@@ -130,7 +130,7 @@ public partial class CruddyBase : ComponentBase
 
         foreach (var info in FKeyInfoList)
         {
-            FKeyOptions[info.FKey] = Repository.GetFKeyOptions(info);
+            FKeyOptions[info.FKey] = Repository.GetFKeyOptionsAsync(info).Result;
         }
     }
 
@@ -170,7 +170,7 @@ public partial class CruddyBase : ComponentBase
         FKeyInfoList = FillFKeyInfoList(FKeys, DefaultSchema, PluralizeTableName);
 
         FillColumnAliasDict();
-        AllColumns = Repository.GetColumns(ColumnAliasDict);
+        AllColumns = Repository.GetColumnsAsync(ColumnAliasDict).Result;
         if (AllColumns.Count == 0)
         {
             throw new InvalidOperationException($"Table {DefaultSchema}.{TableName} was not found or has no supported columns.");
@@ -183,7 +183,7 @@ public partial class CruddyBase : ComponentBase
         }
 
         Fields = GetFields(TableColumns);
-        Rows = Repository.GetAll(BuildSql());
+        Rows = Repository.GetAllAsync(BuildSql()).Result;
     }
 
     /// <summary>
@@ -443,7 +443,7 @@ public partial class CruddyBase : ComponentBase
     /// </summary>
     /// <param name="keyValue">The value of the key column for the row to delete.</param>
     /// <returns>The result of the delete operation.</returns>
-    public object? Delete(object keyValue) => Repository.Delete(keyValue);
+    public object? Delete(object keyValue) => Repository.DeleteAsync(keyValue).Result;
 
     /// <summary>
     /// Updates an existing row in the database table based on the specified key value.
@@ -457,7 +457,7 @@ public partial class CruddyBase : ComponentBase
         ArgumentNullException.ThrowIfNull(row);
 
         var fields = GetFieldsForCreateOrUpdate(CrudOperation.Update);
-        return Repository.Update(row, keyValue, fields);
+        return Repository.UpdateAsync(row, keyValue, fields).Result;
     }
 
     /// <summary>
@@ -472,7 +472,7 @@ public partial class CruddyBase : ComponentBase
         ArgumentNullException.ThrowIfNull(row);
 
         var fields = GetFieldsForCreateOrUpdate(CrudOperation.Create);
-        return Repository.Add(row, fields);
+        return Repository.AddAsync(row, fields).Result;
     }
 
     /// <summary>
@@ -481,5 +481,5 @@ public partial class CruddyBase : ComponentBase
     /// <param name="id">The value of the key column for the row to retrieve.</param>
     /// <param name="columns">The columns to include in the result.</param>
     /// <returns>The row corresponding to the specified key value, or null if not found.</returns>
-    public CruddyRow? GetTableRow(object id, string columns = "*") => Repository.GetById(id, columns);
+    public CruddyRow? GetTableRow(object id, string columns = "*") => Repository.GetByIdAsync(id, columns).Result;
 }

@@ -34,10 +34,12 @@ public class DapperRepository(DbConnection dbConnection, string schema, string t
     /// <summary>
     /// Gets all columns of the table, of a supported type, using sys.columns, sys.tables, sys.types and sys.indexes.
     /// </summary>
+    /// <param name="columnAliasDict">A dictionary mapping column names to their alias names.</param>
+    /// <param name="cancellationToken">A token to cancel the database operation.</param>
     /// <returns>The columns in table order. Empty if the table does not exist.</returns>
-    public List<CruddyField> GetColumns(Dictionary<string, string> columnAliasDict)
+    public async Task<List<CruddyField>> GetColumnsAsync(Dictionary<string, string> columnAliasDict, CancellationToken cancellationToken = default)
     {
-        var rows = dbConnection.Query<ColumnRow>(ColumnsSql, new { Schema = schema, Table = tableName });
+        var rows = await dbConnection.QueryAsync<ColumnRow>(new CommandDefinition(ColumnsSql, new { Schema = schema, Table = tableName }, cancellationToken: cancellationToken)).ConfigureAwait(false);
 
         var fields = new List<CruddyField>();
         foreach (var row in rows)
@@ -90,19 +92,22 @@ public class DapperRepository(DbConnection dbConnection, string schema, string t
     /// Gets all rows returned by the SQL SELECT statement.
     /// </summary>
     /// <param name="sql">The SQL SELECT statement.</param>
+    /// <param name="cancellationToken">A token to cancel the database operation.</param>
     /// <returns>A list of rows (column name/value pairs).</returns>
-    public List<CruddyRow> GetAll(string sql) => dbConnection.Query(sql).Select(ToRow).ToList();
+    public async Task<List<CruddyRow>> GetAllAsync(string sql, CancellationToken cancellationToken = default) =>
+        (await dbConnection.QueryAsync(new CommandDefinition(sql, cancellationToken: cancellationToken)).ConfigureAwait(false)).Select(ToRow).ToList();
 
     /// <summary>
     /// Gets a row by the value of the key column.
     /// </summary>
     /// <param name="id">The key value.</param>
     /// <param name="columns">The columns to select.</param>
+    /// <param name="cancellationToken">A token to cancel the database operation.</param>
     /// <returns>The row if found; otherwise, null.</returns>
-    public CruddyRow? GetById(object id, string columns = "*")
+    public async Task<CruddyRow?> GetByIdAsync(object id, string columns = "*", CancellationToken cancellationToken = default)
     {
         var sql = $"SELECT {columns} FROM {schema}.{tableName} WHERE {keyColumn} = @Id";
-        return dbConnection.Query(sql, new { Id = id }).Select(ToRow).FirstOrDefault();
+        return (await dbConnection.QueryAsync(new CommandDefinition(sql, new { Id = id }, cancellationToken: cancellationToken)).ConfigureAwait(false)).Select(ToRow).FirstOrDefault();
     }
 
     /// <summary>
@@ -110,8 +115,9 @@ public class DapperRepository(DbConnection dbConnection, string schema, string t
     /// </summary>
     /// <param name="row">The row to insert.</param>
     /// <param name="fields">The fields to include in the insert statement.</param>
+    /// <param name="cancellationToken">A token to cancel the database operation.</param>
     /// <returns>The identity value of the new row or the number of rows affected.</returns>
-    public object? Add(CruddyRow row, IReadOnlyList<CruddyField> fields)
+    public async Task<object?> AddAsync(CruddyRow row, IReadOnlyList<CruddyField> fields, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(row);
         if (fields.Count == 0) return 0;
@@ -125,11 +131,11 @@ public class DapperRepository(DbConnection dbConnection, string schema, string t
         // Try to return an identity value for SQL Server. If that fails, fall back to Execute (rows affected).
         try
         {
-            return dbConnection.ExecuteScalar(sql + "; SELECT SCOPE_IDENTITY();", dp);
+            return await dbConnection.ExecuteScalarAsync(new CommandDefinition(sql + "; SELECT SCOPE_IDENTITY();", dp, cancellationToken: cancellationToken)).ConfigureAwait(false);
         }
-        catch
+        catch (Exception ex) when (ex is not OperationCanceledException && !cancellationToken.IsCancellationRequested)
         {
-            return dbConnection.Execute(sql, dp);
+            return await dbConnection.ExecuteAsync(new CommandDefinition(sql, dp, cancellationToken: cancellationToken)).ConfigureAwait(false);
         }
     }
 
@@ -139,8 +145,9 @@ public class DapperRepository(DbConnection dbConnection, string schema, string t
     /// <param name="row">The row holding the new values.</param>
     /// <param name="keyValue">The key value of the row to update.</param>
     /// <param name="fields">The fields to include in the update statement.</param>
+    /// <param name="cancellationToken">A token to cancel the database operation.</param>
     /// <returns>The number of rows affected.</returns>
-    public int Update(CruddyRow row, object keyValue, IReadOnlyList<CruddyField> fields)
+    public async Task<int> UpdateAsync(CruddyRow row, object keyValue, IReadOnlyList<CruddyField> fields, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(row);
         if (fields.Count == 0) return 0;
@@ -151,29 +158,31 @@ public class DapperRepository(DbConnection dbConnection, string schema, string t
         var dp = CreateParameters(row, fields);
         dp.Add("keyValue", keyValue);
 
-        return dbConnection.Execute(sql, dp);
+        return await dbConnection.ExecuteAsync(new CommandDefinition(sql, dp, cancellationToken: cancellationToken)).ConfigureAwait(false);
     }
 
     /// <summary>
     /// Deletes the row identified by the value of the key column.
     /// </summary>
     /// <param name="keyValue">The key value of the row to delete.</param>
+    /// <param name="cancellationToken">A token to cancel the database operation.</param>
     /// <returns>The scalar result of the delete statement.</returns>
-    public object? Delete(object keyValue)
+    public Task<object?> DeleteAsync(object keyValue, CancellationToken cancellationToken = default)
     {
         var sql = $"DELETE FROM {schema}.{tableName} WHERE {keyColumn} = @keyValue";
-        return dbConnection.ExecuteScalar(sql, param: new { keyValue });
+        return dbConnection.ExecuteScalarAsync(new CommandDefinition(sql, new { keyValue }, cancellationToken: cancellationToken));
     }
 
     /// <summary>
     /// Gets the dropdown options for a foreign key from the primary table.
     /// </summary>
     /// <param name="info">The foreign key info.</param>
+    /// <param name="cancellationToken">A token to cancel the database operation.</param>
     /// <returns>A list of options ordered by display value.</returns>
-    public List<FKeyOption> GetFKeyOptions(FKeyInfo info)
+    public async Task<List<FKeyOption>> GetFKeyOptionsAsync(FKeyInfo info, CancellationToken cancellationToken = default)
     {
         var sql = $"SELECT {info.PrimaryId} AS Id, {info.PrimaryDisplay} AS Display FROM {info.PrimaryTable} ORDER BY {info.PrimaryDisplay}";
-        return dbConnection.Query<FKeyOption>(sql).ToList();
+        return (await dbConnection.QueryAsync<FKeyOption>(new CommandDefinition(sql, cancellationToken: cancellationToken)).ConfigureAwait(false)).ToList();
     }
 
 #pragma warning restore S2077

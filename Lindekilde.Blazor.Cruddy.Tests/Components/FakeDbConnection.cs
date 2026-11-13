@@ -16,6 +16,9 @@ public sealed record ExecutedCommand(string Kind, string Sql, Dictionary<string,
 public sealed class FakeDbConnection : DbConnection
 {
     public List<ExecutedCommand> Commands { get; } = [];
+    public List<(string Kind, CancellationToken Token)> AsyncCommands { get; } = [];
+    public Task? CommandGate { get; set; }
+    public TaskCompletionSource? CommandStarted { get; set; }
     public List<Dictionary<string, object?>> Rows { get; } = [];
     public object? ScalarResult { get; set; } = 42;
     public bool ThrowOnScalar { get; set; }
@@ -83,6 +86,35 @@ internal sealed class FakeDbCommand(FakeDbConnection owner) : DbCommand
     {
         Record("Reader");
         return new FakeDataReader(owner.Rows);
+    }
+
+    private async Task WaitForCommandAsync(string kind, CancellationToken cancellationToken)
+    {
+        owner.AsyncCommands.Add((kind, cancellationToken));
+        owner.CommandStarted?.TrySetResult();
+        cancellationToken.ThrowIfCancellationRequested();
+        if (owner.CommandGate is { } gate)
+        {
+            await gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        }
+    }
+
+    public override async Task<int> ExecuteNonQueryAsync(CancellationToken cancellationToken)
+    {
+        await WaitForCommandAsync("NonQuery", cancellationToken).ConfigureAwait(false);
+        return ExecuteNonQuery();
+    }
+
+    public override async Task<object?> ExecuteScalarAsync(CancellationToken cancellationToken)
+    {
+        await WaitForCommandAsync("Scalar", cancellationToken).ConfigureAwait(false);
+        return ExecuteScalar();
+    }
+
+    protected override async Task<DbDataReader> ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+    {
+        await WaitForCommandAsync("Reader", cancellationToken).ConfigureAwait(false);
+        return ExecuteDbDataReader(behavior);
     }
 
     protected override DbParameter CreateDbParameter() => new FakeDbParameter();

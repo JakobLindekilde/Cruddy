@@ -30,25 +30,25 @@ public class CruddyRepositoryInjectionTests
         public string? SelectSql { get; private set; }
         public object? DeletedKey { get; private set; }
 
-        public List<CruddyField> GetColumns(Dictionary<string, string> columnAliasDict) =>
-            [new CruddyField("PersonId", "PersonId", typeof(int), false, true, false)];
+        public Task<List<CruddyField>> GetColumnsAsync(Dictionary<string, string> columnAliasDict, CancellationToken cancellationToken = default) =>
+            Task.FromResult<List<CruddyField>>([new CruddyField("PersonId", "PersonId", typeof(int), false, true, false)]);
 
-        public List<CruddyRow> GetAll(string sql)
+        public Task<List<CruddyRow>> GetAllAsync(string sql, CancellationToken cancellationToken = default)
         {
             SelectSql = sql;
-            return [];
+            return Task.FromResult<List<CruddyRow>>([]);
         }
 
-        public object? Delete(object keyValue)
+        public Task<object?> DeleteAsync(object keyValue, CancellationToken cancellationToken = default)
         {
             DeletedKey = keyValue;
-            return 7;
+            return Task.FromResult<object?>(7);
         }
 
-        public CruddyRow? GetById(object id, string columns = "*") => throw new NotSupportedException();
-        public object? Add(CruddyRow row, IReadOnlyList<CruddyField> fields) => throw new NotSupportedException();
-        public int Update(CruddyRow row, object keyValue, IReadOnlyList<CruddyField> fields) => throw new NotSupportedException();
-        public List<FKeyOption> GetFKeyOptions(FKeyInfo info) => throw new NotSupportedException();
+        public Task<CruddyRow?> GetByIdAsync(object id, string columns = "*", CancellationToken cancellationToken = default) => throw new NotSupportedException();
+        public Task<object?> AddAsync(CruddyRow row, IReadOnlyList<CruddyField> fields, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+        public Task<int> UpdateAsync(CruddyRow row, object keyValue, IReadOnlyList<CruddyField> fields, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+        public Task<List<FKeyOption>> GetFKeyOptionsAsync(FKeyInfo info, CancellationToken cancellationToken = default) => throw new NotSupportedException();
     }
 
     [Fact]

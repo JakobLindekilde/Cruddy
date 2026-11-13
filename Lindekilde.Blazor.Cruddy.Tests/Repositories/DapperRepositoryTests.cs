@@ -21,15 +21,15 @@ public class DapperRepositoryTests
         return doc.RootElement.GetProperty("ConnectionStrings").GetProperty("CruddyDB").GetString()!;
     }
 
-    private static SqlConnection OpenConnection()
+    private static async Task<SqlConnection> OpenConnectionAsync()
     {
         var connection = new SqlConnection(ConnectionString);
-        connection.Open();
+        await connection.OpenAsync();
         return connection;
     }
 
-    private static void DeleteRow(SqlConnection c, string table, int id) =>
-        c.Execute($"DELETE FROM dbo.{table} WHERE Id = @id", new { id });
+    private static Task<int> DeleteRowAsync(SqlConnection c, string table, int id) =>
+        c.ExecuteAsync($"DELETE FROM dbo.{table} WHERE Id = @id", new { id });
 
     private const string DateTimeTable = "DateTimeTypes";
     private const string AllTypesTable = "TestAllTypes";
@@ -108,19 +108,19 @@ public class DapperRepositoryTests
         ["GuidNullable"] = withNullables ? Guid.NewGuid() : null,
     };
 
-    private static int AddRow(DapperRepository repo, CruddyRow row, IReadOnlyList<CruddyField> fields) =>
-        Convert.ToInt32(repo.Add(row, fields));
+    private static async Task<int> AddRowAsync(DapperRepository repo, CruddyRow row, IReadOnlyList<CruddyField> fields) =>
+        Convert.ToInt32(await repo.AddAsync(row, fields));
 
-    private static void DeleteRows(SqlConnection c, string table, IEnumerable<int> ids)
+    private static async Task DeleteRowsAsync(SqlConnection c, string table, IEnumerable<int> ids)
     {
         foreach (var id in ids.Where(id => id != 0))
         {
-            DeleteRow(c, table, id);
+            await DeleteRowAsync(c, table, id);
         }
     }
 
-    private static int CountRows(SqlConnection c, string table) =>
-        c.ExecuteScalar<int>($"SELECT COUNT(*) FROM dbo.{table}");
+    private static Task<int> CountRowsAsync(SqlConnection c, string table) =>
+        c.ExecuteScalarAsync<int>($"SELECT COUNT(*) FROM dbo.{table}");
 
     private static void AssertRowMatches(CruddyRow expected, CruddyRow? actual, IEnumerable<CruddyField> fields)
     {
@@ -249,11 +249,11 @@ public class DapperRepositoryTests
     // ---------- GetColumns ----------
 
     [Fact]
-    public void GetColumns_DateTimeTypes_ReturnsAllColumnsInTableOrder()
+    public async Task GetColumns_DateTimeTypes_ReturnsAllColumnsInTableOrder()
     {
-        using var c = OpenConnection();
+        await using var c = await OpenConnectionAsync();
 
-        var columns = CreateRepo(c, DateTimeTable).GetColumns([]);
+        var columns = await CreateRepo(c, DateTimeTable).GetColumnsAsync([]);
 
         Assert.Equal(
             ["Id", "DateTimeNotNull", "DateTimeNullable", "TimeSpanNotNull", "TimeSpanNullable", "TimeOnlyNotNull", "TimeOnlyNullable"],
@@ -261,11 +261,11 @@ public class DapperRepositoryTests
     }
 
     [Fact]
-    public void GetColumns_DateTimeTypes_MapsTypesNullabilityAndKey()
+    public async Task GetColumns_DateTimeTypes_MapsTypesNullabilityAndKey()
     {
-        using var c = OpenConnection();
+        await using var c = await OpenConnectionAsync();
 
-        var columns = CreateRepo(c, DateTimeTable).GetColumns([]).ToDictionary(f => f.ColumnName);
+        var columns = (await CreateRepo(c, DateTimeTable).GetColumnsAsync([])).ToDictionary(f => f.ColumnName);
 
         Assert.Equal(typeof(int), columns["Id"].Type);
         Assert.True(columns["Id"].IsPrimaryKey);
@@ -282,11 +282,11 @@ public class DapperRepositoryTests
     }
 
     [Fact]
-    public void GetColumns_TestAllTypes_MapsAllSupportedTypes()
+    public async Task GetColumns_TestAllTypes_MapsAllSupportedTypes()
     {
-        using var c = OpenConnection();
+        await using var c = await OpenConnectionAsync();
 
-        var columns = CreateRepo(c, AllTypesTable).GetColumns([]);
+        var columns = await CreateRepo(c, AllTypesTable).GetColumnsAsync([]);
 
         Assert.Equal(AllTypesFields.Length + 1, columns.Count);
         Assert.Equal("Id", columns[0].ColumnName);
@@ -305,41 +305,41 @@ public class DapperRepositoryTests
     }
 
     [Fact]
-    public void GetColumns_SetsNameEqualToColumn()
+    public async Task GetColumns_SetsNameEqualToColumn()
     {
-        using var c = OpenConnection();
+        await using var c = await OpenConnectionAsync();
 
-        var columns = CreateRepo(c, AllTypesTable).GetColumns([]);
+        var columns = await CreateRepo(c, AllTypesTable).GetColumnsAsync([]);
 
         Assert.All(columns, f => Assert.Equal(f.ColumnName, f.AliasName));
     }
 
     [Fact]
-    public void GetColumns_OnlyOnePrimaryKeyColumn()
+    public async Task GetColumns_OnlyOnePrimaryKeyColumn()
     {
-        using var c = OpenConnection();
+        await using var c = await OpenConnectionAsync();
 
-        var columns = CreateRepo(c, AllTypesTable).GetColumns([]);
+        var columns = await CreateRepo(c, AllTypesTable).GetColumnsAsync([]);
 
         Assert.Equal(["Id"], columns.Where(f => f.IsPrimaryKey).Select(f => f.ColumnName));
     }
 
     [Fact]
-    public void GetColumns_UnknownTable_ReturnsEmptyList()
+    public async Task GetColumns_UnknownTable_ReturnsEmptyList()
     {
-        using var c = OpenConnection();
+        await using var c = await OpenConnectionAsync();
 
-        var columns = CreateRepo(c, "NoSuchTable_" + Guid.NewGuid().ToString("N")).GetColumns([]);
+        var columns = await CreateRepo(c, "NoSuchTable_" + Guid.NewGuid().ToString("N")).GetColumnsAsync([]);
 
         Assert.Empty(columns);
     }
 
     [Fact]
-    public void GetColumns_UnknownSchema_ReturnsEmptyList()
+    public async Task GetColumns_UnknownSchema_ReturnsEmptyList()
     {
-        using var c = OpenConnection();
+        await using var c = await OpenConnectionAsync();
 
-        var columns = new DapperRepository(c, "no_such_schema", DateTimeTable, "Id").GetColumns([]);
+        var columns = await new DapperRepository(c, "no_such_schema", DateTimeTable, "Id").GetColumnsAsync([]);
 
         Assert.Empty(columns);
     }
@@ -347,38 +347,38 @@ public class DapperRepositoryTests
     // ---------- Add ----------
 
     [Fact]
-    public void Add_DateTimeTypes_ReturnsIdentityAndStoresAllValues()
+    public async Task Add_DateTimeTypes_ReturnsIdentityAndStoresAllValues()
     {
-        using var c = OpenConnection();
+        await using var c = await OpenConnectionAsync();
         var repo = CreateRepo(c, DateTimeTable);
         var row = DateTimeRow(withNullables: true);
         var id = 0;
         try
         {
-            var result = repo.Add(row, DateTimeFields);
+            var result = await repo.AddAsync(row, DateTimeFields);
             id = Convert.ToInt32(result);
 
             Assert.True(id > 0);
-            AssertRowMatches(row, repo.GetById(id), DateTimeFields);
+            AssertRowMatches(row, await repo.GetByIdAsync(id), DateTimeFields);
         }
         finally
         {
-            DeleteRows(c, DateTimeTable, [id]);
+            await DeleteRowsAsync(c, DateTimeTable, [id]);
         }
     }
 
     [Fact]
-    public void Add_DateTimeTypes_NullableValuesAreStoredAsNull()
+    public async Task Add_DateTimeTypes_NullableValuesAreStoredAsNull()
     {
-        using var c = OpenConnection();
+        await using var c = await OpenConnectionAsync();
         var repo = CreateRepo(c, DateTimeTable);
         var row = DateTimeRow(withNullables: false);
         var id = 0;
         try
         {
-            id = AddRow(repo, row, DateTimeFields);
+            id = await AddRowAsync(repo, row, DateTimeFields);
 
-            var stored = repo.GetById(id);
+            var stored = await repo.GetByIdAsync(id);
             AssertRowMatches(row, stored, DateTimeFields);
             Assert.Null(stored!["DateTimeNullable"]);
             Assert.Null(stored["TimeSpanNullable"]);
@@ -386,23 +386,23 @@ public class DapperRepositoryTests
         }
         finally
         {
-            DeleteRows(c, DateTimeTable, [id]);
+            await DeleteRowsAsync(c, DateTimeTable, [id]);
         }
     }
 
     [Fact]
-    public void Add_DateTimeTypes_OnlySpecifiedFieldsAreInserted()
+    public async Task Add_DateTimeTypes_OnlySpecifiedFieldsAreInserted()
     {
-        using var c = OpenConnection();
+        await using var c = await OpenConnectionAsync();
         var repo = CreateRepo(c, DateTimeTable);
         var row = DateTimeRow(withNullables: true);
         var required = DateTimeFields.Where(f => !f.IsNullable).ToList();
         var id = 0;
         try
         {
-            id = AddRow(repo, row, required);
+            id = await AddRowAsync(repo, row, required);
 
-            var stored = repo.GetById(id);
+            var stored = await repo.GetByIdAsync(id);
             AssertRowMatches(row, stored, required);
             Assert.Null(stored!["DateTimeNullable"]);
             Assert.Null(stored["TimeSpanNullable"]);
@@ -410,34 +410,34 @@ public class DapperRepositoryTests
         }
         finally
         {
-            DeleteRows(c, DateTimeTable, [id]);
+            await DeleteRowsAsync(c, DateTimeTable, [id]);
         }
     }
 
     [Fact]
-    public void Add_DateTimeTypes_DateOnlyValueIsStoredAsDateTime()
+    public async Task Add_DateTimeTypes_DateOnlyValueIsStoredAsDateTime()
     {
-        using var c = OpenConnection();
+        await using var c = await OpenConnectionAsync();
         var repo = CreateRepo(c, DateTimeTable);
         var row = DateTimeRow(withNullables: false);
         row["DateTimeNotNull"] = new DateOnly(2020, 5, 17);
         var id = 0;
         try
         {
-            id = AddRow(repo, row, DateTimeFields);
+            id = await AddRowAsync(repo, row, DateTimeFields);
 
-            Assert.Equal(new DateTime(2020, 5, 17), repo.GetById(id)!["DateTimeNotNull"]);
+            Assert.Equal(new DateTime(2020, 5, 17), (await repo.GetByIdAsync(id))!["DateTimeNotNull"]);
         }
         finally
         {
-            DeleteRows(c, DateTimeTable, [id]);
+            await DeleteRowsAsync(c, DateTimeTable, [id]);
         }
     }
 
     [Fact]
-    public void Add_DateTimeTypes_TimeOnlyValueIsStoredAsTime()
+    public async Task Add_DateTimeTypes_TimeOnlyValueIsStoredAsTime()
     {
-        using var c = OpenConnection();
+        await using var c = await OpenConnectionAsync();
         var repo = CreateRepo(c, DateTimeTable);
         var row = DateTimeRow(withNullables: false);
         row["TimeOnlyNotNull"] = new TimeOnly(13, 45, 30);
@@ -445,22 +445,22 @@ public class DapperRepositoryTests
         var id = 0;
         try
         {
-            id = AddRow(repo, row, DateTimeFields);
+            id = await AddRowAsync(repo, row, DateTimeFields);
 
-            var stored = repo.GetById(id)!;
+            var stored = (await repo.GetByIdAsync(id))!;
             Assert.Equal(new TimeSpan(13, 45, 30), stored["TimeOnlyNotNull"]);
             Assert.Equal(new TimeSpan(23, 59, 59), stored["TimeOnlyNullable"]);
         }
         finally
         {
-            DeleteRows(c, DateTimeTable, [id]);
+            await DeleteRowsAsync(c, DateTimeTable, [id]);
         }
     }
 
     [Fact]
-    public void Add_DateTimeTypes_BoundaryValuesRoundTrip()
+    public async Task Add_DateTimeTypes_BoundaryValuesRoundTrip()
     {
-        using var c = OpenConnection();
+        await using var c = await OpenConnectionAsync();
         var repo = CreateRepo(c, DateTimeTable);
         var row = new CruddyRow
         {
@@ -474,100 +474,100 @@ public class DapperRepositoryTests
         var id = 0;
         try
         {
-            id = AddRow(repo, row, DateTimeFields);
+            id = await AddRowAsync(repo, row, DateTimeFields);
 
-            AssertRowMatches(row, repo.GetById(id), DateTimeFields);
+            AssertRowMatches(row, await repo.GetByIdAsync(id), DateTimeFields);
         }
         finally
         {
-            DeleteRows(c, DateTimeTable, [id]);
+            await DeleteRowsAsync(c, DateTimeTable, [id]);
         }
     }
 
     [Fact]
-    public void Add_DateTimeTypes_TwoInsertsReturnDifferentIncreasingIdentities()
+    public async Task Add_DateTimeTypes_TwoInsertsReturnDifferentIncreasingIdentities()
     {
-        using var c = OpenConnection();
+        await using var c = await OpenConnectionAsync();
         var repo = CreateRepo(c, DateTimeTable);
         var ids = new List<int>();
         try
         {
-            ids.Add(AddRow(repo, DateTimeRow(false), DateTimeFields));
-            ids.Add(AddRow(repo, DateTimeRow(true), DateTimeFields));
+            ids.Add(await AddRowAsync(repo, DateTimeRow(false), DateTimeFields));
+            ids.Add(await AddRowAsync(repo, DateTimeRow(true), DateTimeFields));
 
             Assert.True(ids[1] > ids[0]);
         }
         finally
         {
-            DeleteRows(c, DateTimeTable, ids);
+            await DeleteRowsAsync(c, DateTimeTable, ids);
         }
     }
 
     [Fact]
-    public void Add_TestAllTypes_StoresAllValues()
+    public async Task Add_TestAllTypes_StoresAllValues()
     {
-        using var c = OpenConnection();
+        await using var c = await OpenConnectionAsync();
         var repo = CreateRepo(c, AllTypesTable);
         var row = AllTypesRow(withNullables: true);
         var id = 0;
         try
         {
-            id = AddRow(repo, row, AllTypesFields);
+            id = await AddRowAsync(repo, row, AllTypesFields);
 
             Assert.True(id > 0);
-            AssertRowMatches(row, repo.GetById(id), AllTypesFields);
+            AssertRowMatches(row, await repo.GetByIdAsync(id), AllTypesFields);
         }
         finally
         {
-            DeleteRows(c, AllTypesTable, [id]);
+            await DeleteRowsAsync(c, AllTypesTable, [id]);
         }
     }
 
     [Fact]
-    public void Add_TestAllTypes_NullableValuesAreStoredAsNull()
+    public async Task Add_TestAllTypes_NullableValuesAreStoredAsNull()
     {
-        using var c = OpenConnection();
+        await using var c = await OpenConnectionAsync();
         var repo = CreateRepo(c, AllTypesTable);
         var row = AllTypesRow(withNullables: false);
         var id = 0;
         try
         {
-            id = AddRow(repo, row, AllTypesFields);
+            id = await AddRowAsync(repo, row, AllTypesFields);
 
-            var stored = repo.GetById(id);
+            var stored = await repo.GetByIdAsync(id);
             AssertRowMatches(row, stored, AllTypesFields);
             Assert.All(AllTypesFields.Where(f => f.IsNullable), f => Assert.Null(stored![f.AliasName]));
         }
         finally
         {
-            DeleteRows(c, AllTypesTable, [id]);
+            await DeleteRowsAsync(c, AllTypesTable, [id]);
         }
     }
 
     [Fact]
-    public void Add_TestAllTypes_ReturnsIdentityOfNewRow()
+    public async Task Add_TestAllTypes_ReturnsIdentityOfNewRow()
     {
-        using var c = OpenConnection();
+        await using var c = await OpenConnectionAsync();
         var repo = CreateRepo(c, AllTypesTable);
         var guid = Guid.NewGuid();
         var id = 0;
         try
         {
-            id = AddRow(repo, AllTypesRow(false, guid), AllTypesFields);
+            id = await AddRowAsync(repo, AllTypesRow(false, guid), AllTypesFields);
 
-            var storedId = c.ExecuteScalar<int>($"SELECT Id FROM dbo.{AllTypesTable} WHERE GuidNotNull = @guid", new { guid });
+            var storedId = await c.ExecuteScalarAsync<int>($"SELECT Id FROM dbo.{AllTypesTable} WHERE GuidNotNull = @guid", new { guid });
             Assert.Equal(storedId, id);
         }
         finally
         {
-            DeleteRows(c, AllTypesTable, [id]);
+            await DeleteRowsAsync(c, AllTypesTable, [id]);
         }
     }
 
     [Fact]
-    public void Add_TestAllTypes_ExtremeNumericValuesRoundTrip()
+    public async Task Add_TestAllTypes_ExtremeNumericValuesRoundTrip()
     {
-        using var c = OpenConnection();
+        await using var c = await OpenConnectionAsync();
         var repo = CreateRepo(c, AllTypesTable);
         var row = AllTypesRow(withNullables: true);
         row["Int32NotNull"] = int.MinValue;
@@ -584,64 +584,64 @@ public class DapperRepositoryTests
         var id = 0;
         try
         {
-            id = AddRow(repo, row, AllTypesFields);
+            id = await AddRowAsync(repo, row, AllTypesFields);
 
-            AssertRowMatches(row, repo.GetById(id), AllTypesFields);
+            AssertRowMatches(row, await repo.GetByIdAsync(id), AllTypesFields);
         }
         finally
         {
-            DeleteRows(c, AllTypesTable, [id]);
+            await DeleteRowsAsync(c, AllTypesTable, [id]);
         }
     }
 
     [Fact]
-    public void Add_MissingValueForNotNullColumn_Throws_AndInsertsNothing()
+    public async Task Add_MissingValueForNotNullColumn_Throws_AndInsertsNothing()
     {
-        using var c = OpenConnection();
+        await using var c = await OpenConnectionAsync();
         var repo = CreateRepo(c, AllTypesTable);
         var row = AllTypesRow(withNullables: false);
         row.Remove("StringNotNull");
-        var before = CountRows(c, AllTypesTable);
+        var before = await CountRowsAsync(c, AllTypesTable);
 
-        Assert.ThrowsAny<SqlException>(() => repo.Add(row, AllTypesFields));
+        await Assert.ThrowsAnyAsync<SqlException>(() => repo.AddAsync(row, AllTypesFields));
 
-        Assert.Equal(before, CountRows(c, AllTypesTable));
+        Assert.Equal(before, await CountRowsAsync(c, AllTypesTable));
     }
 
     [Fact]
-    public void Add_NullRow_ThrowsArgumentNullException()
+    public async Task Add_NullRow_ThrowsArgumentNullException()
     {
-        using var c = OpenConnection();
+        await using var c = await OpenConnectionAsync();
 
-        Assert.Throws<ArgumentNullException>(() => CreateRepo(c, DateTimeTable).Add(null!, DateTimeFields));
+        await Assert.ThrowsAsync<ArgumentNullException>(() => CreateRepo(c, DateTimeTable).AddAsync(null!, DateTimeFields));
     }
 
     [Fact]
-    public void Add_NoFields_ReturnsZeroAndInsertsNothing()
+    public async Task Add_NoFields_ReturnsZeroAndInsertsNothing()
     {
-        using var c = OpenConnection();
-        var before = CountRows(c, DateTimeTable);
+        await using var c = await OpenConnectionAsync();
+        var before = await CountRowsAsync(c, DateTimeTable);
 
-        var result = CreateRepo(c, DateTimeTable).Add(DateTimeRow(true), []);
+        var result = await CreateRepo(c, DateTimeTable).AddAsync(DateTimeRow(true), []);
 
         Assert.Equal(0, result);
-        Assert.Equal(before, CountRows(c, DateTimeTable));
+        Assert.Equal(before, await CountRowsAsync(c, DateTimeTable));
     }
 
     // ---------- GetById ----------
 
     [Fact]
-    public void GetById_DateTimeTypes_ReturnsRowWithAllColumns()
+    public async Task GetById_DateTimeTypes_ReturnsRowWithAllColumns()
     {
-        using var c = OpenConnection();
+        await using var c = await OpenConnectionAsync();
         var repo = CreateRepo(c, DateTimeTable);
         var row = DateTimeRow(withNullables: true);
         var id = 0;
         try
         {
-            id = AddRow(repo, row, DateTimeFields);
+            id = await AddRowAsync(repo, row, DateTimeFields);
 
-            var stored = repo.GetById(id);
+            var stored = await repo.GetByIdAsync(id);
 
             Assert.NotNull(stored);
             Assert.Equal(DateTimeFields.Length + 1, stored.Count);
@@ -650,42 +650,42 @@ public class DapperRepositoryTests
         }
         finally
         {
-            DeleteRows(c, DateTimeTable, [id]);
+            await DeleteRowsAsync(c, DateTimeTable, [id]);
         }
     }
 
     [Fact]
-    public void GetById_ColumnNamesAreCaseInsensitive()
+    public async Task GetById_ColumnNamesAreCaseInsensitive()
     {
-        using var c = OpenConnection();
+        await using var c = await OpenConnectionAsync();
         var repo = CreateRepo(c, DateTimeTable);
         var id = 0;
         try
         {
-            id = AddRow(repo, DateTimeRow(true), DateTimeFields);
+            id = await AddRowAsync(repo, DateTimeRow(true), DateTimeFields);
 
-            var stored = repo.GetById(id)!;
+            var stored = (await repo.GetByIdAsync(id))!;
 
             Assert.Equal(stored["DateTimeNotNull"], stored["DATETIMENOTNULL"]);
             Assert.True(stored.ContainsKey("id"));
         }
         finally
         {
-            DeleteRows(c, DateTimeTable, [id]);
+            await DeleteRowsAsync(c, DateTimeTable, [id]);
         }
     }
 
     [Fact]
-    public void GetById_SpecificColumns_ReturnsOnlyThoseColumns()
+    public async Task GetById_SpecificColumns_ReturnsOnlyThoseColumns()
     {
-        using var c = OpenConnection();
+        await using var c = await OpenConnectionAsync();
         var repo = CreateRepo(c, DateTimeTable);
         var id = 0;
         try
         {
-            id = AddRow(repo, DateTimeRow(true), DateTimeFields);
+            id = await AddRowAsync(repo, DateTimeRow(true), DateTimeFields);
 
-            var stored = repo.GetById(id, "Id, TimeSpanNotNull");
+            var stored = await repo.GetByIdAsync(id, "Id, TimeSpanNotNull");
 
             Assert.NotNull(stored);
             Assert.Equal(["Id", "TimeSpanNotNull"], stored.Keys);
@@ -693,65 +693,65 @@ public class DapperRepositoryTests
         }
         finally
         {
-            DeleteRows(c, DateTimeTable, [id]);
+            await DeleteRowsAsync(c, DateTimeTable, [id]);
         }
     }
 
     [Fact]
-    public void GetById_UnknownId_ReturnsNull()
+    public async Task GetById_UnknownId_ReturnsNull()
     {
-        using var c = OpenConnection();
+        await using var c = await OpenConnectionAsync();
 
-        Assert.Null(CreateRepo(c, DateTimeTable).GetById(-1));
+        Assert.Null(await CreateRepo(c, DateTimeTable).GetByIdAsync(-1));
     }
 
     [Fact]
-    public void GetById_DeletedRow_ReturnsNull()
+    public async Task GetById_DeletedRow_ReturnsNull()
     {
-        using var c = OpenConnection();
+        await using var c = await OpenConnectionAsync();
         var repo = CreateRepo(c, DateTimeTable);
-        var id = AddRow(repo, DateTimeRow(false), DateTimeFields);
-        DeleteRow(c, DateTimeTable, id);
+        var id = await AddRowAsync(repo, DateTimeRow(false), DateTimeFields);
+        await DeleteRowAsync(c, DateTimeTable, id);
 
-        Assert.Null(repo.GetById(id));
+        Assert.Null(await repo.GetByIdAsync(id));
     }
 
     [Fact]
-    public void GetById_ReturnsOnlyTheRequestedRow()
+    public async Task GetById_ReturnsOnlyTheRequestedRow()
     {
-        using var c = OpenConnection();
+        await using var c = await OpenConnectionAsync();
         var repo = CreateRepo(c, AllTypesTable);
         var first = AllTypesRow(false);
         var second = AllTypesRow(true);
         var ids = new List<int>();
         try
         {
-            ids.Add(AddRow(repo, first, AllTypesFields));
-            ids.Add(AddRow(repo, second, AllTypesFields));
+            ids.Add(await AddRowAsync(repo, first, AllTypesFields));
+            ids.Add(await AddRowAsync(repo, second, AllTypesFields));
 
-            var stored = repo.GetById(ids[1]);
+            var stored = await repo.GetByIdAsync(ids[1]);
 
             Assert.Equal(ids[1], stored!["Id"]);
             AssertRowMatches(second, stored, AllTypesFields);
         }
         finally
         {
-            DeleteRows(c, AllTypesTable, ids);
+            await DeleteRowsAsync(c, AllTypesTable, ids);
         }
     }
 
     [Fact]
-    public void GetById_UsesConfiguredKeyColumn_WithGuidKey()
+    public async Task GetById_UsesConfiguredKeyColumn_WithGuidKey()
     {
-        using var c = OpenConnection();
+        await using var c = await OpenConnectionAsync();
         var setup = CreateRepo(c, AllTypesTable);
         var guid = Guid.NewGuid();
         var id = 0;
         try
         {
-            id = AddRow(setup, AllTypesRow(false, guid), AllTypesFields);
+            id = await AddRowAsync(setup, AllTypesRow(false, guid), AllTypesFields);
 
-            var stored = CreateRepo(c, AllTypesTable, "GuidNotNull").GetById(guid);
+            var stored = await CreateRepo(c, AllTypesTable, "GuidNotNull").GetByIdAsync(guid);
 
             Assert.NotNull(stored);
             Assert.Equal(id, stored["Id"]);
@@ -759,26 +759,26 @@ public class DapperRepositoryTests
         }
         finally
         {
-            DeleteRows(c, AllTypesTable, [id]);
+            await DeleteRowsAsync(c, AllTypesTable, [id]);
         }
     }
 
     // ---------- GetAll ----------
 
     [Fact]
-    public void GetAll_DateTimeTypes_ReturnsMatchingRowsInSqlOrder()
+    public async Task GetAll_DateTimeTypes_ReturnsMatchingRowsInSqlOrder()
     {
-        using var c = OpenConnection();
+        await using var c = await OpenConnectionAsync();
         var repo = CreateRepo(c, DateTimeTable);
         var first = DateTimeRow(false);
         var second = DateTimeRow(true);
         var ids = new List<int>();
         try
         {
-            ids.Add(AddRow(repo, first, DateTimeFields));
-            ids.Add(AddRow(repo, second, DateTimeFields));
+            ids.Add(await AddRowAsync(repo, first, DateTimeFields));
+            ids.Add(await AddRowAsync(repo, second, DateTimeFields));
 
-            var rows = repo.GetAll($"SELECT * FROM dbo.{DateTimeTable} WHERE Id IN ({ids[0]}, {ids[1]}) ORDER BY Id DESC");
+            var rows = await repo.GetAllAsync($"SELECT * FROM dbo.{DateTimeTable} WHERE Id IN ({ids[0]}, {ids[1]}) ORDER BY Id DESC");
 
             Assert.Equal(2, rows.Count);
             Assert.Equal(ids[1], rows[0]["Id"]);
@@ -788,105 +788,105 @@ public class DapperRepositoryTests
         }
         finally
         {
-            DeleteRows(c, DateTimeTable, ids);
+            await DeleteRowsAsync(c, DateTimeTable, ids);
         }
     }
 
     [Fact]
-    public void GetAll_TestAllTypes_ReturnsAllTypedValues()
+    public async Task GetAll_TestAllTypes_ReturnsAllTypedValues()
     {
-        using var c = OpenConnection();
+        await using var c = await OpenConnectionAsync();
         var repo = CreateRepo(c, AllTypesTable);
         var row = AllTypesRow(true);
         var id = 0;
         try
         {
-            id = AddRow(repo, row, AllTypesFields);
+            id = await AddRowAsync(repo, row, AllTypesFields);
 
-            var rows = repo.GetAll($"SELECT * FROM dbo.{AllTypesTable} WHERE Id = {id}");
+            var rows = await repo.GetAllAsync($"SELECT * FROM dbo.{AllTypesTable} WHERE Id = {id}");
 
             var stored = Assert.Single(rows);
             AssertRowMatches(row, stored, AllTypesFields);
         }
         finally
         {
-            DeleteRows(c, AllTypesTable, [id]);
+            await DeleteRowsAsync(c, AllTypesTable, [id]);
         }
     }
 
     [Fact]
-    public void GetAll_NullValuesAreReturnedAsNull()
+    public async Task GetAll_NullValuesAreReturnedAsNull()
     {
-        using var c = OpenConnection();
+        await using var c = await OpenConnectionAsync();
         var repo = CreateRepo(c, AllTypesTable);
         var id = 0;
         try
         {
-            id = AddRow(repo, AllTypesRow(false), AllTypesFields);
+            id = await AddRowAsync(repo, AllTypesRow(false), AllTypesFields);
 
-            var stored = Assert.Single(repo.GetAll($"SELECT * FROM dbo.{AllTypesTable} WHERE Id = {id}"));
+            var stored = Assert.Single(await repo.GetAllAsync($"SELECT * FROM dbo.{AllTypesTable} WHERE Id = {id}"));
 
             Assert.All(AllTypesFields.Where(f => f.IsNullable), f => Assert.Null(stored[f.AliasName]));
         }
         finally
         {
-            DeleteRows(c, AllTypesTable, [id]);
+            await DeleteRowsAsync(c, AllTypesTable, [id]);
         }
     }
 
     [Fact]
-    public void GetAll_NoMatchingRows_ReturnsEmptyList()
+    public async Task GetAll_NoMatchingRows_ReturnsEmptyList()
     {
-        using var c = OpenConnection();
+        await using var c = await OpenConnectionAsync();
 
-        var rows = CreateRepo(c, DateTimeTable).GetAll($"SELECT * FROM dbo.{DateTimeTable} WHERE Id = -1");
+        var rows = await CreateRepo(c, DateTimeTable).GetAllAsync($"SELECT * FROM dbo.{DateTimeTable} WHERE Id = -1");
 
         Assert.NotNull(rows);
         Assert.Empty(rows);
     }
 
     [Fact]
-    public void GetAll_RespectsSelectedColumnsAndAliases()
+    public async Task GetAll_RespectsSelectedColumnsAndAliases()
     {
-        using var c = OpenConnection();
+        await using var c = await OpenConnectionAsync();
         var repo = CreateRepo(c, DateTimeTable);
         var id = 0;
         try
         {
-            id = AddRow(repo, DateTimeRow(true), DateTimeFields);
+            id = await AddRowAsync(repo, DateTimeRow(true), DateTimeFields);
 
-            var stored = Assert.Single(repo.GetAll($"SELECT Id AS Key1, DateTimeNotNull AS Moment FROM dbo.{DateTimeTable} WHERE Id = {id}"));
+            var stored = Assert.Single(await repo.GetAllAsync($"SELECT Id AS Key1, DateTimeNotNull AS Moment FROM dbo.{DateTimeTable} WHERE Id = {id}"));
 
             Assert.Equal(["Key1", "Moment"], stored.Keys);
             Assert.Equal(new DateTime(2021, 3, 4, 5, 6, 7), stored["moment"]);
         }
         finally
         {
-            DeleteRows(c, DateTimeTable, [id]);
+            await DeleteRowsAsync(c, DateTimeTable, [id]);
         }
     }
 
     [Fact]
-    public void GetAll_ReturnsNewListOnEachCall()
+    public async Task GetAll_ReturnsNewListOnEachCall()
     {
-        using var c = OpenConnection();
+        await using var c = await OpenConnectionAsync();
         var repo = CreateRepo(c, DateTimeTable);
         var sql = $"SELECT * FROM dbo.{DateTimeTable} WHERE Id = -1";
 
-        Assert.NotSame(repo.GetAll(sql), repo.GetAll(sql));
+        Assert.NotSame(await repo.GetAllAsync(sql), await repo.GetAllAsync(sql));
     }
 
     // ---------- Update ----------
 
     [Fact]
-    public void Update_DateTimeTypes_UpdatesAllFields()
+    public async Task Update_DateTimeTypes_UpdatesAllFields()
     {
-        using var c = OpenConnection();
+        await using var c = await OpenConnectionAsync();
         var repo = CreateRepo(c, DateTimeTable);
         var id = 0;
         try
         {
-            id = AddRow(repo, DateTimeRow(false), DateTimeFields);
+            id = await AddRowAsync(repo, DateTimeRow(false), DateTimeFields);
             var updated = new CruddyRow
             {
                 ["DateTimeNotNull"] = new DateTime(2000, 1, 2, 3, 4, 5),
@@ -897,336 +897,336 @@ public class DapperRepositoryTests
                 ["TimeOnlyNullable"] = new TimeSpan(20, 21, 22),
             };
 
-            var affected = repo.Update(updated, id, DateTimeFields);
+            var affected = await repo.UpdateAsync(updated, id, DateTimeFields);
 
             Assert.Equal(1, affected);
-            AssertRowMatches(updated, repo.GetById(id), DateTimeFields);
+            AssertRowMatches(updated, await repo.GetByIdAsync(id), DateTimeFields);
         }
         finally
         {
-            DeleteRows(c, DateTimeTable, [id]);
+            await DeleteRowsAsync(c, DateTimeTable, [id]);
         }
     }
 
     [Fact]
-    public void Update_DateTimeTypes_OnlyUpdatesSpecifiedFields()
+    public async Task Update_DateTimeTypes_OnlyUpdatesSpecifiedFields()
     {
-        using var c = OpenConnection();
+        await using var c = await OpenConnectionAsync();
         var repo = CreateRepo(c, DateTimeTable);
         var original = DateTimeRow(true);
         var id = 0;
         try
         {
-            id = AddRow(repo, original, DateTimeFields);
+            id = await AddRowAsync(repo, original, DateTimeFields);
             var newTime = new TimeSpan(22, 33, 44);
             var change = new CruddyRow { ["TimeSpanNotNull"] = newTime, ["DateTimeNotNull"] = new DateTime(1999, 9, 9) };
 
-            var affected = repo.Update(change, id, [DateTimeFields[2]]);
+            var affected = await repo.UpdateAsync(change, id, [DateTimeFields[2]]);
 
             Assert.Equal(1, affected);
-            var stored = repo.GetById(id)!;
+            var stored = (await repo.GetByIdAsync(id))!;
             Assert.Equal(newTime, stored["TimeSpanNotNull"]);
             Assert.Equal(original["DateTimeNotNull"], stored["DateTimeNotNull"]);
             Assert.Equal(original["TimeOnlyNullable"], stored["TimeOnlyNullable"]);
         }
         finally
         {
-            DeleteRows(c, DateTimeTable, [id]);
+            await DeleteRowsAsync(c, DateTimeTable, [id]);
         }
     }
 
     [Fact]
-    public void Update_DateTimeTypes_CanSetNullableValuesToNullAndBack()
+    public async Task Update_DateTimeTypes_CanSetNullableValuesToNullAndBack()
     {
-        using var c = OpenConnection();
+        await using var c = await OpenConnectionAsync();
         var repo = CreateRepo(c, DateTimeTable);
         var nullableFields = DateTimeFields.Where(f => f.IsNullable).ToList();
         var id = 0;
         try
         {
-            id = AddRow(repo, DateTimeRow(true), DateTimeFields);
+            id = await AddRowAsync(repo, DateTimeRow(true), DateTimeFields);
 
-            repo.Update(DateTimeRow(false), id, nullableFields);
-            var cleared = repo.GetById(id)!;
+            await repo.UpdateAsync(DateTimeRow(false), id, nullableFields);
+            var cleared = (await repo.GetByIdAsync(id))!;
             Assert.All(nullableFields, f => Assert.Null(cleared[f.AliasName]));
 
             var restored = DateTimeRow(true);
-            repo.Update(restored, id, nullableFields);
-            AssertRowMatches(restored, repo.GetById(id), nullableFields);
+            await repo.UpdateAsync(restored, id, nullableFields);
+            AssertRowMatches(restored, await repo.GetByIdAsync(id), nullableFields);
         }
         finally
         {
-            DeleteRows(c, DateTimeTable, [id]);
+            await DeleteRowsAsync(c, DateTimeTable, [id]);
         }
     }
 
     [Fact]
-    public void Update_DateTimeTypes_DateOnlyAndTimeOnlyValues()
+    public async Task Update_DateTimeTypes_DateOnlyAndTimeOnlyValues()
     {
-        using var c = OpenConnection();
+        await using var c = await OpenConnectionAsync();
         var repo = CreateRepo(c, DateTimeTable);
         var id = 0;
         try
         {
-            id = AddRow(repo, DateTimeRow(false), DateTimeFields);
+            id = await AddRowAsync(repo, DateTimeRow(false), DateTimeFields);
             var change = new CruddyRow
             {
                 ["DateTimeNotNull"] = new DateOnly(2030, 6, 7),
                 ["TimeOnlyNotNull"] = new TimeOnly(8, 9, 10),
             };
 
-            var affected = repo.Update(change, id, [DateTimeFields[0], DateTimeFields[4]]);
+            var affected = await repo.UpdateAsync(change, id, [DateTimeFields[0], DateTimeFields[4]]);
 
             Assert.Equal(1, affected);
-            var stored = repo.GetById(id)!;
+            var stored = (await repo.GetByIdAsync(id))!;
             Assert.Equal(new DateTime(2030, 6, 7), stored["DateTimeNotNull"]);
             Assert.Equal(new TimeSpan(8, 9, 10), stored["TimeOnlyNotNull"]);
         }
         finally
         {
-            DeleteRows(c, DateTimeTable, [id]);
+            await DeleteRowsAsync(c, DateTimeTable, [id]);
         }
     }
 
     [Fact]
-    public void Update_TestAllTypes_UpdatesAllFields()
+    public async Task Update_TestAllTypes_UpdatesAllFields()
     {
-        using var c = OpenConnection();
+        await using var c = await OpenConnectionAsync();
         var repo = CreateRepo(c, AllTypesTable);
         var id = 0;
         try
         {
-            id = AddRow(repo, AllTypesRow(false), AllTypesFields);
+            id = await AddRowAsync(repo, AllTypesRow(false), AllTypesFields);
             var updated = AllTypesRow(true);
             updated["Int32NotNull"] = 456;
             updated["StringNotNull"] = "Updated";
             updated["BoolNotNull"] = false;
 
-            var affected = repo.Update(updated, id, AllTypesFields);
+            var affected = await repo.UpdateAsync(updated, id, AllTypesFields);
 
             Assert.Equal(1, affected);
-            AssertRowMatches(updated, repo.GetById(id), AllTypesFields);
+            AssertRowMatches(updated, await repo.GetByIdAsync(id), AllTypesFields);
         }
         finally
         {
-            DeleteRows(c, AllTypesTable, [id]);
+            await DeleteRowsAsync(c, AllTypesTable, [id]);
         }
     }
 
     [Fact]
-    public void Update_TestAllTypes_SetsNullableValuesToNull()
+    public async Task Update_TestAllTypes_SetsNullableValuesToNull()
     {
-        using var c = OpenConnection();
+        await using var c = await OpenConnectionAsync();
         var repo = CreateRepo(c, AllTypesTable);
         var id = 0;
         try
         {
-            id = AddRow(repo, AllTypesRow(true), AllTypesFields);
+            id = await AddRowAsync(repo, AllTypesRow(true), AllTypesFields);
             var updated = AllTypesRow(false);
 
-            repo.Update(updated, id, AllTypesFields);
+            await repo.UpdateAsync(updated, id, AllTypesFields);
 
-            var stored = repo.GetById(id)!;
+            var stored = (await repo.GetByIdAsync(id))!;
             Assert.All(AllTypesFields.Where(f => f.IsNullable), f => Assert.Null(stored[f.AliasName]));
         }
         finally
         {
-            DeleteRows(c, AllTypesTable, [id]);
+            await DeleteRowsAsync(c, AllTypesTable, [id]);
         }
     }
 
     [Fact]
-    public void Update_OnlyAffectsRowWithGivenKey()
+    public async Task Update_OnlyAffectsRowWithGivenKey()
     {
-        using var c = OpenConnection();
+        await using var c = await OpenConnectionAsync();
         var repo = CreateRepo(c, AllTypesTable);
         var untouched = AllTypesRow(true);
         var ids = new List<int>();
         try
         {
-            ids.Add(AddRow(repo, AllTypesRow(false), AllTypesFields));
-            ids.Add(AddRow(repo, untouched, AllTypesFields));
+            ids.Add(await AddRowAsync(repo, AllTypesRow(false), AllTypesFields));
+            ids.Add(await AddRowAsync(repo, untouched, AllTypesFields));
 
-            repo.Update(AllTypesRow(true), ids[0], AllTypesFields);
+            await repo.UpdateAsync(AllTypesRow(true), ids[0], AllTypesFields);
 
-            AssertRowMatches(untouched, repo.GetById(ids[1]), AllTypesFields);
+            AssertRowMatches(untouched, await repo.GetByIdAsync(ids[1]), AllTypesFields);
         }
         finally
         {
-            DeleteRows(c, AllTypesTable, ids);
+            await DeleteRowsAsync(c, AllTypesTable, ids);
         }
     }
 
     [Fact]
-    public void Update_UnknownKey_ReturnsZero()
+    public async Task Update_UnknownKey_ReturnsZero()
     {
-        using var c = OpenConnection();
+        await using var c = await OpenConnectionAsync();
 
-        var affected = CreateRepo(c, AllTypesTable).Update(AllTypesRow(true), -1, AllTypesFields);
+        var affected = await CreateRepo(c, AllTypesTable).UpdateAsync(AllTypesRow(true), -1, AllTypesFields);
 
         Assert.Equal(0, affected);
     }
 
     [Fact]
-    public void Update_NoFields_ReturnsZeroAndLeavesRowUnchanged()
+    public async Task Update_NoFields_ReturnsZeroAndLeavesRowUnchanged()
     {
-        using var c = OpenConnection();
+        await using var c = await OpenConnectionAsync();
         var repo = CreateRepo(c, DateTimeTable);
         var original = DateTimeRow(true);
         var id = 0;
         try
         {
-            id = AddRow(repo, original, DateTimeFields);
+            id = await AddRowAsync(repo, original, DateTimeFields);
 
-            var affected = repo.Update(DateTimeRow(false), id, []);
+            var affected = await repo.UpdateAsync(DateTimeRow(false), id, []);
 
             Assert.Equal(0, affected);
-            AssertRowMatches(original, repo.GetById(id), DateTimeFields);
+            AssertRowMatches(original, await repo.GetByIdAsync(id), DateTimeFields);
         }
         finally
         {
-            DeleteRows(c, DateTimeTable, [id]);
+            await DeleteRowsAsync(c, DateTimeTable, [id]);
         }
     }
 
     [Fact]
-    public void Update_NullRow_ThrowsArgumentNullException()
+    public async Task Update_NullRow_ThrowsArgumentNullException()
     {
-        using var c = OpenConnection();
+        await using var c = await OpenConnectionAsync();
 
-        Assert.Throws<ArgumentNullException>(() => CreateRepo(c, DateTimeTable).Update(null!, 1, DateTimeFields));
+        await Assert.ThrowsAsync<ArgumentNullException>(() => CreateRepo(c, DateTimeTable).UpdateAsync(null!, 1, DateTimeFields));
     }
 
     [Fact]
-    public void Update_NullForNotNullColumn_Throws_AndKeepsValue()
+    public async Task Update_NullForNotNullColumn_Throws_AndKeepsValue()
     {
-        using var c = OpenConnection();
+        await using var c = await OpenConnectionAsync();
         var repo = CreateRepo(c, AllTypesTable);
         var original = AllTypesRow(false);
         var id = 0;
         try
         {
-            id = AddRow(repo, original, AllTypesFields);
+            id = await AddRowAsync(repo, original, AllTypesFields);
             var invalid = AllTypesRow(false);
             invalid["StringNotNull"] = null;
 
-            Assert.ThrowsAny<SqlException>(() => repo.Update(invalid, id, AllTypesFields));
+            await Assert.ThrowsAnyAsync<SqlException>(() => repo.UpdateAsync(invalid, id, AllTypesFields));
 
-            AssertRowMatches(original, repo.GetById(id), AllTypesFields);
+            AssertRowMatches(original, await repo.GetByIdAsync(id), AllTypesFields);
         }
         finally
         {
-            DeleteRows(c, AllTypesTable, [id]);
+            await DeleteRowsAsync(c, AllTypesTable, [id]);
         }
     }
 
     // ---------- Delete ----------
 
     [Fact]
-    public void Delete_DateTimeTypes_RemovesRow()
+    public async Task Delete_DateTimeTypes_RemovesRow()
     {
-        using var c = OpenConnection();
+        await using var c = await OpenConnectionAsync();
         var repo = CreateRepo(c, DateTimeTable);
         var id = 0;
         try
         {
-            id = AddRow(repo, DateTimeRow(true), DateTimeFields);
-            Assert.NotNull(repo.GetById(id));
+            id = await AddRowAsync(repo, DateTimeRow(true), DateTimeFields);
+            Assert.NotNull(await repo.GetByIdAsync(id));
 
-            repo.Delete(id);
+            await repo.DeleteAsync(id);
 
-            Assert.Null(repo.GetById(id));
+            Assert.Null(await repo.GetByIdAsync(id));
         }
         finally
         {
-            DeleteRows(c, DateTimeTable, [id]);
+            await DeleteRowsAsync(c, DateTimeTable, [id]);
         }
     }
 
     [Fact]
-    public void Delete_TestAllTypes_RemovesRow()
+    public async Task Delete_TestAllTypes_RemovesRow()
     {
-        using var c = OpenConnection();
+        await using var c = await OpenConnectionAsync();
         var repo = CreateRepo(c, AllTypesTable);
         var id = 0;
         try
         {
-            id = AddRow(repo, AllTypesRow(true), AllTypesFields);
+            id = await AddRowAsync(repo, AllTypesRow(true), AllTypesFields);
 
-            repo.Delete(id);
+            await repo.DeleteAsync(id);
 
-            Assert.Null(repo.GetById(id));
+            Assert.Null(await repo.GetByIdAsync(id));
         }
         finally
         {
-            DeleteRows(c, AllTypesTable, [id]);
+            await DeleteRowsAsync(c, AllTypesTable, [id]);
         }
     }
 
     [Fact]
-    public void Delete_OnlyRemovesRowWithGivenKey()
+    public async Task Delete_OnlyRemovesRowWithGivenKey()
     {
-        using var c = OpenConnection();
+        await using var c = await OpenConnectionAsync();
         var repo = CreateRepo(c, AllTypesTable);
         var kept = AllTypesRow(true);
         var ids = new List<int>();
         try
         {
-            ids.Add(AddRow(repo, AllTypesRow(false), AllTypesFields));
-            ids.Add(AddRow(repo, kept, AllTypesFields));
-            var before = CountRows(c, AllTypesTable);
+            ids.Add(await AddRowAsync(repo, AllTypesRow(false), AllTypesFields));
+            ids.Add(await AddRowAsync(repo, kept, AllTypesFields));
+            var before = await CountRowsAsync(c, AllTypesTable);
 
-            repo.Delete(ids[0]);
+            await repo.DeleteAsync(ids[0]);
 
-            Assert.Equal(before - 1, CountRows(c, AllTypesTable));
-            Assert.Null(repo.GetById(ids[0]));
-            AssertRowMatches(kept, repo.GetById(ids[1]), AllTypesFields);
+            Assert.Equal(before - 1, await CountRowsAsync(c, AllTypesTable));
+            Assert.Null(await repo.GetByIdAsync(ids[0]));
+            AssertRowMatches(kept, await repo.GetByIdAsync(ids[1]), AllTypesFields);
         }
         finally
         {
-            DeleteRows(c, AllTypesTable, ids);
+            await DeleteRowsAsync(c, AllTypesTable, ids);
         }
     }
 
     [Fact]
-    public void Delete_UnknownKey_DoesNotThrowAndDeletesNothing()
+    public async Task Delete_UnknownKey_DoesNotThrowAndDeletesNothing()
     {
-        using var c = OpenConnection();
-        var before = CountRows(c, DateTimeTable);
+        await using var c = await OpenConnectionAsync();
+        var before = await CountRowsAsync(c, DateTimeTable);
 
-        var exception = Record.Exception(() => CreateRepo(c, DateTimeTable).Delete(-1));
+        var exception = await Record.ExceptionAsync(() => CreateRepo(c, DateTimeTable).DeleteAsync(-1));
 
         Assert.Null(exception);
-        Assert.Equal(before, CountRows(c, DateTimeTable));
+        Assert.Equal(before, await CountRowsAsync(c, DateTimeTable));
     }
 
     [Fact]
-    public void Delete_CalledTwice_SecondCallIsHarmless()
+    public async Task Delete_CalledTwice_SecondCallIsHarmless()
     {
-        using var c = OpenConnection();
+        await using var c = await OpenConnectionAsync();
         var repo = CreateRepo(c, DateTimeTable);
         var id = 0;
         try
         {
-            id = AddRow(repo, DateTimeRow(false), DateTimeFields);
-            repo.Delete(id);
+            id = await AddRowAsync(repo, DateTimeRow(false), DateTimeFields);
+            await repo.DeleteAsync(id);
 
-            var exception = Record.Exception(() => repo.Delete(id));
+            var exception = await Record.ExceptionAsync(() => repo.DeleteAsync(id));
 
             Assert.Null(exception);
         }
         finally
         {
-            DeleteRows(c, DateTimeTable, [id]);
+            await DeleteRowsAsync(c, DateTimeTable, [id]);
         }
     }
 
     // ---------- GetFKeyOptions ----------
 
     [Fact]
-    public void GetFKeyOptions_TestAllTypes_ReturnsIdAndDisplayOrderedByDisplay()
+    public async Task GetFKeyOptions_TestAllTypes_ReturnsIdAndDisplayOrderedByDisplay()
     {
-        using var c = OpenConnection();
+        await using var c = await OpenConnectionAsync();
         var repo = CreateRepo(c, AllTypesTable);
         var prefix = "fk-" + Guid.NewGuid().ToString("N");
         var rowB = AllTypesRow(false);
@@ -1236,10 +1236,10 @@ public class DapperRepositoryTests
         var ids = new List<int>();
         try
         {
-            ids.Add(AddRow(repo, rowB, AllTypesFields));
-            ids.Add(AddRow(repo, rowA, AllTypesFields));
+            ids.Add(await AddRowAsync(repo, rowB, AllTypesFields));
+            ids.Add(await AddRowAsync(repo, rowA, AllTypesFields));
 
-            var options = repo.GetFKeyOptions(new FKeyInfo("FK", $"dbo.{AllTypesTable}", "Id", "StringNotNull"));
+            var options = await repo.GetFKeyOptionsAsync(new FKeyInfo("FK", $"dbo.{AllTypesTable}", "Id", "StringNotNull"));
 
             var mine = options.Where(o => ((string)o.Display!).StartsWith(prefix)).ToList();
             Assert.Equal(2, mine.Count);
@@ -1248,14 +1248,14 @@ public class DapperRepositoryTests
         }
         finally
         {
-            DeleteRows(c, AllTypesTable, ids);
+            await DeleteRowsAsync(c, AllTypesTable, ids);
         }
     }
 
     [Fact]
-    public void GetFKeyOptions_ResultIsSortedByDisplay()
+    public async Task GetFKeyOptions_ResultIsSortedByDisplay()
     {
-        using var c = OpenConnection();
+        await using var c = await OpenConnectionAsync();
         var repo = CreateRepo(c, AllTypesTable);
         var prefix = "fk-" + Guid.NewGuid().ToString("N");
         var ids = new List<int>();
@@ -1265,81 +1265,81 @@ public class DapperRepositoryTests
             {
                 var row = AllTypesRow(false);
                 row["StringNotNull"] = prefix + suffix;
-                ids.Add(AddRow(repo, row, AllTypesFields));
+                ids.Add(await AddRowAsync(repo, row, AllTypesFields));
             }
 
-            var options = repo.GetFKeyOptions(new FKeyInfo("FK", $"dbo.{AllTypesTable}", "Id", "StringNotNull"));
+            var options = await repo.GetFKeyOptionsAsync(new FKeyInfo("FK", $"dbo.{AllTypesTable}", "Id", "StringNotNull"));
 
             var mine = options.Select(o => (string)o.Display!).Where(d => d.StartsWith(prefix)).ToList();
             Assert.Equal([prefix + "1", prefix + "2", prefix + "3"], mine);
         }
         finally
         {
-            DeleteRows(c, AllTypesTable, ids);
+            await DeleteRowsAsync(c, AllTypesTable, ids);
         }
     }
 
     [Fact]
-    public void GetFKeyOptions_DateTimeTypes_MapsTimeSpanDisplay()
+    public async Task GetFKeyOptions_DateTimeTypes_MapsTimeSpanDisplay()
     {
-        using var c = OpenConnection();
+        await using var c = await OpenConnectionAsync();
         var repo = CreateRepo(c, DateTimeTable);
         var row = DateTimeRow(false);
         var id = 0;
         try
         {
-            id = AddRow(repo, row, DateTimeFields);
+            id = await AddRowAsync(repo, row, DateTimeFields);
 
-            var options = repo.GetFKeyOptions(new FKeyInfo("FK", $"dbo.{DateTimeTable}", "Id", "TimeSpanNotNull"));
+            var options = await repo.GetFKeyOptionsAsync(new FKeyInfo("FK", $"dbo.{DateTimeTable}", "Id", "TimeSpanNotNull"));
 
             var option = Assert.Single(options, o => (int)o.Id! == id);
             Assert.Equal(new TimeSpan(1, 2, 3), option.Display);
         }
         finally
         {
-            DeleteRows(c, DateTimeTable, [id]);
+            await DeleteRowsAsync(c, DateTimeTable, [id]);
         }
     }
 
     [Fact]
-    public void GetFKeyOptions_NullDisplayValue_IsReturnedAsNull()
+    public async Task GetFKeyOptions_NullDisplayValue_IsReturnedAsNull()
     {
-        using var c = OpenConnection();
+        await using var c = await OpenConnectionAsync();
         var repo = CreateRepo(c, AllTypesTable);
         var id = 0;
         try
         {
-            id = AddRow(repo, AllTypesRow(false), AllTypesFields);
+            id = await AddRowAsync(repo, AllTypesRow(false), AllTypesFields);
 
-            var options = repo.GetFKeyOptions(new FKeyInfo("FK", $"dbo.{AllTypesTable}", "Id", "StringNullable"));
+            var options = await repo.GetFKeyOptionsAsync(new FKeyInfo("FK", $"dbo.{AllTypesTable}", "Id", "StringNullable"));
 
             Assert.Null(Assert.Single(options, o => (int)o.Id! == id).Display);
         }
         finally
         {
-            DeleteRows(c, AllTypesTable, [id]);
+            await DeleteRowsAsync(c, AllTypesTable, [id]);
         }
     }
 
     [Fact]
-    public void GetFKeyOptions_DeletedRowIsNoLongerListed()
+    public async Task GetFKeyOptions_DeletedRowIsNoLongerListed()
     {
-        using var c = OpenConnection();
+        await using var c = await OpenConnectionAsync();
         var repo = CreateRepo(c, AllTypesTable);
         var id = 0;
         try
         {
-            id = AddRow(repo, AllTypesRow(false), AllTypesFields);
+            id = await AddRowAsync(repo, AllTypesRow(false), AllTypesFields);
             var info = new FKeyInfo("FK", $"dbo.{AllTypesTable}", "Id", "StringNotNull");
-            Assert.Contains(repo.GetFKeyOptions(info), o => (int)o.Id! == id);
+            Assert.Contains(await repo.GetFKeyOptionsAsync(info), o => (int)o.Id! == id);
 
-            repo.Delete(id);
+            await repo.DeleteAsync(id);
 
-            Assert.DoesNotContain(repo.GetFKeyOptions(info), o => (int)o.Id! == id);
+            Assert.DoesNotContain(await repo.GetFKeyOptionsAsync(info), o => (int)o.Id! == id);
         }
         finally
         {
-            DeleteRows(c, AllTypesTable, [id]);
+            await DeleteRowsAsync(c, AllTypesTable, [id]);
         }
     }
 }
